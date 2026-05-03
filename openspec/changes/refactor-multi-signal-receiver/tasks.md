@@ -31,19 +31,19 @@ Behaviour-parity guard for the refactor portion: at the end of group 4, every te
 
 ## 3. Schema YAML loader (TDD)
 
-- [ ] 3.1 [red] Test: `SchemaCatalog::fromDirectory($dir)` scans `<dir>/<signal>/v<n>.yaml`, returns a catalog with one entry per file
-- [ ] 3.2 [green] Implement `App\Schema\SchemaCatalog` with `fromDirectory` static factory using `glob`
-- [ ] 3.3 [red] Test: filename signal/version mismatching YAML header rejected (e.g. `logs/v2.yaml` declaring `version: 1`); error names the file
-- [ ] 3.4 [green] Add filename/header consistency check
-- [ ] 3.5 [red] Test: `byId('logs/v1')` returns the matching definition; `byId('logs/v99')` throws
-- [ ] 3.6 [green] Implement
-- [ ] 3.7 [red] Test: `latestFor('logs')` returns highest version when both v1 and v2 are present (use a fixture dir with two files)
-- [ ] 3.8 [green] Implement
-- [ ] 3.9 [red] Test: `latestFor('unknownsignal')` throws with the signal name
-- [ ] 3.10 [red] Test: `all()` returns all definitions keyed by id
-- [ ] 3.11 [green] Implement
-- [ ] 3.12 [red] Test: a malformed YAML in the directory raises during construction with a path-aware error
-- [ ] 3.13 [green] Wrap the parse loop with file-path context
+- [x] 3.1 [red] Test: `SchemaCatalog::fromDirectory($dir)` scans `<dir>/<signal>/v<n>.yaml`, returns a catalog with one entry per file
+- [x] 3.2 [green] Implement `App\Schema\SchemaCatalog` with `fromDirectory` static factory using `glob`
+- [x] 3.3 [red] Test: filename signal/version mismatching YAML header rejected (e.g. `logs/v2.yaml` declaring `version: 1`); error names the file
+- [x] 3.4 [green] Add filename/header consistency check
+- [x] 3.5 [red] Test: `byId('logs/v1')` returns the matching definition; `byId('logs/v99')` throws
+- [x] 3.6 [green] Implement
+- [x] 3.7 [red] Test: `latestFor('logs')` returns highest version when both v1 and v2 are present (use a fixture dir with two files)
+- [x] 3.8 [green] Implement
+- [x] 3.9 [red] Test: `latestFor('unknownsignal')` throws with the signal name
+- [x] 3.10 [red] Test: `all()` returns all definitions keyed by id
+- [x] 3.11 [green] Implement
+- [x] 3.12 [red] Test: a malformed YAML in the directory raises during construction with a path-aware error
+- [x] 3.13 [green] Wrap the parse loop with file-path context
 
 ## 4. SchemaCatalog wired into the container (component TDD)
 
