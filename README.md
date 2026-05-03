@@ -45,21 +45,21 @@ Add the hash under the appropriate tenant in `config/packages/crashler.yaml`, th
 
 ## On-disk layout
 
-Each successful `POST /v1/logs` request produces exactly one Parquet file:
+Each successful OTLP write produces exactly one Parquet file under the tenant's signal subdirectory:
 
 ```
-$APP_SHARE_DIR/logs/
+$APP_SHARE_DIR/<signal>/
   <tenant-slug>/
     date=YYYY-MM-DD/
       hour=HH/
         part-<ulid>.parquet
 ```
 
-`<tenant-slug>` is the authenticated tenant's slug. Date and hour are derived from the request's wall-clock arrival time in UTC. Per-record event timestamps are preserved in the `time_unix_nano` column inside the file.
+`<signal>` is `logs` for `POST /v1/logs` and `traces` for `POST /v1/traces`. `<tenant-slug>` is the authenticated tenant's slug. Date and hour are derived from the request's wall-clock arrival time in UTC. Per-record event timestamps are preserved inside the file (logs: `time_unix_nano`; traces: `start_time_unix_nano`).
 
 ## Schemas and column conventions
 
-Each signal's Parquet layout is declared in a versioned YAML at `config/schemas/<signal>/v<n>.yaml`. The YAML lists every column (name, type, repetition), the OpenTelemetry semantic-convention promotions that turn well-known attributes into top-level columns, and a reserved `transforms:` block for future ingest-time mutations.
+Each signal's Parquet layout is declared in a versioned YAML at `config/schemas/<signal>/v<n>.yaml`. Today: [`logs/v1`](config/schemas/logs/v1.yaml) (one row per `LogRecord`) and [`traces/v1`](config/schemas/traces/v1.yaml) (one row per `Span`, with `events` and `links` carried as JSON-string columns). The YAML lists every column (name, type, repetition), the OpenTelemetry semantic-convention promotions that turn well-known attributes into top-level columns, and a reserved `transforms:` block for future ingest-time mutations.
 
 Promoted column names follow a three-level prefix convention:
 
@@ -88,7 +88,7 @@ The on-disk Parquet schema is treated as **internal**. A future query layer will
 
 ## Querying
 
-DuckDB reads the file tree directly:
+DuckDB reads the file tree directly. Logs:
 
 ```bash
 duckdb -c "
@@ -106,7 +106,30 @@ duckdb -c "
 "
 ```
 
-Event-time range queries should filter on `time_unix_nano` rather than the partition columns: a late-arriving log lands in the partition corresponding to its *ingest* time, not its event time. Multi-version reads can branch on `_schema_version`/`_schema_id` to handle column renames across schema versions.
+Traces:
+
+```bash
+duckdb -c "
+  SELECT
+    _schema_id,
+    resource_service_name,
+    name,
+    kind_text,
+    duration_nano,
+    http_response_status_code,
+    status_text,
+    status_message
+  FROM read_parquet('var/share/traces/<slug>/**/*.parquet', hive_partitioning=true)
+  WHERE _schema_id = 'traces/v1'
+    AND date = '2026-05-03'
+    AND kind_text = 'SERVER'
+    AND http_response_status_code >= 500
+  ORDER BY start_time_unix_nano DESC
+  LIMIT 100;
+"
+```
+
+Event-time range queries should filter on `time_unix_nano` (logs) or `start_time_unix_nano` (traces) rather than the partition columns: a late-arriving record lands in the partition corresponding to its *ingest* time, not its event time. Multi-version reads can branch on `_schema_version`/`_schema_id` to handle column renames across schema versions.
 
 ## Running
 
@@ -114,7 +137,10 @@ Event-time range queries should filter on `time_unix_nano` rather than the parti
 symfony serve         # or your web server of choice
 ```
 
-Send a test request from the OpenTelemetry Collector's `otlphttp` exporter or any OTel SDK pointing at `http://localhost:8000/v1/logs` with `Authorization: Bearer <plaintext-token>`.
+Send a test request from the OpenTelemetry Collector's `otlphttp` exporter or any OTel SDK. Both signals share the same auth header (`Authorization: Bearer <plaintext-token>`); the URLs are:
+
+- Logs: `http://localhost:8000/v1/logs`
+- Traces: `http://localhost:8000/v1/traces`
 
 ## Tests
 

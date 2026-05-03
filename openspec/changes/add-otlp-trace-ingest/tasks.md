@@ -111,9 +111,9 @@ The scaffolding established by `refactor-multi-signal-receiver` carries most of 
 
 ## 9. Operator documentation
 
-- [ ] 9.1 README: extend the "Schemas and column conventions" section to mention the traces signal and link to `config/schemas/traces/v1.yaml`
-- [ ] 9.2 README "Querying" section: add a DuckDB example for traces (filter by `_schema_id = 'traces/v1'`, `kind_text = 'SERVER'`, `http_response_status_code >= 500`, etc.)
-- [ ] 9.3 README "Running" section: document that the `otlphttp` exporter URL for traces is `<host>/v1/traces`; same auth header as logs
+- [x] 9.1 README: extend the "Schemas and column conventions" section to mention the traces signal and link to `config/schemas/traces/v1.yaml`
+- [x] 9.2 README "Querying" section: add a DuckDB example for traces (filter by `_schema_id = 'traces/v1'`, `kind_text = 'SERVER'`, `http_response_status_code >= 500`, etc.)
+- [x] 9.3 README "Running" section: document that the `otlphttp` exporter URL for traces is `<host>/v1/traces`; same auth header as logs
 
 ## 10. Spec scenario cross-check
 
