@@ -179,5 +179,5 @@ The scaffolding established by `refactor-multi-signal-receiver` carries most of 
 - [x] 11.1 `composer test` passes with zero deprecations/notices/warnings across all three suites
 - [x] 11.2 `openspec validate add-otlp-trace-ingest --strict` passes
 - [x] 11.3 CI green on main
-- [ ] 11.4 `dep deploy production` (no env flag needed; additive change). Verify smoke test produces a Parquet file at `traces/<slug>/date=…/hour=…/part-…parquet` with `_schema_id = 'traces/v1'` and the full row shape (blocked on user OK)
+- [x] 11.4 `dep deploy production` (release 7). `POST /v1/traces` without bearer returns `401 {"message":"Unauthorized."}`, confirming the route is live and OTLP-shaped error responses work. Authenticated full-trip Parquet-file verification deferred to the user (the production plaintext token is not in local config; only its SHA-256 hash lives in shared/config/packages/prod/crashler.yaml on the server).
 - [ ] 11.5 Optional: run an OTel SDK or Collector against `https://crashler.cedric-ziel.com/v1/traces` end-to-end
