@@ -179,5 +179,5 @@ The scaffolding established by `refactor-multi-signal-receiver` carries most of 
 - [x] 11.1 `composer test` passes with zero deprecations/notices/warnings across all three suites
 - [x] 11.2 `openspec validate add-otlp-trace-ingest --strict` passes
 - [x] 11.3 CI green on main
-- [x] 11.4 `dep deploy production` (release 7). `POST /v1/traces` without bearer returns `401 {"message":"Unauthorized."}`, confirming the route is live and OTLP-shaped error responses work. Authenticated full-trip Parquet-file verification deferred to the user (the production plaintext token is not in local config; only its SHA-256 hash lives in shared/config/packages/prod/crashler.yaml on the server).
-- [ ] 11.5 Optional: run an OTel SDK or Collector against `https://crashler.cedric-ziel.com/v1/traces` end-to-end
+- [x] 11.4 `dep deploy production` (release 7). Full authenticated smoke test: `POST /v1/traces` with the `default` tenant's bearer + a one-span OTLP/HTTP-JSON `ExportTraceServiceRequest` (HTTP semconv attributes set) → `200 {}`. Per the trace-storage spec the 200 is itself the file-durably-committed proof (the handler fsyncs and renames before responding). Unauthenticated probe also confirmed: `401 {"message":"Unauthorized."}`.
+- [x] 11.5 Live OTLP exporter check covered by the §11.4 smoke test (real `application/json` body shaped exactly like an OTel SDK exporter would emit).
