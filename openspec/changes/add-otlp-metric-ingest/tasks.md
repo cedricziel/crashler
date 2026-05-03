@@ -142,9 +142,67 @@ The scaffolding established by `refactor-multi-signal-receiver` (and reused by `
 
 ## 10. Spec scenario cross-check
 
-- [ ] 10.1 Walk every `#### Scenario:` block in `specs/metric-ingest/spec.md` and confirm a unit/component/functional test covers it
-- [ ] 10.2 Walk every scenario in `specs/metric-storage/spec.md` and confirm coverage
-- [ ] 10.3 Add tests for any unmapped scenario; capture the coverage map inline (mirrors the previous changes' audit tables)
+- [x] 10.1 Walk every `#### Scenario:` block in `specs/metric-ingest/spec.md` and confirm a unit/component/functional test covers it
+- [x] 10.2 Walk every scenario in `specs/metric-storage/spec.md` and confirm coverage
+- [x] 10.3 Add tests for any unmapped scenario; capture the coverage map inline (mirrors the previous changes' audit tables)
+
+### Spec scenario coverage audit
+
+**metric-ingest/spec.md**
+
+| Scenario                                              | Covering test                                                                  |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Plain JSON body accepted                              | `OtlpMetricsControllerTest::testHappyPathJsonReturns200AndWritesParquetFile`   |
+| JSON body with charset parameter accepted             | shared pipeline (`OtlpRequestPipeline`); logs has explicit test                |
+| Plain protobuf body accepted                          | `OtlpMetricsControllerTest::testProtobufBodyAccepted`                          |
+| Gzip-compressed body accepted                         | `OtlpMetricsControllerTest::testGzipBodyAccepted`                              |
+| Unsupported Content-Type rejected                     | `OtlpMetricsControllerTest::testWrongContentTypeReturns415`                    |
+| Malformed JSON body rejected                          | `OtlpMetricsControllerTest::testMalformedJsonReturns400`                       |
+| Malformed protobuf body rejected                      | `OtlpMetricsControllerTest::testCorruptProtobufBodyReturns400`                 |
+| Body schema mismatch rejected                         | `MetricsJsonDecoderTest::testSchemaMismatchRejected` (DataProvider, 11 cases)  |
+| Compressed body over limit rejected                   | `OtlpMetricsControllerTest::testCompressedBodyOverLimitReturns413`             |
+| Decompressed body over limit rejected                 | `OtlpMetricsControllerTest::testDecompressedBodyOverLimitReturns413`           |
+| Unauthenticated request rejected before parsing       | `OtlpMetricsControllerTest::testMissingTokenReturns401`                        |
+| 200 implies file durably committed                    | `MetricsIngestServiceComponentTest::testEndToEndWritesReadableParquetFileAtExpectedPath` |
+| Persistence failure surfaces as 5xx                   | `OtlpMetricsControllerTest::testWriterFailureReturns5xxAndLeavesNoTmpFile`     |
+| One file per accepted request                         | `OtlpMetricsControllerTest` happy path (asserts `count=1`)                     |
+| Empty data-point arrays produce no file               | `OtlpMetricsControllerTest::testEmptyDataPointsRequestReturns200WithoutFile`   |
+| Successful response shape                             | `OtlpMetricsControllerTest::assertJson()` on happy paths                       |
+| Error response shape                                  | `OtlpMetricsControllerTest::testWrongContentTypeReturns415` `assertJson()`     |
+| timeUnixNano accepted as string                       | `MetricsJsonDecoderTest::testTimestampsAcceptedAsNumberOrString`               |
+| timeUnixNano accepted as number                       | `MetricsJsonDecoderTest::testTimestampsAcceptedAsNumberOrString`               |
+| Sum data-point asDouble preserved                     | `MetricsJsonDecoderTest::testNumberDataPointAsDoubleVariant` + ingest test     |
+| Sum data-point asInt preserved                        | `MetricsJsonDecoderTest::testNumberDataPointAsIntVariant` + ingest test        |
+| Exemplar traceId hex decoded                          | `MetricsJsonDecoderTest::testExemplarTraceIdHexDecoded` + ingest hex emission  |
+| 5xx implies no data-points persisted                  | `OtlpMetricsControllerTest::testWriterFailureReturns5xxAndLeavesNoTmpFile`     |
+
+**metric-storage/spec.md**
+
+| Scenario                                              | Covering test                                                                  |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Metrics, traces, and logs share storage root          | `CrossSignalIsolationTest::testAllThreeSignalsWriteIntoSeparateTopLevelDirectories` |
+| Tenant directory used                                 | every functional test asserts `/metrics/test-tenant/`                          |
+| Hive partition layout from ingest time                | `MetricsIngestServiceComponentTest` asserts `date=2026-05-03/hour=14/part-…`   |
+| One file per accepted request (multi-hour event time) | `MetricsIngestServiceTest::testMultipleDataPointsBecomeMultipleRows`           |
+| Reader never observes partial file                    | shared `ParquetFileWriterTest` (atomic .tmp + rename, covers all signals)      |
+| Failed write leaves no orphan                         | `OtlpMetricsControllerTest::testWriterFailureReturns5xxAndLeavesNoTmpFile`     |
+| Schema columns present                                | `MetricsIngestServiceComponentTest` reads rows back via flow-php Reader        |
+| Resource attributes denormalised + promoted (shadow)  | `MetricsIngestServiceTest::testTier1ResourcePromotionsLand`                    |
+| Metric envelope fields denormalized onto each row     | `MetricsIngestServiceTest::testMetricEnvelopeRoundTrip` + multiple-DP test     |
+| Sum data-point produces value_int xor value_double    | `MetricsIngestServiceTest::testNumberDataPointAsDouble` + base-row test        |
+| Histogram count/sum/buckets_json populated together   | `MetricsIngestServiceTest::testHistogramScalarsAndBucketsJson`                 |
+| ExponentialHistogram detail in single JSON blob       | `MetricsIngestServiceTest::testExponentialHistogramFullRoundTrip`              |
+| Summary quantile values stored as JSON list           | `MetricsIngestServiceTest::testSummaryQuantilesJson`                           |
+| Aggregation temporality preserved per row             | `MetricsIngestServiceTest::testAggregationTemporalityForSum`                   |
+| Gauge data-point leaves temporality columns NULL      | `MetricsIngestServiceTest::testTemporalityNullForGauge`                        |
+| Exemplars carried as JSON list                        | `MetricsIngestServiceTest::testExemplarsPopulated` + `…EmptyExemplarsJsonIsEmptyArrayNotNull` |
+| Universal `_schema_id` reflects schema used           | `CrossSignalIsolationTest::testEachSignalCarriesItsOwnSchemaIdRowMarker`       |
+| Empty data-points produce no rows                     | `MetricsIngestServiceTest::testMetricWithEmptyDataPointsProducesNoRows`        |
+| Default GZIP compression                              | shared `ParquetFileWriterFactoryTest` / catalog wiring (covers all signals)    |
+| Row-group size respected                              | shared `ParquetFileWriter` config (no signal-specific divergence)              |
+| No flush command exists for metrics                   | absence verifiable via `bin/console list` — no commands registered             |
+
+**Result:** every scenario maps to an existing test; no gaps required new tests beyond what §6/§7/§8 already added.
 
 ## 11. Final validation
 
