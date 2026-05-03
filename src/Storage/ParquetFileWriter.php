@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Storage;
 
+use App\Schema\SchemaCompiler;
+use App\Schema\SchemaDefinition;
 use Flow\Parquet\Option;
 use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
-use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\Writer;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Symfony\Component\Filesystem\Filesystem;
@@ -17,6 +18,10 @@ use Symfony\Component\Filesystem\Filesystem;
  * descriptor, then atomically renames to the final path. On any failure the
  * `.tmp` is removed and the exception is re-raised so the request layer can
  * surface a 5xx with no orphan on disk.
+ *
+ * Every row is augmented with the universal `_schema_version` and `_schema_id`
+ * columns derived from the SchemaDefinition; callers do not need to inject
+ * these themselves.
  */
 final class ParquetFileWriter implements WritesParquetFiles
 {
@@ -24,7 +29,7 @@ final class ParquetFileWriter implements WritesParquetFiles
     private const int ROW_GROUP_SIZE_BYTES = 32 * 1024 * 1024;
 
     public function __construct(
-        private readonly Schema $schema,
+        private readonly SchemaDefinition $definition,
         private readonly Compressions $compression,
         private readonly Filesystem $filesystem = new Filesystem(),
     ) {
@@ -36,6 +41,9 @@ final class ParquetFileWriter implements WritesParquetFiles
     public function writeAndCommit(string $finalPath, iterable $rows): void
     {
         $tmpPath = $finalPath.'.tmp';
+        $schema = SchemaCompiler::toFlowSchema($this->definition);
+        $version = $this->definition->version;
+        $id = $this->definition->id();
 
         try {
             $writer = new Writer(
@@ -44,8 +52,8 @@ final class ParquetFileWriter implements WritesParquetFiles
             );
 
             try {
-                $writer->open($tmpPath, $this->schema);
-                $writer->writeBatch($rows);
+                $writer->open($tmpPath, $schema);
+                $writer->writeBatch($this->augmentRows($rows, $version, $id));
             } finally {
                 if ($writer->isOpen()) {
                     $writer->close();
@@ -69,6 +77,20 @@ final class ParquetFileWriter implements WritesParquetFiles
                 $this->filesystem->remove($tmpPath);
             }
             throw $e;
+        }
+    }
+
+    /**
+     * @param iterable<array<string, mixed>> $rows
+     *
+     * @return \Generator<int, array<string, mixed>>
+     */
+    private function augmentRows(iterable $rows, int $version, string $id): \Generator
+    {
+        foreach ($rows as $row) {
+            $row[SchemaCompiler::COLUMN_SCHEMA_VERSION] = $version;
+            $row[SchemaCompiler::COLUMN_SCHEMA_ID] = $id;
+            yield $row;
         }
     }
 

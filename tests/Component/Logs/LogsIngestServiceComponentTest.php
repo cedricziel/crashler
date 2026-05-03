@@ -11,8 +11,8 @@ use App\Otlp\Dto\KeyValueDto;
 use App\Otlp\Dto\LogRecordDto;
 use App\Otlp\Dto\ResourceLogsDto;
 use App\Otlp\Dto\ScopeLogsDto;
+use App\Schema\SchemaCatalog;
 use App\Storage\ParquetFileWriter;
-use App\Storage\ParquetSchema;
 use App\Storage\PartitionPathResolver;
 use App\Tenancy\Tenant;
 use App\Tests\Support\StubFilenameGenerator;
@@ -38,7 +38,8 @@ final class LogsIngestServiceComponentTest extends TestCase
             storageRoot: $this->tempStorageRoot(),
         );
 
-        $writer = new ParquetFileWriter(ParquetSchema::definition(), Compressions::GZIP);
+        $catalog = SchemaCatalog::fromDirectory(\dirname(__DIR__, 3).'/config/schemas');
+        $writer = new ParquetFileWriter($catalog->latestFor('logs'), Compressions::GZIP);
         $service = new LogsIngestService($writer, $resolver);
 
         $request = new ExportLogsServiceRequestDto([
@@ -81,7 +82,7 @@ final class LogsIngestServiceComponentTest extends TestCase
         self::assertSame(1714752000000000000, $rows[0]['time_unix_nano']);
         self::assertSame('INFO', $rows[0]['severity_text']);
         self::assertSame('{"stringValue":"hello"}', $rows[0]['body_json']);
-        self::assertSame('checkout', $rows[0]['service_name']);
+        self::assertSame('checkout', $rows[0]['resource_service_name']);
         self::assertSame('app', $rows[0]['scope_name']);
         self::assertSame('1.0', $rows[0]['scope_version']);
     }

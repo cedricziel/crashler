@@ -82,7 +82,7 @@ final class LogsIngestService
             'severity_number' => $record->severityNumber,
             'severity_text' => $record->severityText,
             'body_json' => null !== $record->body ? AnyValueJsonEncoder::encode($record->body) : null,
-            'service_name' => $serviceName,
+            'resource_service_name' => $serviceName,
             'scope_name' => $scope->scopeName,
             'scope_version' => $scope->scopeVersion,
             'trace_id_hex' => null !== $record->traceId ? bin2hex($record->traceId) : null,

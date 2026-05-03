@@ -45,8 +45,8 @@ final class LogsIngestServiceTest extends TestCase
         );
 
         // service.name extracted from resource attributes.
-        self::assertSame('checkout', $rows[0]['service_name']);
-        self::assertSame('checkout', $rows[1]['service_name']);
+        self::assertSame('checkout', $rows[0]['resource_service_name']);
+        self::assertSame('checkout', $rows[1]['resource_service_name']);
 
         // Scope name/version copied.
         self::assertSame('app', $rows[0]['scope_name']);
@@ -107,7 +107,7 @@ final class LogsIngestServiceTest extends TestCase
         self::assertNotNull($writer->capturedRows);
         $rows = $writer->capturedRows;
         self::assertCount(1, $rows);
-        self::assertNull($rows[0]['service_name']);
+        self::assertNull($rows[0]['resource_service_name']);
         self::assertNull($rows[0]['scope_name']);
         self::assertNull($rows[0]['scope_version']);
         self::assertNull($rows[0]['body_json'], 'absent body must serialize as NULL, distinct from empty AnyValue {}');

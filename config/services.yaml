@@ -44,7 +44,6 @@ services:
             - '../src/Tenancy/DuplicateTokenHashException.php'
             - '../src/Otlp/Dto/'
             - '../src/Otlp/Exception/'
-            - '../src/Storage/ParquetSchema.php'
             - '../src/Storage/ParquetFileWriter.php'
             - '../src/Storage/PartitionPaths.php'
             # Schema infrastructure: value objects + factory-built catalog.
