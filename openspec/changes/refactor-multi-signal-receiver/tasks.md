@@ -4,9 +4,9 @@ Behaviour-parity guard for the refactor portion: at the end of group 4, every te
 
 ## 1. Project setup and groundwork
 
-- [ ] 1.1 Verify `symfony/yaml` is reachable from `App\` services (it is in deps; just sanity-check the autoload path)
-- [ ] 1.2 Investigate flow-php's file-level key/value metadata API: read the relevant `Writer` / `Options` source under `vendor/flow-php/parquet/` and write a one-paragraph note in design.md's "Open Questions" section confirming whether `Options::KEY_VALUE_METADATA` (or the actual constant name) is reachable
-- [ ] 1.3 Add a `tests/Unit/Schema/` and `tests/Component/Schema/` directory; confirm `composer test:unit` still runs (zero new tests yet)
+- [x] 1.1 Verify `symfony/yaml` is reachable from `App\` services (it is in deps; just sanity-check the autoload path)
+- [x] 1.2 Investigate flow-php's file-level key/value metadata API: read the relevant `Writer` / `Options` source under `vendor/flow-php/parquet/` and write a one-paragraph note in design.md's "Open Questions" section confirming whether `Options::KEY_VALUE_METADATA` (or the actual constant name) is reachable — *finding: not exposed; row-level columns only, design.md updated*
+- [x] 1.3 Add a `tests/Unit/Schema/` and `tests/Component/Schema/` directory; confirm `composer test:unit` still runs (zero new tests yet)
 
 ## 2. SchemaDefinition value object (TDD)
 
