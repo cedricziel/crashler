@@ -60,12 +60,12 @@ The scaffolding established by `refactor-multi-signal-receiver` carries most of 
 
 ## 5. SpanEvent / SpanLink JSON encoder (TDD)
 
-- [ ] 5.1 [red] Unit test: `SpanEventJsonEncoder::encode([])` returns `[]`
-- [ ] 5.2 [red] Unit test: a `SpanEventDto` with name + timeUnixNano + attributes serialises to OTLP/HTTP-JSON shape (`{name, timeUnixNano: "<numstr>", attributes: [{key, value}]}`)
-- [ ] 5.3 [green] Implement `App\Otlp\SpanEventJsonEncoder` (or extend `AnyValueJsonEncoder` with a span-events helper)
-- [ ] 5.4 [red] Unit test: `SpanLinkJsonEncoder::encode([])` returns `[]`
-- [ ] 5.5 [red] Unit test: a `SpanLinkDto` serialises to `{traceId, spanId, traceState, attributes, droppedAttributesCount, flags}` with hex IDs
-- [ ] 5.6 [green] Implement the link encoder
+- [x] 5.1 [red] Unit test: `SpanEventJsonEncoder::encode([])` returns `[]`
+- [x] 5.2 [red] Unit test: a `SpanEventDto` with name + timeUnixNano + attributes serialises to OTLP/HTTP-JSON shape (`{name, timeUnixNano: "<numstr>", attributes: [{key, value}]}`)
+- [x] 5.3 [green] Implement `App\Otlp\SpanEventJsonEncoder` (or extend `AnyValueJsonEncoder` with a span-events helper)
+- [x] 5.4 [red] Unit test: `SpanLinkJsonEncoder::encode([])` returns `[]`
+- [x] 5.5 [red] Unit test: a `SpanLinkDto` serialises to `{traceId, spanId, traceState, attributes, droppedAttributesCount, flags}` with hex IDs
+- [x] 5.6 [green] Implement the link encoder
 
 ## 6. TracesIngestService (TDD)
 

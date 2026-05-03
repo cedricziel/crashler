@@ -33,6 +33,16 @@ final class AnyValueJsonEncoder
      */
     public static function encodeAttributes(array $attributes): string
     {
+        return json_encode(self::attributesToArray($attributes), \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE | \JSON_THROW_ON_ERROR);
+    }
+
+    /**
+     * @param list<KeyValueDto> $attributes
+     *
+     * @return list<array{key: string, value: array<string, mixed>}>
+     */
+    public static function attributesToArray(array $attributes): array
+    {
         $items = [];
         foreach ($attributes as $kv) {
             $items[] = [
@@ -41,13 +51,13 @@ final class AnyValueJsonEncoder
             ];
         }
 
-        return json_encode($items, \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE | \JSON_THROW_ON_ERROR);
+        return $items;
     }
 
     /**
      * @return array<string, mixed>
      */
-    private static function toArray(AnyValueDto $value): array
+    public static function toArray(AnyValueDto $value): array
     {
         if (null !== $value->stringValue) {
             return ['stringValue' => $value->stringValue];
