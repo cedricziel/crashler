@@ -82,37 +82,37 @@ The scaffolding established by `refactor-multi-signal-receiver` (and reused by `
 
 ## 6. MetricsIngestService (TDD)
 
-- [ ] 6.1 [red] Unit test (with `CapturingParquetWriter`): a request with one Sum metric / one NumberDataPoint produces exactly one row with `metric_name`, `metric_type='SUM'`, `metric_type_code=0`, `value_int` populated, `value_double` NULL, `time_unix_nano`, `attributes_json='[]'`, `exemplars_json='[]'`
-- [ ] 6.2 [green] Implement `MetricsIngestService::write` skeleton (flatten DTO → row map; calls `WritesParquetFiles::writeAndCommit`)
-- [ ] 6.3 [red] Test: NumberDataPoint with `asDouble` populates `value_double`, leaves `value_int` NULL
-- [ ] 6.4 [red] Test: NumberDataPoint with `asInt` populates `value_int`, leaves `value_double` NULL
-- [ ] 6.5 [green] Add the variant-aware value mapping
-- [ ] 6.6 [red] DataProvider test: every metric type maps to its `metric_type` text and `metric_type_code` (SUM=0, GAUGE=1, HISTOGRAM=2, EXPONENTIAL_HISTOGRAM=3, SUMMARY=4)
-- [ ] 6.7 [green] Add the metric_type discriminator derivation
-- [ ] 6.8 [red] Test: HistogramDataPoint produces a row with `count`, `sum`, `min`, `max` populated and `buckets_json` containing the bucket structure
-- [ ] 6.9 [green] Wire `HistogramBucketsJsonEncoder` and the scalar columns
-- [ ] 6.10 [red] Test: ExponentialHistogramDataPoint produces a row with `count`, `sum`, `min`, `max` plus `exponential_histogram_json` containing the full proto sub-message
-- [ ] 6.11 [green] Wire `ExponentialHistogramJsonEncoder`
-- [ ] 6.12 [red] Test: SummaryDataPoint produces a row with `count`, `sum`, and `quantiles_json` as a 3-element list
-- [ ] 6.13 [green] Wire `SummaryQuantilesJsonEncoder`
-- [ ] 6.14 [red] Test: aggregation_temporality DELTA/CUMULATIVE/UNSPECIFIED maps to `aggregation_temporality` int + `aggregation_temporality_text` for Sum / Histogram / ExponentialHistogram rows
-- [ ] 6.15 [red] Test: Gauge and Summary rows have `aggregation_temporality` and `aggregation_temporality_text` NULL
-- [ ] 6.16 [green] Add temporality mapping
-- [ ] 6.17 [red] Test: Sum.is_monotonic populated for Sum rows; NULL for Gauge/Histogram/ExponentialHistogram/Summary
-- [ ] 6.18 [green] Add is_monotonic mapping
-- [ ] 6.19 [red] Test: every Tier-1 universal resource promotion lands as a `resource_*` column (mirrors the logs/traces equivalents)
-- [ ] 6.20 [red] Test: scope_schema_url populated when ScopeMetrics.schema_url is non-empty
-- [ ] 6.21 [green] Use `AttributeColumnExtractor` (signal='metrics') for resource and scope levels (no record-level promotions per D6)
-- [ ] 6.22 [red] Test: data-point with two exemplars produces `exemplars_json` with two items; traceId/spanId emitted as lowercase hex; AnyValue variants in filtered_attributes preserved
-- [ ] 6.23 [green] Wire `ExemplarJsonEncoder`
-- [ ] 6.24 [red] Test: empty exemplars list → `exemplars_json='[]'` (not NULL)
-- [ ] 6.25 [red] Test: `metric_attributes_json` round-trips the parent Metric envelope (name, unit, description, type, temporality, is_monotonic) excluding the data-points list
-- [ ] 6.26 [green] Wire `MetricEnvelopeJsonEncoder`
-- [ ] 6.27 [red] Test: a Metric envelope with empty data-points produces zero rows
-- [ ] 6.28 [red] Test: a request whose every Metric has empty data-points produces no Parquet file (writer's writeAndCommit not called)
-- [ ] 6.29 [green] Add the empty-rows short-circuit
-- [ ] 6.30 [red] Component test (real `ParquetFileWriter`, real filesystem, MockClock, StubFilenameGenerator): a known DTO produces a Parquet file at `<temp>/metrics/<slug>/date=…/hour=…/part-<ulid>.parquet` whose rows match the expected schema (one row per data-point, all column types correct)
-- [ ] 6.31 Declares `implements App\Otlp\Contract\IngestsSignal`
+- [x] 6.1 [red] Unit test (with `CapturingParquetWriter`): a request with one Sum metric / one NumberDataPoint produces exactly one row with `metric_name`, `metric_type='SUM'`, `metric_type_code=0`, `value_int` populated, `value_double` NULL, `time_unix_nano`, `attributes_json='[]'`, `exemplars_json='[]'`
+- [x] 6.2 [green] Implement `MetricsIngestService::write` skeleton (flatten DTO → row map; calls `WritesParquetFiles::writeAndCommit`)
+- [x] 6.3 [red] Test: NumberDataPoint with `asDouble` populates `value_double`, leaves `value_int` NULL
+- [x] 6.4 [red] Test: NumberDataPoint with `asInt` populates `value_int`, leaves `value_double` NULL
+- [x] 6.5 [green] Add the variant-aware value mapping
+- [x] 6.6 [red] DataProvider test: every metric type maps to its `metric_type` text and `metric_type_code` (SUM=0, GAUGE=1, HISTOGRAM=2, EXPONENTIAL_HISTOGRAM=3, SUMMARY=4)
+- [x] 6.7 [green] Add the metric_type discriminator derivation
+- [x] 6.8 [red] Test: HistogramDataPoint produces a row with `count`, `sum`, `min`, `max` populated and `buckets_json` containing the bucket structure
+- [x] 6.9 [green] Wire `HistogramBucketsJsonEncoder` and the scalar columns
+- [x] 6.10 [red] Test: ExponentialHistogramDataPoint produces a row with `count`, `sum`, `min`, `max` plus `exponential_histogram_json` containing the full proto sub-message
+- [x] 6.11 [green] Wire `ExponentialHistogramJsonEncoder`
+- [x] 6.12 [red] Test: SummaryDataPoint produces a row with `count`, `sum`, and `quantiles_json` as a 3-element list
+- [x] 6.13 [green] Wire `SummaryQuantilesJsonEncoder`
+- [x] 6.14 [red] Test: aggregation_temporality DELTA/CUMULATIVE/UNSPECIFIED maps to `aggregation_temporality` int + `aggregation_temporality_text` for Sum / Histogram / ExponentialHistogram rows
+- [x] 6.15 [red] Test: Gauge and Summary rows have `aggregation_temporality` and `aggregation_temporality_text` NULL
+- [x] 6.16 [green] Add temporality mapping
+- [x] 6.17 [red] Test: Sum.is_monotonic populated for Sum rows; NULL for Gauge/Histogram/ExponentialHistogram/Summary
+- [x] 6.18 [green] Add is_monotonic mapping
+- [x] 6.19 [red] Test: every Tier-1 universal resource promotion lands as a `resource_*` column (mirrors the logs/traces equivalents)
+- [x] 6.20 [red] Test: scope_schema_url populated when ScopeMetrics.schema_url is non-empty
+- [x] 6.21 [green] Use `AttributeColumnExtractor` (signal='metrics') for resource and scope levels (no record-level promotions per D6)
+- [x] 6.22 [red] Test: data-point with two exemplars produces `exemplars_json` with two items; traceId/spanId emitted as lowercase hex; AnyValue variants in filtered_attributes preserved
+- [x] 6.23 [green] Wire `ExemplarJsonEncoder`
+- [x] 6.24 [red] Test: empty exemplars list → `exemplars_json='[]'` (not NULL)
+- [x] 6.25 [red] Test: `metric_attributes_json` round-trips the parent Metric envelope (name, unit, description, type, temporality, is_monotonic) excluding the data-points list
+- [x] 6.26 [green] Wire `MetricEnvelopeJsonEncoder`
+- [x] 6.27 [red] Test: a Metric envelope with empty data-points produces zero rows
+- [x] 6.28 [red] Test: a request whose every Metric has empty data-points produces no Parquet file (writer's writeAndCommit not called)
+- [x] 6.29 [green] Add the empty-rows short-circuit
+- [x] 6.30 [red] Component test (real `ParquetFileWriter`, real filesystem, MockClock, StubFilenameGenerator): a known DTO produces a Parquet file at `<temp>/metrics/<slug>/date=…/hour=…/part-<ulid>.parquet` whose rows match the expected schema (one row per data-point, all column types correct)
+- [x] 6.31 Declares `implements App\Otlp\Contract\IngestsSignal`
 
 ## 7. OtlpMetricsController + wiring (TDD, functional)
 
