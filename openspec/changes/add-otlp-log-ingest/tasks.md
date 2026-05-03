@@ -75,38 +75,38 @@
 
 ## 8. log-ingest — DTOs (TDD)
 
-- [ ] 8.1 [red] Unit tests for each DTO's construction, immutability, and field exposure (one per DTO)
-- [ ] 8.2 [green] Implement `App\Otlp\Dto\*` value classes
-- [ ] 8.3 [red] Foundry factories in `tests/Factories/` for each DTO with sensible defaults and easy variant overrides
+- [x] 8.1 [red] Unit tests for each DTO's construction, immutability, and field exposure (one per DTO)
+- [x] 8.2 [green] Implement `App\Otlp\Dto\*` value classes
+- [ ] 8.3 [red] Foundry factories in `tests/Factories/` for each DTO with sensible defaults and easy variant overrides — *deferred until first higher-level test would benefit from one*
 
 ## 9. log-ingest — JSON decoder (TDD)
 
-- [ ] 9.1 [red] Test: minimal valid OTLP request decodes to expected DTO tree
-- [ ] 9.2 [green] Implement `LogsJsonDecoder::decode` happy-path skeleton
-- [ ] 9.3 [red] Test: `timeUnixNano` accepted as JSON number
-- [ ] 9.4 [red] Test: `timeUnixNano` accepted as numeric string (and identical int64 result as the number form)
-- [ ] 9.5 [green] Add dual numeric/string parsing
-- [ ] 9.6 [red] Tests for AnyValue body variants: stringValue, intValue, doubleValue, boolValue, bytesValue (base64 in JSON), arrayValue, kvlistValue (one test per variant; parametrized via foundry)
-- [ ] 9.7 [green] Add AnyValue decoding preserving the variant
-- [ ] 9.8 [red] Test: hex `traceId` (32 chars) and `spanId` (16 chars) decoded to the correct byte sequences
-- [ ] 9.9 [green] Add hex decoding
-- [ ] 9.10 [red] Tests for schema mismatch: missing `resourceLogs`, wrong field type for `resourceLogs`, wrong field type for `scopeLogs`, wrong field type for `logRecords`, malformed JSON — each throws `OtlpDecodeException` with a clear message
-- [ ] 9.11 [green] Add schema validation
-- [ ] 9.12 [red] Test: optional fields missing → DTO field is null; multi-resource request decodes both resources
+- [x] 9.1 [red] Test: minimal valid OTLP request decodes to expected DTO tree
+- [x] 9.2 [green] Implement `LogsJsonDecoder::decode` happy-path skeleton
+- [x] 9.3 [red] Test: `timeUnixNano` accepted as JSON number
+- [x] 9.4 [red] Test: `timeUnixNano` accepted as numeric string (and identical int64 result as the number form)
+- [x] 9.5 [green] Add dual numeric/string parsing
+- [x] 9.6 [red] Tests for AnyValue body variants: stringValue, intValue, doubleValue, boolValue, bytesValue (base64 in JSON), arrayValue, kvlistValue (one test per variant; parametrized via foundry)
+- [x] 9.7 [green] Add AnyValue decoding preserving the variant
+- [x] 9.8 [red] Test: hex `traceId` (32 chars) and `spanId` (16 chars) decoded to the correct byte sequences
+- [x] 9.9 [green] Add hex decoding
+- [x] 9.10 [red] Tests for schema mismatch: missing `resourceLogs`, wrong field type for `resourceLogs`, wrong field type for `scopeLogs`, wrong field type for `logRecords`, malformed JSON — each throws `OtlpDecodeException` with a clear message
+- [x] 9.11 [green] Add schema validation
+- [x] 9.12 [red] Test: optional fields missing → DTO field is null; multi-resource request decodes both resources
 
 ## 10. log-ingest — Gzip decoder (TDD)
 
-- [ ] 10.1 [red] Test: round-trip — gzip-encode a known string, decode through `GzipBodyDecoder`, assert equality
-- [ ] 10.2 [green] Implement `GzipBodyDecoder::decode` using streaming `inflate_init`
-- [ ] 10.3 [red] Test: input that decompresses past the limit throws `OtlpPayloadTooLargeException` mid-stream; assert peak memory does not exceed limit + small overhead (e.g., 64 KiB)
-- [ ] 10.4 [green] Add incremental size enforcement
-- [ ] 10.5 [red] Test: corrupt gzip bytes throw a decode exception; empty input throws
+- [x] 10.1 [red] Test: round-trip — gzip-encode a known string, decode through `GzipBodyDecoder`, assert equality
+- [x] 10.2 [green] Implement `GzipBodyDecoder::decode` using streaming `inflate_init`
+- [x] 10.3 [red] Test: input that decompresses past the limit throws `OtlpPayloadTooLargeException` mid-stream; assert peak memory does not exceed limit + small overhead (e.g., 64 KiB)
+- [x] 10.4 [green] Add incremental size enforcement
+- [x] 10.5 [red] Test: corrupt gzip bytes throw a decode exception; empty input throws
 
 ## 11. log-ingest — Error response helper (TDD)
 
-- [ ] 11.1 [red] Test: `ErrorResponse::create(400, 'bad json')` returns a `JsonResponse` with status 400, content-type `application/json`, body `{"message":"bad json"}`
-- [ ] 11.2 [green] Implement `ErrorResponse`
-- [ ] 11.3 [red] Test: each documented status code produces a correctly shaped response
+- [x] 11.1 [red] Test: `ErrorResponse::create(400, 'bad json')` returns a `JsonResponse` with status 400, content-type `application/json`, body `{"message":"bad json"}`
+- [x] 11.2 [green] Implement `ErrorResponse`
+- [x] 11.3 [red] Test: each documented status code produces a correctly shaped response
 
 ## 12. log-storage — Schema (TDD)
 
