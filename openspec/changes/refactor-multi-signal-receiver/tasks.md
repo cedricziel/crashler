@@ -106,19 +106,19 @@ Behaviour-parity guard for the refactor portion: at the end of group 4, every te
 
 ## 10. OtlpRequestPipeline extraction (refactor; tests must stay green unmodified)
 
-- [ ] 10.1 Define `App\Otlp\Contract\SignalDecoder` interface with a single `decode(string $body): object` method
-- [ ] 10.2 Define `App\Otlp\Contract\IngestsSignal` interface with a single `write(object $request, Tenant $tenant): void` method
-- [ ] 10.3 `App\Otlp\LogsJsonDecoder` and `App\Otlp\LogsProtobufDecoder` declare `implements SignalDecoder`; `App\Logs\LogsIngestService` declares `implements IngestsSignal`. No body changes — `composer test` stays green.
-- [ ] 10.4 Extract `App\Otlp\OtlpRequestPipeline` whose `handle()` method holds the controller's body verbatim, parameterised on `SignalDecoder $jsonDecoder, SignalDecoder $protobufDecoder, IngestsSignal $ingestService`. The current `OtlpLogsController::__invoke` becomes a one-liner that builds the args and calls into the pipeline.
-- [ ] 10.5 Wire the pipeline as a service in `services.yaml`; `OtlpLogsController` constructor takes the pipeline + the three logs-specific collaborators
-- [ ] 10.6 [verification] Run `composer test`. All 186 existing tests must pass without any test body changes. Tests that *would* need to change (because they assert internal column names) are tracked separately in group 11.
+- [x] 10.1 Define `App\Otlp\Contract\SignalDecoder` interface with a single `decode(string $body): object` method
+- [x] 10.2 Define `App\Otlp\Contract\IngestsSignal` interface with a single `write(object $request, Tenant $tenant): void` method
+- [x] 10.3 `App\Otlp\LogsJsonDecoder` and `App\Otlp\LogsProtobufDecoder` declare `implements SignalDecoder`; `App\Logs\LogsIngestService` declares `implements IngestsSignal`. No body changes — `composer test` stays green.
+- [x] 10.4 Extract `App\Otlp\OtlpRequestPipeline` whose `handle()` method holds the controller's body verbatim, parameterised on `SignalDecoder $jsonDecoder, SignalDecoder $protobufDecoder, IngestsSignal $ingestService`. The current `OtlpLogsController::__invoke` becomes a one-liner that builds the args and calls into the pipeline.
+- [x] 10.5 Wire the pipeline as a service in `services.yaml`; `OtlpLogsController` constructor takes the pipeline + the three logs-specific collaborators
+- [x] 10.6 [verification] Run `composer test`. All 186 existing tests must pass without any test body changes. Tests that *would* need to change (because they assert internal column names) are tracked separately in group 11.
 
 ## 11. Update behaviour-parity tests for the new schema (test-side updates only)
 
-- [ ] 11.1 `tests/Component/Logs/LogsIngestServiceComponentTest.php`: update assertions that read written rows back to use `resource_service_name` (was `service_name`); add assertions for the new promoted columns (`resource_service_namespace`, `scope_schema_url`, `event_name`, etc. where the fixture exercises them)
-- [ ] 11.2 `tests/Functional/Controller/OtlpLogsControllerTest.php`: same column-rename adjustments where the test reads rows back; verify response shape and status codes are untouched
-- [ ] 11.3 `tests/Component/Storage/ParquetFileWriterTest.php`: update the synthetic row fixtures to use the new column names; assert `_schema_version` and `_schema_id` columns appear with expected values
-- [ ] 11.4 `composer test` green
+- [x] 11.1 `tests/Component/Logs/LogsIngestServiceComponentTest.php`: update assertions that read written rows back to use `resource_service_name` (was `service_name`); add assertions for the new promoted columns — *done in §7 fallout: column rename + AttributeColumnExtractor wiring*
+- [x] 11.2 `tests/Functional/Controller/OtlpLogsControllerTest.php`: same column-rename adjustments where the test reads rows back; verify response shape and status codes are untouched — *no row-reading assertions in functional test; only response-shape assertions, which are unchanged by schema rename. Verified green post-refactor.*
+- [x] 11.3 `tests/Component/Storage/ParquetFileWriterTest.php`: update the synthetic row fixtures to use the new column names; assert `_schema_version` and `_schema_id` columns appear with expected values — *done in §7*
+- [x] 11.4 `composer test` green
 
 ## 12. Deploy task — purge old log files (gated)
 
