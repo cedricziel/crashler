@@ -125,6 +125,22 @@ task('crashler:ensure_storage', function () {
 });
 after('deploy:shared', 'crashler:ensure_storage');
 
+// On a fresh host, the shared .env.local doesn't exist yet, so when
+// Composer's post-install-cmd runs `cache:clear`, the kernel falls back
+// to APP_ENV=dev (from committed .env) and dies trying to load DebugBundle
+// — which --no-dev excluded. Bootstrap the file once with sane prod
+// defaults and a freshly generated APP_SECRET (created on the host so
+// it never leaves it). Subsequent deploys are no-ops.
+task('crashler:bootstrap_env_local', function () {
+    $path = '{{deploy_path}}/shared/.env.local';
+    if (test("[ -s $path ]")) {
+        return;
+    }
+    run("set -e; secret=\$(openssl rand -hex 16); printf 'APP_ENV=prod\\nAPP_DEBUG=0\\nAPP_SECRET=%s\\n' \"\$secret\" > $path; chmod 600 $path");
+    info('Bootstrapped shared/.env.local — APP_ENV=prod, fresh APP_SECRET');
+});
+before('deploy:vendors', 'crashler:bootstrap_env_local');
+
 // Hooks ------------------------------------------------------------------
 
 after('deploy:failed', 'deploy:unlock');
