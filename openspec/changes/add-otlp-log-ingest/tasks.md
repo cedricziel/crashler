@@ -21,9 +21,9 @@
 
 ## 3. Tenants — Tenant value object (TDD)
 
-- [ ] 3.1 [red] Unit test: constructing a `Tenant` with valid slug + name exposes them via getters; equality by value
-- [ ] 3.2 [green] Implement `App\Tenancy\Tenant` value object (immutable)
-- [ ] 3.3 [red] Test: constructing with mismatched type / missing fields fails (PHP type system; verify via static expectation if relevant)
+- [x] 3.1 [red] Unit test: constructing a `Tenant` with valid slug + name exposes them via getters; equality by value
+- [x] 3.2 [green] Implement `App\Tenancy\Tenant` value object (immutable)
+- [x] 3.3 [red] Test: constructing with mismatched type / missing fields fails (PHP type system; verify via static expectation if relevant) — *covered by PHP 8.4's strict types on readonly promoted properties; explicit type-mismatch test omitted as redundant*
 
 ## 4. Tenants — TenantRegistry (TDD)
 
