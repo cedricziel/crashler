@@ -14,22 +14,22 @@ The scaffolding established by `refactor-multi-signal-receiver` (and reused by `
 
 ## 2. Metric DTOs (TDD)
 
-- [ ] 2.1 [red] Unit tests for `App\Otlp\Dto\NumberDataPointDto` (asInt xor asDouble, attributes, start/time, exemplars, flags)
-- [ ] 2.2 [green] Implement `NumberDataPointDto` (immutable readonly value object)
-- [ ] 2.3 [red] Unit tests for `App\Otlp\Dto\HistogramDataPointDto` (count, sum, min, max, bucket_counts, explicit_bounds, attributes, exemplars)
-- [ ] 2.4 [green] Implement `HistogramDataPointDto`
-- [ ] 2.5 [red] Unit tests for `App\Otlp\Dto\ExponentialHistogramDataPointDto` (scale, zero_count, zero_threshold, positive/negative bucket DTOs, count, sum)
-- [ ] 2.6 [green] Implement `ExponentialHistogramDataPointDto` + nested `BucketsDto`
-- [ ] 2.7 [red] Unit tests for `App\Otlp\Dto\SummaryDataPointDto` (count, sum, list of `ValueAtQuantileDto`)
-- [ ] 2.8 [green] Implement `SummaryDataPointDto` + `ValueAtQuantileDto`
-- [ ] 2.9 [red] Unit tests for `App\Otlp\Dto\ExemplarDto` (filtered_attributes, time, traceId/spanId raw bytes, asInt xor asDouble)
-- [ ] 2.10 [green] Implement `ExemplarDto`
-- [ ] 2.11 [red] Unit tests for `App\Otlp\Dto\MetricDto` (name, unit, description, type discriminator, temporality, is_monotonic, list of typed data-points)
-- [ ] 2.12 [green] Implement `MetricDto` (with a typed enum for the metric variant)
-- [ ] 2.13 [red] Unit tests for `App\Otlp\Dto\ScopeMetricsDto` and `App\Otlp\Dto\ResourceMetricsDto`
-- [ ] 2.14 [green] Implement both
-- [ ] 2.15 [red] Unit tests for `App\Otlp\Dto\ExportMetricsServiceRequestDto`
-- [ ] 2.16 [green] Implement it
+- [x] 2.1 [red] Unit tests for `App\Otlp\Dto\NumberDataPointDto` (asInt xor asDouble, attributes, start/time, exemplars, flags)
+- [x] 2.2 [green] Implement `NumberDataPointDto` (immutable readonly value object)
+- [x] 2.3 [red] Unit tests for `App\Otlp\Dto\HistogramDataPointDto` (count, sum, min, max, bucket_counts, explicit_bounds, attributes, exemplars)
+- [x] 2.4 [green] Implement `HistogramDataPointDto`
+- [x] 2.5 [red] Unit tests for `App\Otlp\Dto\ExponentialHistogramDataPointDto` (scale, zero_count, zero_threshold, positive/negative bucket DTOs, count, sum)
+- [x] 2.6 [green] Implement `ExponentialHistogramDataPointDto` + nested `BucketsDto`
+- [x] 2.7 [red] Unit tests for `App\Otlp\Dto\SummaryDataPointDto` (count, sum, list of `ValueAtQuantileDto`)
+- [x] 2.8 [green] Implement `SummaryDataPointDto` + `ValueAtQuantileDto`
+- [x] 2.9 [red] Unit tests for `App\Otlp\Dto\ExemplarDto` (filtered_attributes, time, traceId/spanId raw bytes, asInt xor asDouble)
+- [x] 2.10 [green] Implement `ExemplarDto`
+- [x] 2.11 [red] Unit tests for `App\Otlp\Dto\MetricDto` (name, unit, description, type discriminator, temporality, is_monotonic, list of typed data-points)
+- [x] 2.12 [green] Implement `MetricDto` (with a typed enum for the metric variant)
+- [x] 2.13 [red] Unit tests for `App\Otlp\Dto\ScopeMetricsDto` and `App\Otlp\Dto\ResourceMetricsDto`
+- [x] 2.14 [green] Implement both
+- [x] 2.15 [red] Unit tests for `App\Otlp\Dto\ExportMetricsServiceRequestDto`
+- [x] 2.16 [green] Implement it
 
 ## 3. MetricsJsonDecoder (TDD)
 
