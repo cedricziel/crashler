@@ -184,5 +184,5 @@ Behaviour-parity guard for the refactor portion: at the end of group 4, every te
 - [x] 15.1 `composer test` passes with zero deprecations/notices/warnings — *255 tests / 604 assertions across all suites*
 - [~] 15.2 `composer test:coverage` passes the configured thresholds (where coverage driver is available) — *PCOV unavailable in dev sandbox; CI runs with PCOV and verifies thresholds (CI run 25278913293 SUCCESS)*
 - [x] 15.3 `openspec validate refactor-multi-signal-receiver --strict` passes
-- [ ] 15.4 Set `CRASHLER_PURGE_OLD_LOGS_ON_DEPLOY=1` and `dep deploy production`; verify smoke test produces a new file at the expected path with `_schema_id = 'logs/v1'` and the new column names — *blocked on user authorization (schema-breaking deploy)*
-- [ ] 15.5 Unset `CRASHLER_PURGE_OLD_LOGS_ON_DEPLOY` for subsequent deploys — *follows §15.4*
+- [x] 15.4 Set `CRASHLER_PURGE_OLD_LOGS_ON_DEPLOY=1` and `dep deploy production`; verify smoke test produces a new file at the expected path with `_schema_id = 'logs/v1'` and the new column names — *release 6 deployed; 4 v0 files purged; smoke-test produced part-01KQPWCTJ6GNKFS174P5TTDFX8.parquet with full v1 schema (every promoted column populated correctly, `_schema_id=logs/v1`)*
+- [x] 15.5 Unset `CRASHLER_PURGE_OLD_LOGS_ON_DEPLOY` for subsequent deploys — *the env var was scoped to the deploy command (not exported); next `dep deploy` runs without it*
