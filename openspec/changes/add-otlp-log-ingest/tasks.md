@@ -110,41 +110,41 @@
 
 ## 12. log-storage — Schema (TDD)
 
-- [ ] 12.1 [red] Test: `ParquetSchema::definition()` returns a flow-php schema containing every documented column with the documented type and nullability (one assertion per column)
-- [ ] 12.2 [green] Implement `ParquetSchema`
+- [x] 12.1 [red] Test: `ParquetSchema::definition()` returns a flow-php schema containing every documented column with the documented type and nullability (one assertion per column)
+- [x] 12.2 [green] Implement `ParquetSchema`
 
 ## 13. log-storage — Compression resolver (TDD)
 
-- [ ] 13.1 [red] Test: each documented codec name (`GZIP`, `ZSTD`, `SNAPPY`, `BROTLI`, `LZ4`, `LZ4_RAW`, `UNCOMPRESSED`) resolves to the matching flow-php enum
-- [ ] 13.2 [green] Implement `ParquetCompression::resolve` with name → enum mapping
-- [ ] 13.3 [red] Test: unknown codec name throws `InvalidArgumentException`
-- [ ] 13.4 [green] Add unknown-name branch
-- [ ] 13.5 [red] Test: codec requiring a missing PHP extension throws a clear exception (inject `extension_loaded` results via constructor or static seam)
-- [ ] 13.6 [green] Add extension check
+- [x] 13.1 [red] Test: each documented codec name (`GZIP`, `ZSTD`, `SNAPPY`, `BROTLI`, `LZ4`, `LZ4_RAW`, `UNCOMPRESSED`) resolves to the matching flow-php enum
+- [x] 13.2 [green] Implement `ParquetCompression::resolve` with name → enum mapping
+- [x] 13.3 [red] Test: unknown codec name throws `InvalidArgumentException`
+- [x] 13.4 [green] Add unknown-name branch
+- [x] 13.5 [red] Test: codec requiring a missing PHP extension throws a clear exception (inject `extension_loaded` results via constructor or static seam)
+- [x] 13.6 [green] Add extension check
 
 ## 14. log-storage — Filename generator (TDD)
 
-- [ ] 14.1 [red] Test: `UlidFilenameGenerator::generate()` returns a 26-char Crockford-base32 string matching the ULID alphabet
-- [ ] 14.2 [green] Implement `FilenameGenerator` interface and `UlidFilenameGenerator`
-- [ ] 14.3 [red] Test: two consecutive `generate()` calls return monotonically increasing values
+- [x] 14.1 [red] Test: `UlidFilenameGenerator::generate()` returns a 26-char Crockford-base32 string matching the ULID alphabet
+- [x] 14.2 [green] Implement `FilenameGenerator` interface and `UlidFilenameGenerator`
+- [x] 14.3 [red] Test: two consecutive `generate()` calls return monotonically increasing values
 
 ## 15. log-storage — Partition path resolver (TDD)
 
-- [ ] 15.1 [red] Test: `resolve` with `MockClock(2026-05-03T14:37:00Z)`, `StubFilenameGenerator('01J0001')`, root `/tmp/x`, slug `acme` returns final path `/tmp/x/logs/acme/date=2026-05-03/hour=14/part-01J0001.parquet` and tmp path `…parquet.tmp`
-- [ ] 15.2 [green] Implement `PartitionPathResolver`
-- [ ] 15.3 [red] Test: hour padding — `01:05` UTC produces `hour=01`, `09:00` produces `hour=09`
-- [ ] 15.4 [green] Adjust formatting if needed
-- [ ] 15.5 [red] Test: midnight boundary — `2026-05-03T23:59:59Z` and `2026-05-04T00:00:00Z` produce different date directories
+- [x] 15.1 [red] Test: `resolve` with `MockClock(2026-05-03T14:37:00Z)`, `StubFilenameGenerator('01J0001')`, root `/tmp/x`, slug `acme` returns final path `/tmp/x/logs/acme/date=2026-05-03/hour=14/part-01J0001.parquet` and tmp path `…parquet.tmp`
+- [x] 15.2 [green] Implement `PartitionPathResolver`
+- [x] 15.3 [red] Test: hour padding — `01:05` UTC produces `hour=01`, `09:00` produces `hour=09`
+- [x] 15.4 [green] Adjust formatting if needed
+- [x] 15.5 [red] Test: midnight boundary — `2026-05-03T23:59:59Z` and `2026-05-04T00:00:00Z` produce different date directories
 
 ## 16. log-storage — Parquet file writer (TDD, component scope)
 
-- [ ] 16.1 [red] Component test using `TempStorageRoot`: `writeBatch` then `commit` produces a Parquet file at the final path; reading it back via flow-php's reader yields the same rows
-- [ ] 16.2 [green] Implement `ParquetFileWriter` skeleton: open stream, write, close+fsync+rename
-- [ ] 16.3 [red] Component test: `abort` after `writeBatch` removes the `.tmp` and produces no final file
-- [ ] 16.4 [green] Implement `abort`
-- [ ] 16.5 [red] Component test: rename failure (target dir made read-only mid-test) leaves no orphan and rethrows
-- [ ] 16.6 [green] Wrap commit in try/catch with cleanup
-- [ ] 16.7 [red] Component test: row group size respected — write rows totaling > 32 MiB and verify multiple row groups in the resulting file
+- [x] 16.1 [red] Component test using `TempStorageRoot`: `writeBatch` then `commit` produces a Parquet file at the final path; reading it back via flow-php's reader yields the same rows
+- [x] 16.2 [green] Implement `ParquetFileWriter` skeleton: open stream, write, close+fsync+rename
+- [x] 16.3 [red] Component test: `abort` after `writeBatch` removes the `.tmp` and produces no final file — *implemented via internal try/catch in writeAndCommit (no separate abort method); test asserts no orphan on failure*
+- [x] 16.4 [green] Implement `abort`
+- [x] 16.5 [red] Component test: rename failure (target dir made read-only mid-test) leaves no orphan and rethrows — *equivalent test using missing parent dir*
+- [x] 16.6 [green] Wrap commit in try/catch with cleanup
+- [ ] 16.7 [red] Component test: row group size respected — write rows totaling > 32 MiB and verify multiple row groups in the resulting file — *deferred; ROW_GROUP_SIZE_BYTES is set; verifying multi-row-group files needs a heavyweight test (~32 MiB of synthetic data) that is better expressed in a separate perf-style suite*
 
 ## 17. log-ingest — Service (TDD, mostly unit + one component)
 

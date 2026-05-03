@@ -35,6 +35,9 @@ services:
             - '../src/Tenancy/DuplicateTokenHashException.php'
             - '../src/Otlp/Dto/'
             - '../src/Otlp/Exception/'
+            - '../src/Storage/ParquetSchema.php'
+            - '../src/Storage/ParquetFileWriter.php'
+            - '../src/Storage/PartitionPaths.php'
 
     # TenantRegistry is built once at boot from validated config; the
     # CrashlerExtension exposes the validated tenants array as a parameter
@@ -43,6 +46,21 @@ services:
         factory: ['App\Tenancy\TenantRegistryFactory', 'fromValidatedConfig']
         arguments:
             - '%crashler.tenants_validated%'
+
+    # Bind constructor scalar args from container parameters.
+    App\Storage\PartitionPathResolver:
+        arguments:
+            $storageRoot: '%crashler.storage_root%'
+
+    # Default Parquet writer wires the configured compression codec at boot.
+    # ParquetCompression::resolve fails fast if the codec's PHP extension is
+    # missing, surfacing misconfiguration before traffic flows.
+    App\Storage\ParquetFileWriterFactory:
+        arguments:
+            $configuredCompressionName: '%crashler.compression%'
+
+    App\Storage\ParquetFileWriter:
+        factory: ['@App\Storage\ParquetFileWriterFactory', 'create']
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
