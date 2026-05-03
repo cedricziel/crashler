@@ -7,7 +7,12 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
-    crashler.storage_root: '%env(resolve:APP_SHARE_DIR)%'
+    # Default storage root resolves to <project>/var/share, which under a
+    # Deployer-managed release symlinks into shared/var/share. Override with
+    # an absolute APP_SHARE_DIR env var when the running PHP process has a
+    # different CWD than the project (e.g. Apache + mod_php on shared hosting).
+    crashler.storage_root_default: '%kernel.project_dir%/var/share'
+    crashler.storage_root: '%env(default:crashler.storage_root_default:resolve:APP_SHARE_DIR)%'
     crashler.compression: '%env(string:CRASHLER_PARQUET_COMPRESSION)%'
     crashler.ingest.max_body_bytes: '%env(int:CRASHLER_INGEST_MAX_BODY_BYTES)%'
     crashler.ingest.max_decompressed_bytes: '%env(int:CRASHLER_INGEST_MAX_DECOMPRESSED_BYTES)%'
