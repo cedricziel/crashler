@@ -1,0 +1,79 @@
+# OTLP logs schema, v1.
+#
+# This file is the contract for the on-disk Parquet layout for the logs
+# signal. It is an INTERNAL contract: query consumers go through the
+# planned query layer, not directly. Renames and additions are routine
+# (bump v<n>.yaml when needed).
+#
+# Promotions: semconv-key -> column-name. Listing a key promotes its value
+# to a top-level Parquet column AND keeps the original key in the JSON
+# blob (shadow promotion — no data is ever lost by the rename).
+
+signal: logs
+version: 1
+
+columns:
+    # required record-level
+    - { name: time_unix_nano,                  type: int64,  repetition: required }
+    - { name: resource_attributes_json,        type: string, repetition: required }
+    - { name: attributes_json,                 type: string, repetition: required }
+
+    # tier-1 universal — resource
+    - { name: resource_service_name,           type: string, repetition: optional }
+    - { name: resource_service_namespace,      type: string, repetition: optional }
+    - { name: resource_service_version,        type: string, repetition: optional }
+    - { name: resource_service_instance_id,    type: string, repetition: optional }
+    - { name: resource_deployment_environment, type: string, repetition: optional }
+    - { name: resource_host_name,              type: string, repetition: optional }
+    - { name: resource_telemetry_sdk_language, type: string, repetition: optional }
+
+    # scope
+    - { name: scope_name,                      type: string, repetition: optional }
+    - { name: scope_version,                   type: string, repetition: optional }
+    - { name: scope_schema_url,                type: string, repetition: optional }
+
+    # logs record-level (signal-specific)
+    - { name: observed_time_unix_nano,         type: int64,  repetition: optional }
+    - { name: severity_number,                 type: int32,  repetition: optional }
+    - { name: severity_text,                   type: string, repetition: optional }
+    - { name: body_json,                       type: string, repetition: optional }
+    - { name: event_name,                      type: string, repetition: optional }
+    - { name: exception_type,                  type: string, repetition: optional }
+    - { name: exception_message,               type: string, repetition: optional }
+    - { name: trace_id_hex,                    type: string, repetition: optional }
+    - { name: span_id_hex,                     type: string, repetition: optional }
+    - { name: flags,                           type: int32,  repetition: optional }
+
+promotions:
+    resource:
+        service.name:                  resource_service_name
+        service.namespace:             resource_service_namespace
+        service.version:               resource_service_version
+        service.instance.id:           resource_service_instance_id
+        # Canonical and legacy keys for deployment env both promote to the
+        # same column. Iteration order is YAML order: canonical wins when
+        # both are present.
+        deployment.environment.name:   resource_deployment_environment
+        deployment.environment:        resource_deployment_environment
+        host.name:                     resource_host_name
+        telemetry.sdk.language:        resource_telemetry_sdk_language
+    scope:
+        # Note: schema_url is a top-level scope field in OTel, not inside
+        # Scope.attributes. The ingest service surfaces it through the
+        # extractor's scope path with a synthetic KeyValueDto so the same
+        # code path handles it as any other scope-level promotion.
+        schema_url:                    scope_schema_url
+    record:
+        event.name:                    event_name
+        exception.type:                exception_type
+        exception.message:             exception_message
+
+transforms:
+    drop_keys: []
+    rename_keys: {}
+    defaults:
+        resource: {}
+        record: {}
+    redact_keys: []
+    derive: {}
+    drop_when: []
