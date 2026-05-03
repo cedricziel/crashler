@@ -52,7 +52,6 @@
     </source>
 
     <coverage includeUncoveredFiles="true"
-              pathCoverage="true"
               ignoreDeprecatedCodeUnits="true"
               disableCodeCoverageIgnore="false"
     >
