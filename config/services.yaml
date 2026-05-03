@@ -33,6 +33,7 @@ services:
             - '../src/Tenancy/TenantRegistry.php'
             - '../src/Tenancy/TenantRegistryFactory.php'
             - '../src/Tenancy/DuplicateTokenHashException.php'
+            - '../src/Otlp/Dto/'
 
     # TenantRegistry is built once at boot from validated config; the
     # CrashlerExtension exposes the validated tenants array as a parameter
