@@ -56,17 +56,17 @@ Behaviour-parity guard for the refactor portion: at the end of group 4, every te
 
 ## 5. AttributeColumnExtractor (TDD)
 
-- [ ] 5.1 [red] Test: extractor constructed with a stub schema whose `promotions.resource.service.name = 'resource_service_name'`; `extractResource` on `[KeyValueDto('service.name', stringValue('checkout'))]` returns `['resource_service_name' => 'checkout']`
-- [ ] 5.2 [green] Implement `App\Otlp\AttributeColumnExtractor` with `extractResource` happy path
-- [ ] 5.3 [red] Test: input `KeyValueDto[]` is unchanged after extraction (reference equality)
-- [ ] 5.4 [green] Confirm by-value extraction; refactor if needed
-- [ ] 5.5 [red] Test: keys not listed in promotions are absent from the returned map
-- [ ] 5.6 [red] Test: scope and record extraction work via separate methods with their own promotion sub-maps
-- [ ] 5.7 [green] Implement `extractScope` and `extractRecord`
-- [ ] 5.8 [red] Test: legacy-key fallback — a single column listed under both `deployment.environment.name` and `deployment.environment`, input contains only the legacy form, returned map uses that value
-- [ ] 5.9 [green] Implement first-non-null semantics
-- [ ] 5.10 [red] Test: AnyValue variants — int values become PHP int in the column, double becomes float, string becomes string, bool becomes bool, bytes becomes the raw byte string, kvlist/array values are coerced to JSON-string (since columns are scalar)
-- [ ] 5.11 [green] Implement variant-to-scalar conversion
+- [x] 5.1 [red] Test: extractor constructed with a stub schema whose `promotions.resource.service.name = 'resource_service_name'`; `extractResource` on `[KeyValueDto('service.name', stringValue('checkout'))]` returns `['resource_service_name' => 'checkout']`
+- [x] 5.2 [green] Implement `App\Otlp\AttributeColumnExtractor` with `extractResource` happy path
+- [x] 5.3 [red] Test: input `KeyValueDto[]` is unchanged after extraction (reference equality)
+- [x] 5.4 [green] Confirm by-value extraction; refactor if needed
+- [x] 5.5 [red] Test: keys not listed in promotions are absent from the returned map
+- [x] 5.6 [red] Test: scope and record extraction work via separate methods with their own promotion sub-maps
+- [x] 5.7 [green] Implement `extractScope` and `extractRecord`
+- [x] 5.8 [red] Test: legacy-key fallback — a single column listed under both `deployment.environment.name` and `deployment.environment`, input contains only the legacy form, returned map uses that value
+- [x] 5.9 [green] Implement first-non-null semantics
+- [x] 5.10 [red] Test: AnyValue variants — int values become PHP int in the column, double becomes float, string becomes string, bool becomes bool, bytes becomes the raw byte string, kvlist/array values are coerced to JSON-string (since columns are scalar)
+- [x] 5.11 [green] Implement variant-to-scalar conversion
 
 ## 6. logs/v1 YAML
 
