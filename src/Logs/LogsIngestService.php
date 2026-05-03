@@ -39,7 +39,7 @@ final class LogsIngestService
             return;
         }
 
-        $paths = $this->paths->resolve($tenant);
+        $paths = $this->paths->resolve($tenant, 'logs');
 
         try {
             $this->filesystem->mkdir($paths->partitionDir, 0o750);

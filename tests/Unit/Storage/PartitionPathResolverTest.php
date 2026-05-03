@@ -22,7 +22,7 @@ final class PartitionPathResolverTest extends TestCase
             storageRoot: '/tmp/x',
         );
 
-        $paths = $resolver->resolve(new Tenant('acme', 'Acme Corp'));
+        $paths = $resolver->resolve(new Tenant('acme', 'Acme Corp'), 'logs');
 
         self::assertSame(
             '/tmp/x/logs/acme/date=2026-05-03/hour=14/part-01J0001AAAA000000000000000.parquet',
@@ -40,7 +40,7 @@ final class PartitionPathResolverTest extends TestCase
             storageRoot: '/r',
         );
 
-        $paths = $resolver->resolve(new Tenant('acme', 'Acme Corp'));
+        $paths = $resolver->resolve(new Tenant('acme', 'Acme Corp'), 'logs');
 
         self::assertStringContainsString('hour=01', $paths->finalPath);
     }
@@ -53,7 +53,7 @@ final class PartitionPathResolverTest extends TestCase
             storageRoot: '/r',
         );
 
-        $paths = $resolver->resolve(new Tenant('acme', 'Acme Corp'));
+        $paths = $resolver->resolve(new Tenant('acme', 'Acme Corp'), 'logs');
 
         self::assertStringContainsString('hour=09', $paths->finalPath);
     }
@@ -64,13 +64,13 @@ final class PartitionPathResolverTest extends TestCase
             clock: new MockClock('2026-05-03 23:59:59 UTC'),
             filenames: new StubFilenameGenerator('A'),
             storageRoot: '/r',
-        ))->resolve(new Tenant('acme', 'Acme Corp'));
+        ))->resolve(new Tenant('acme', 'Acme Corp'), 'logs');
 
         $atStart = (new PartitionPathResolver(
             clock: new MockClock('2026-05-04 00:00:00 UTC'),
             filenames: new StubFilenameGenerator('B'),
             storageRoot: '/r',
-        ))->resolve(new Tenant('acme', 'Acme Corp'));
+        ))->resolve(new Tenant('acme', 'Acme Corp'), 'logs');
 
         self::assertStringContainsString('date=2026-05-03', $atEnd->finalPath);
         self::assertStringContainsString('hour=23', $atEnd->finalPath);
@@ -87,7 +87,7 @@ final class PartitionPathResolverTest extends TestCase
             storageRoot: '/r',
         );
 
-        $paths = $resolver->resolve(new Tenant('acme', 'Acme Corp'));
+        $paths = $resolver->resolve(new Tenant('acme', 'Acme Corp'), 'logs');
 
         self::assertStringContainsString('date=2026-07-15', $paths->finalPath);
         self::assertStringContainsString('hour=00', $paths->finalPath);
@@ -101,10 +101,25 @@ final class PartitionPathResolverTest extends TestCase
             storageRoot: '/r',
         );
 
-        $a = $resolver->resolve(new Tenant('acme', 'Acme'));
-        $b = $resolver->resolve(new Tenant('widget', 'Widget'));
+        $a = $resolver->resolve(new Tenant('acme', 'Acme'), 'logs');
+        $b = $resolver->resolve(new Tenant('widget', 'Widget'), 'logs');
 
         self::assertStringContainsString('/logs/acme/', $a->finalPath);
         self::assertStringContainsString('/logs/widget/', $b->finalPath);
+    }
+
+    public function testSignalSubdirSwitchesTopLevelDirectory(): void
+    {
+        $resolver = new PartitionPathResolver(
+            clock: new MockClock('2026-05-03 14:37:00 UTC'),
+            filenames: new StubFilenameGenerator(['SAME', 'SAME', 'SAME']),
+            storageRoot: '/r',
+        );
+
+        $tenant = new Tenant('acme', 'Acme');
+
+        self::assertStringContainsString('/logs/acme/', $resolver->resolve($tenant, 'logs')->finalPath);
+        self::assertStringContainsString('/traces/acme/', $resolver->resolve($tenant, 'traces')->finalPath);
+        self::assertStringContainsString('/metrics/acme/', $resolver->resolve($tenant, 'metrics')->finalPath);
     }
 }

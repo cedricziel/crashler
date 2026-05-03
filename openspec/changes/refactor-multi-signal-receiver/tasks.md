@@ -88,9 +88,9 @@ Behaviour-parity guard for the refactor portion: at the end of group 4, every te
 
 ## 8. PartitionPathResolver — signalSubdir parameter (TDD)
 
-- [ ] 8.1 [red] Test: `resolve(Tenant, 'logs')` returns paths under `<root>/logs/<slug>/...`; `resolve(Tenant, 'traces')` returns paths under `<root>/traces/<slug>/...`
-- [ ] 8.2 [green] Update `PartitionPathResolver::resolve` signature; update the path template
-- [ ] 8.3 Update existing call site in `LogsIngestService` to pass `'logs'` (failing tests fixed)
+- [x] 8.1 [red] Test: `resolve(Tenant, 'logs')` returns paths under `<root>/logs/<slug>/...`; `resolve(Tenant, 'traces')` returns paths under `<root>/traces/<slug>/...`
+- [x] 8.2 [green] Update `PartitionPathResolver::resolve` signature; update the path template
+- [x] 8.3 Update existing call site in `LogsIngestService` to pass `'logs'` (failing tests fixed)
 
 ## 9. LogsIngestService — populate promoted columns (TDD)
 

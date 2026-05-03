@@ -16,15 +16,20 @@ final class PartitionPathResolver
     ) {
     }
 
-    public function resolve(Tenant $tenant): PartitionPaths
+    /**
+     * @param non-empty-string $signalSubdir signal-level subdirectory
+     *                                       (e.g. 'logs', 'traces', 'metrics')
+     */
+    public function resolve(Tenant $tenant, string $signalSubdir): PartitionPaths
     {
         $now = $this->clock->now()->setTimezone(new \DateTimeZone('UTC'));
         $date = $now->format('Y-m-d');
         $hour = $now->format('H');
 
         $partitionDir = \sprintf(
-            '%s/logs/%s/date=%s/hour=%s',
+            '%s/%s/%s/date=%s/hour=%s',
             rtrim($this->storageRoot, '/'),
+            $signalSubdir,
             $tenant->slug,
             $date,
             $hour,
