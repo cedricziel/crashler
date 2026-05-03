@@ -1,0 +1,38 @@
+name: OpenSpec
+
+on:
+  pull_request:
+    paths:
+      - "openspec/**"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: openspec validate --strict
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install OpenSpec
+        run: npm install -g openspec@^1.2.0
+
+      - name: Validate active changes
+        run: |
+          set -euo pipefail
+          changes=$(openspec list --json | jq -r '.changes[].name // empty')
+          if [ -z "$changes" ]; then
+            echo "No active changes — nothing to validate."
+            exit 0
+          fi
+          for c in $changes; do
+            echo "Validating $c"
+            openspec validate "$c" --strict
+          done
