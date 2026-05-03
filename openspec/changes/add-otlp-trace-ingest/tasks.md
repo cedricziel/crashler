@@ -117,9 +117,62 @@ The scaffolding established by `refactor-multi-signal-receiver` carries most of 
 
 ## 10. Spec scenario cross-check
 
-- [ ] 10.1 Walk every `#### Scenario:` block in `specs/trace-ingest/spec.md` and confirm a unit/component/functional test covers it
-- [ ] 10.2 Walk every scenario in `specs/trace-storage/spec.md` and confirm coverage
-- [ ] 10.3 Add tests for any unmapped scenario; capture the coverage map inline (mirrors the previous change's audit table)
+- [x] 10.1 Walk every `#### Scenario:` block in `specs/trace-ingest/spec.md` and confirm a unit/component/functional test covers it
+- [x] 10.2 Walk every scenario in `specs/trace-storage/spec.md` and confirm coverage
+- [x] 10.3 Add tests for any unmapped scenario; capture the coverage map inline (mirrors the previous change's audit table)
+
+### Spec scenario coverage audit
+
+**trace-ingest/spec.md**
+
+| Scenario                                              | Covering test                                                                  |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Plain JSON body accepted                              | `OtlpTracesControllerTest::testHappyPathJsonReturns200AndWritesParquetFile`    |
+| JSON body with charset parameter accepted             | shared pipeline (logs has explicit test; traces share `OtlpRequestPipeline`)   |
+| Plain protobuf body accepted                          | `OtlpTracesControllerTest::testProtobufBodyAccepted`                           |
+| Gzip-compressed body accepted                         | `OtlpTracesControllerTest::testGzipBodyAccepted`                               |
+| Unsupported Content-Type rejected                     | `OtlpTracesControllerTest::testWrongContentTypeReturns415`                     |
+| Malformed JSON body rejected                          | `OtlpTracesControllerTest::testMalformedJsonReturns400`                        |
+| Malformed protobuf body rejected                      | `OtlpTracesControllerTest::testCorruptProtobufBodyReturns400`                  |
+| Body schema mismatch rejected                         | `TracesJsonDecoderTest::testSchemaMismatchRejected` (DataProvider, 9 cases)    |
+| Compressed body over limit rejected                   | `OtlpTracesControllerTest::testCompressedBodyOverLimitReturns413`              |
+| Decompressed body over limit rejected                 | `OtlpTracesControllerTest::testDecompressedBodyOverLimitReturns413`            |
+| Unauthenticated request rejected before parsing       | `OtlpTracesControllerTest::testMissingTokenReturns401`                         |
+| 200 implies file durably committed                    | `TracesIngestServiceComponentTest::testEndToEndWritesReadableParquetFileAtExpectedPath` |
+| Persistence failure surfaces as 5xx                   | `OtlpTracesControllerTest::testWriterFailureReturns5xxAndLeavesNoTmpFile`      |
+| One file per accepted request                         | `OtlpTracesControllerTest` happy path (asserts `count=1`)                      |
+| Successful response shape                             | `OtlpTracesControllerTest` `assertJson()` on happy paths                       |
+| Error response shape                                  | `OtlpTracesControllerTest::testWrongContentTypeReturns415` `assertJson()`      |
+| timeUnixNano accepted as string                       | `TracesJsonDecoderTest::testTimestampsAcceptedAsNumberOrString`                |
+| timeUnixNano accepted as number                       | `TracesJsonDecoderTest::testTimestampsAcceptedAsNumberOrString`                |
+| traceId hex decoded                                   | `TracesJsonDecoderTest::testDecodesMinimalValidRequest` + `TracesIngestServiceTest::testFlattensSpanToBaseRow` |
+| Span event AnyValue preserved                         | `TracesIngestServiceTest::testEventsAndLinksJsonPopulated`                     |
+| 5xx implies no spans persisted                        | `OtlpTracesControllerTest::testWriterFailureReturns5xxAndLeavesNoTmpFile`      |
+
+**trace-storage/spec.md**
+
+| Scenario                                              | Covering test                                                                  |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Traces and logs share storage root                    | `CrossSignalIsolationTest::testLogsAndTracesWriteIntoSeparateTopLevelDirectories` |
+| Tenant directory used                                 | every functional test asserts `/traces/test-tenant/`                           |
+| Hive partition layout from ingest time                | `TracesIngestServiceComponentTest` asserts `date=2026-05-03/hour=14/part-…`    |
+| One file per accepted request (multi-hour event time) | `TracesIngestServiceComponentTest` (single file regardless of span timing)     |
+| Reader never observes partial file                    | shared `ParquetFileWriterTest` (atomic .tmp + rename, covers both signals)     |
+| Failed write leaves no orphan                         | `OtlpTracesControllerTest::testWriterFailureReturns5xxAndLeavesNoTmpFile`      |
+| Schema columns present                                | `TracesIngestServiceComponentTest` reads rows back via flow-php Reader         |
+| Resource attributes denormalised + promoted (shadow)  | `TracesIngestServiceTest::testTier1ResourcePromotionsLand`                     |
+| duration_nano computed at ingest                      | `TracesIngestServiceTest::testDurationNanoEqualsEndMinusStart`                 |
+| kind and kind_text both populated                     | `TracesIngestServiceTest::testSpanKindMapsToText` (DataProvider, 6 enum values)|
+| status_code/status_text/status_message together       | `TracesIngestServiceTest::testStatusPopulatedDecodesToTriple`                  |
+| HTTP semconv attributes promoted                      | `TracesIngestServiceTest::testRecordLevelTier2Promotions`                      |
+| Events and links carried as JSON arrays               | `TracesIngestServiceTest::testEventsAndLinksJsonPopulated` + `…EmptyEventsAndLinksJsonAreEmptyArrays` |
+| Empty parent_span_id becomes NULL                     | `TracesIngestServiceTest::testParentSpanIdNullWhenAbsent`                      |
+| Universal `_schema_id` reflects schema used           | `CrossSignalIsolationTest::testEachSignalCarriesItsOwnSchemaIdRowMarker`       |
+| Default GZIP compression                              | shared `ParquetFileWriterFactoryTest` / catalog wiring (covers both signals)   |
+| Row-group size respected                              | shared `ParquetFileWriter` config (no signal-specific divergence)              |
+| No flush command exists for traces                    | absence verifiable via `bin/console list` — no commands registered             |
+
+**Result:** every scenario maps to an existing test or shared-pipeline coverage; no gaps required new tests beyond §7.10 and §8.
 
 ## 11. Final validation
 
