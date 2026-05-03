@@ -10,24 +10,24 @@ Behaviour-parity guard for the refactor portion: at the end of group 4, every te
 
 ## 2. SchemaDefinition value object (TDD)
 
-- [ ] 2.1 [red] Test: `SchemaDefinition::fromArray(['signal' => 'logs', 'version' => 1, 'columns' => [...], 'promotions' => [...], 'transforms' => $emptySkeleton])` returns a definition exposing `signal`, `version`, `id`, `columns`, three promotion maps
-- [ ] 2.2 [green] Implement `App\Schema\SchemaDefinition` with named-constructor `fromArray(array)`
-- [ ] 2.3 [red] Test: `id` is `<signal>/v<version>` (`logs/v1`)
-- [ ] 2.4 [green] Trivially in `fromArray`
-- [ ] 2.5 [red] Test: `yamlSha256` set by `fromYamlString(string $yaml)` named-constructor; equals `hash('sha256', $yaml)`
-- [ ] 2.6 [green] Implement `fromYamlString` using `Symfony\Component\Yaml\Yaml::parse`
-- [ ] 2.7 [red] Test: empty `columns` rejected via `InvalidArgumentException`
-- [ ] 2.8 [red] Test: duplicate column names rejected with the duplicates listed in the error message
-- [ ] 2.9 [red] Test: a column with `type: hex` (or any unrecognised type) rejected naming the offending column and value
-- [ ] 2.10 [red] Test: a column with `repetition: required` and a name beginning with `_schema_` rejected
-- [ ] 2.11 [red] Test: any column with `repetition` outside `{required, optional}` rejected
-- [ ] 2.12 [green] Implement column-list validation in `SchemaDefinition::fromArray`
-- [ ] 2.13 [red] Test: `promotions.resource.<key> -> <column>` where `<column>` not in `columns` rejected with the offending key/column pair
-- [ ] 2.14 [green] Implement promotion-target validation
-- [ ] 2.15 [red] Test: `transforms` block missing any of the six required sub-keys rejected, error names the missing sub-key
-- [ ] 2.16 [red] Test: `transforms.drop_keys: [some.key]` (non-empty) rejected with "transforms not yet implemented"
-- [ ] 2.17 [green] Implement transforms-skeleton validation
-- [ ] 2.18 [red] Test: legacy-fallback promotion (a column listed under multiple keys) accepted
+- [x] 2.1 [red] Test: `SchemaDefinition::fromArray(['signal' => 'logs', 'version' => 1, 'columns' => [...], 'promotions' => [...], 'transforms' => $emptySkeleton])` returns a definition exposing `signal`, `version`, `id`, `columns`, three promotion maps
+- [x] 2.2 [green] Implement `App\Schema\SchemaDefinition` with named-constructor `fromArray(array)`
+- [x] 2.3 [red] Test: `id` is `<signal>/v<version>` (`logs/v1`)
+- [x] 2.4 [green] Trivially in `fromArray`
+- [x] 2.5 [red] Test: `yamlSha256` set by `fromYamlString(string $yaml)` named-constructor; equals `hash('sha256', $yaml)`
+- [x] 2.6 [green] Implement `fromYamlString` using `Symfony\Component\Yaml\Yaml::parse`
+- [x] 2.7 [red] Test: empty `columns` rejected via `InvalidArgumentException`
+- [x] 2.8 [red] Test: duplicate column names rejected with the duplicates listed in the error message
+- [x] 2.9 [red] Test: a column with `type: hex` (or any unrecognised type) rejected naming the offending column and value
+- [x] 2.10 [red] Test: a column with `repetition: required` and a name beginning with `_schema_` rejected
+- [x] 2.11 [red] Test: any column with `repetition` outside `{required, optional}` rejected
+- [x] 2.12 [green] Implement column-list validation in `SchemaDefinition::fromArray`
+- [x] 2.13 [red] Test: `promotions.resource.<key> -> <column>` where `<column>` not in `columns` rejected with the offending key/column pair
+- [x] 2.14 [green] Implement promotion-target validation
+- [x] 2.15 [red] Test: `transforms` block missing any of the six required sub-keys rejected, error names the missing sub-key
+- [x] 2.16 [red] Test: `transforms.drop_keys: [some.key]` (non-empty) rejected with "transforms not yet implemented"
+- [x] 2.17 [green] Implement transforms-skeleton validation
+- [x] 2.18 [red] Test: legacy-fallback promotion (a column listed under multiple keys) accepted
 
 ## 3. Schema YAML loader (TDD)
 
