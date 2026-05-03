@@ -8,7 +8,7 @@ use Symfony\Component\Yaml\Yaml;
 
 final readonly class SchemaDefinition
 {
-    public const array ALLOWED_TYPES = ['int32', 'int64', 'string', 'boolean', 'float', 'dateTime'];
+    public const array ALLOWED_TYPES = ['int32', 'int64', 'string', 'boolean', 'float', 'double', 'dateTime'];
     public const array ALLOWED_REPETITIONS = ['required', 'optional'];
     public const array TRANSFORM_SUBKEYS = ['drop_keys', 'rename_keys', 'defaults', 'redact_keys', 'derive', 'drop_when'];
     public const string RESERVED_COLUMN_PREFIX = '_schema_';

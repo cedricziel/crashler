@@ -47,6 +47,7 @@ final class SchemaCompiler
             'string' => FlatColumn::string($name, $rep),
             'boolean' => FlatColumn::boolean($name, $rep),
             'float' => FlatColumn::float($name, $rep),
+            'double' => FlatColumn::double($name, $rep),
             'dateTime' => FlatColumn::dateTime($name, $rep),
             default => throw new \LogicException(\sprintf(
                 'Unhandled SchemaDefinition type "%s" for column "%s"; SchemaDefinition validator should have rejected this earlier.',

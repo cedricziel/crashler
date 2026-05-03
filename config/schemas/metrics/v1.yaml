@@ -1,0 +1,108 @@
+# OTLP metrics schema, v1.
+#
+# This file is the contract for the on-disk Parquet layout for the metrics
+# signal. It is an INTERNAL contract: query consumers go through the planned
+# query layer, not directly. Renames and additions are routine (bump v<n>.yaml
+# when needed).
+#
+# One row per OTLP data-point (NOT per metric). The parent Metric envelope's
+# name/unit/description/type are denormalized onto every data-point row.
+# Histogram bucket structure, exponential-histogram detail, summary quantiles,
+# and exemplars are stored as JSON-string columns (`buckets_json`,
+# `exponential_histogram_json`, `quantiles_json`, `exemplars_json`) using
+# OTLP/HTTP-JSON wire shape so a future change can lift them to first-class
+# rows without losing data.
+
+signal: metrics
+version: 1
+
+columns:
+    # required envelope + per-row anchors
+    - { name: metric_name,                     type: string,  repetition: required }
+    - { name: metric_type,                     type: string,  repetition: required }   # 'SUM' | 'GAUGE' | 'HISTOGRAM' | 'EXPONENTIAL_HISTOGRAM' | 'SUMMARY'
+    - { name: metric_type_code,                type: int32,   repetition: required }   # 0=SUM, 1=GAUGE, 2=HISTOGRAM, 3=EXPONENTIAL_HISTOGRAM, 4=SUMMARY
+    - { name: time_unix_nano,                  type: int64,   repetition: required }
+    - { name: exemplars_json,                  type: string,  repetition: required }   # JSON list, '[]' when empty
+    - { name: attributes_json,                 type: string,  repetition: required }   # data-point attributes
+    - { name: metric_attributes_json,          type: string,  repetition: required }   # parent Metric envelope (round-trip fidelity)
+    - { name: resource_attributes_json,        type: string,  repetition: required }
+
+    # optional metric envelope
+    - { name: metric_unit,                     type: string,  repetition: optional }
+    - { name: metric_description,              type: string,  repetition: optional }
+
+    # optional data-point timing + flags
+    - { name: start_time_unix_nano,            type: int64,   repetition: optional }
+    - { name: flags,                           type: int32,   repetition: optional }
+
+    # optional aggregation temporality + monotonicity
+    - { name: aggregation_temporality,         type: int32,   repetition: optional }   # 0=UNSPECIFIED, 1=DELTA, 2=CUMULATIVE
+    - { name: aggregation_temporality_text,    type: string,  repetition: optional }   # 'UNSPECIFIED' | 'DELTA' | 'CUMULATIVE'
+    - { name: is_monotonic,                    type: boolean, repetition: optional }   # SUM only
+
+    # optional value columns. Sum/Gauge populate value_double XOR value_int.
+    # Histogram/ExponentialHistogram/Summary populate count/sum/min/max as scalars
+    # alongside the JSON blob for direct-scalar queries.
+    - { name: value_double,                    type: double,  repetition: optional }
+    - { name: value_int,                       type: int64,   repetition: optional }
+    - { name: count,                           type: int64,   repetition: optional }
+    - { name: sum,                             type: double,  repetition: optional }
+    - { name: min,                             type: double,  repetition: optional }
+    - { name: max,                             type: double,  repetition: optional }
+
+    # optional nested-array JSON blobs (populated per metric_type)
+    - { name: buckets_json,                    type: string,  repetition: optional }   # HISTOGRAM only
+    - { name: exponential_histogram_json,      type: string,  repetition: optional }   # EXPONENTIAL_HISTOGRAM only
+    - { name: quantiles_json,                  type: string,  repetition: optional }   # SUMMARY only
+
+    # tier-1 universal — resource (byte-for-byte identical to logs/v1 + traces/v1)
+    - { name: resource_service_name,           type: string,  repetition: optional }
+    - { name: resource_service_namespace,      type: string,  repetition: optional }
+    - { name: resource_service_version,        type: string,  repetition: optional }
+    - { name: resource_service_instance_id,    type: string,  repetition: optional }
+    - { name: resource_deployment_environment, type: string,  repetition: optional }
+    - { name: resource_host_name,              type: string,  repetition: optional }
+    - { name: resource_telemetry_sdk_language, type: string,  repetition: optional }
+
+    # scope
+    - { name: scope_name,                      type: string,  repetition: optional }
+    - { name: scope_version,                   type: string,  repetition: optional }
+    - { name: scope_schema_url,                type: string,  repetition: optional }
+
+promotions:
+    resource:
+        # Identical block to logs/v1 and traces/v1 so cross-signal joins by
+        # service.name / deployment environment / host name are a single
+        # equality predicate. Canonical-first ordering for deployment.environment.
+        service.name:                  resource_service_name
+        service.namespace:             resource_service_namespace
+        service.version:               resource_service_version
+        service.instance.id:           resource_service_instance_id
+        deployment.environment.name:   resource_deployment_environment
+        deployment.environment:        resource_deployment_environment
+        host.name:                     resource_host_name
+        telemetry.sdk.language:        resource_telemetry_sdk_language
+    scope:
+        # ScopeMetrics.schema_url is a top-level field (not inside
+        # Scope.attributes); the ingest service surfaces it through a
+        # synthetic KeyValueDto so the extractor's scope path handles
+        # it like any other promotion.
+        schema_url:                    scope_schema_url
+    record:
+        # Deliberately empty in v1. Metric attribute semconv is still in flux
+        # (e.g. http.method ↔ http.request.method oscillation in 2024–2025).
+        # Promoting any data-point attribute now would lock us into that name
+        # for the lifetime of metrics/v1 files. Re-evaluate for metrics/v2
+        # once semconv stabilises. All data-point attributes live in
+        # attributes_json today.
+        {}
+
+transforms:
+    drop_keys: []
+    rename_keys: {}
+    defaults:
+        resource: {}
+        record: {}
+    redact_keys: []
+    derive: {}
+    drop_when: []

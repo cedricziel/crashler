@@ -4,13 +4,13 @@ The scaffolding established by `refactor-multi-signal-receiver` (and reused by `
 
 ## 1. metrics/v1 YAML
 
-- [ ] 1.1 [red] Component test: `SchemaCatalog::fromDirectory('config/schemas')` returns a definition for `metrics/v1` with the documented columns and promotion rules (mirrors `LogsV1SchemaTest` and `TracesV1SchemaTest`)
-- [ ] 1.2 Author `config/schemas/metrics/v1.yaml` per the metric-storage delta spec table (universal `_schema_*` appended by writer)
-- [ ] 1.3 [green] Test from 1.1 passes
-- [ ] 1.4 [red] DataProvider test: every required column from the spec table is present with correct type and repetition
-- [ ] 1.5 [red] Test: tier-1 resource promotions are byte-for-byte identical to `logs/v1` and `traces/v1` (same column names + same key order including the canonical-then-legacy `deployment.environment.*` ordering)
-- [ ] 1.6 [red] Test: scope schema_url promotion present
-- [ ] 1.7 [red] Test: no record-level (data-point attribute) promotions in v1 (D6 deliberate non-decision)
+- [x] 1.1 [red] Component test: `SchemaCatalog::fromDirectory('config/schemas')` returns a definition for `metrics/v1` with the documented columns and promotion rules (mirrors `LogsV1SchemaTest` and `TracesV1SchemaTest`)
+- [x] 1.2 Author `config/schemas/metrics/v1.yaml` per the metric-storage delta spec table (universal `_schema_*` appended by writer)
+- [x] 1.3 [green] Test from 1.1 passes
+- [x] 1.4 [red] DataProvider test: every required column from the spec table is present with correct type and repetition
+- [x] 1.5 [red] Test: tier-1 resource promotions are byte-for-byte identical to `logs/v1` and `traces/v1` (same column names + same key order including the canonical-then-legacy `deployment.environment.*` ordering)
+- [x] 1.6 [red] Test: scope schema_url promotion present
+- [x] 1.7 [red] Test: no record-level (data-point attribute) promotions in v1 (D6 deliberate non-decision)
 
 ## 2. Metric DTOs (TDD)
 
