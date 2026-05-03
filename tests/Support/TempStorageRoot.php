@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace App\Tests\Support;
 
+use Symfony\Component\Filesystem\Filesystem;
+
 trait TempStorageRoot
 {
     private ?string $tempStorageRoot = null;
+    private ?Filesystem $tempStorageFs = null;
 
     protected function tempStorageRoot(): string
     {
         if (null === $this->tempStorageRoot) {
+            $this->tempStorageFs = new Filesystem();
             $this->tempStorageRoot = sys_get_temp_dir().'/crashler-test-'.bin2hex(random_bytes(8));
-            if (!mkdir($this->tempStorageRoot, 0o700, true) && !is_dir($this->tempStorageRoot)) {
-                throw new \RuntimeException('Failed to create temp storage root: '.$this->tempStorageRoot);
-            }
+            $this->tempStorageFs->mkdir($this->tempStorageRoot, 0o700);
         }
 
         return $this->tempStorageRoot;
@@ -25,25 +27,10 @@ trait TempStorageRoot
      */
     protected function removeTempStorageRoot(): void
     {
-        if (null !== $this->tempStorageRoot && is_dir($this->tempStorageRoot)) {
-            self::rrmdir($this->tempStorageRoot);
+        if (null !== $this->tempStorageRoot && null !== $this->tempStorageFs && $this->tempStorageFs->exists($this->tempStorageRoot)) {
+            $this->tempStorageFs->remove($this->tempStorageRoot);
         }
         $this->tempStorageRoot = null;
-    }
-
-    private static function rrmdir(string $dir): void
-    {
-        foreach (scandir($dir) ?: [] as $entry) {
-            if ('.' === $entry || '..' === $entry) {
-                continue;
-            }
-            $path = $dir.'/'.$entry;
-            if (is_dir($path)) {
-                self::rrmdir($path);
-            } else {
-                @unlink($path);
-            }
-        }
-        @rmdir($dir);
+        $this->tempStorageFs = null;
     }
 }

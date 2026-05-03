@@ -14,6 +14,8 @@ use App\Otlp\Dto\ScopeLogsDto;
 use App\Storage\PartitionPathResolver;
 use App\Storage\WritesParquetFiles;
 use App\Tenancy\Tenant;
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
+use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Flattens an OTLP request into Parquet rows and writes a single file under
@@ -25,6 +27,7 @@ final class LogsIngestService
     public function __construct(
         private readonly WritesParquetFiles $writer,
         private readonly PartitionPathResolver $paths,
+        private readonly Filesystem $filesystem = new Filesystem(),
     ) {
     }
 
@@ -38,8 +41,10 @@ final class LogsIngestService
 
         $paths = $this->paths->resolve($tenant);
 
-        if (!is_dir($paths->partitionDir) && !@mkdir($paths->partitionDir, 0o750, true) && !is_dir($paths->partitionDir)) {
-            throw new \RuntimeException(\sprintf('Failed to create partition directory: %s', $paths->partitionDir));
+        try {
+            $this->filesystem->mkdir($paths->partitionDir, 0o750);
+        } catch (IOExceptionInterface $e) {
+            throw new \RuntimeException(\sprintf('Failed to create partition directory: %s', $paths->partitionDir), previous: $e);
         }
 
         $this->writer->writeAndCommit($paths->finalPath, $rows);

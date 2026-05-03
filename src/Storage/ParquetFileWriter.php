@@ -9,6 +9,8 @@ use Flow\Parquet\Options;
 use Flow\Parquet\ParquetFile\Compressions;
 use Flow\Parquet\ParquetFile\Schema;
 use Flow\Parquet\Writer;
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
+use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * Writes a single Parquet file via {@see Writer} to a `.tmp` path, fsyncs the
@@ -24,6 +26,7 @@ final class ParquetFileWriter implements WritesParquetFiles
     public function __construct(
         private readonly Schema $schema,
         private readonly Compressions $compression,
+        private readonly Filesystem $filesystem = new Filesystem(),
     ) {
     }
 
@@ -51,18 +54,19 @@ final class ParquetFileWriter implements WritesParquetFiles
 
             $this->fsyncFile($tmpPath);
 
-            if (!@rename($tmpPath, $finalPath)) {
-                $error = error_get_last()['message'] ?? 'unknown error';
+            try {
+                $this->filesystem->rename($tmpPath, $finalPath, overwrite: false);
+            } catch (IOExceptionInterface $e) {
                 throw new \RuntimeException(\sprintf(
                     'Failed to rename "%s" -> "%s": %s',
                     $tmpPath,
                     $finalPath,
-                    $error,
-                ));
+                    $e->getMessage(),
+                ), previous: $e);
             }
         } catch (\Throwable $e) {
-            if (file_exists($tmpPath)) {
-                @unlink($tmpPath);
+            if ($this->filesystem->exists($tmpPath)) {
+                $this->filesystem->remove($tmpPath);
             }
             throw $e;
         }
