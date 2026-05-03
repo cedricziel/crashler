@@ -57,21 +57,56 @@ $APP_SHARE_DIR/logs/
 
 `<tenant-slug>` is the authenticated tenant's slug. Date and hour are derived from the request's wall-clock arrival time in UTC. Per-record event timestamps are preserved in the `time_unix_nano` column inside the file.
 
+## Schemas and column conventions
+
+Each signal's Parquet layout is declared in a versioned YAML at `config/schemas/<signal>/v<n>.yaml`. The YAML lists every column (name, type, repetition), the OpenTelemetry semantic-convention promotions that turn well-known attributes into top-level columns, and a reserved `transforms:` block for future ingest-time mutations.
+
+Promoted column names follow a three-level prefix convention:
+
+```
+resource_*        from ResourceLogs.resource.attributes
+                  e.g. resource_service_name, resource_host_name,
+                  resource_deployment_environment
+
+scope_*           from ScopeLogs.scope (top-level fields and, eventually,
+                  scope.attributes)
+                  e.g. scope_name, scope_version, scope_schema_url
+
+<unprefixed>      record-level fields and per-record promoted attributes
+                  e.g. severity_text, body_json, time_unix_nano,
+                  event_name, exception_type
+```
+
+Promoted columns are **shadows**: every promoted attribute also stays in `resource_attributes_json` / `attributes_json` blobs unchanged. Renaming or removing a column is a YAML edit (with a version bump for breaking changes); the JSON blob is the lossless source of truth.
+
+Two infrastructure columns are appended by the writer to every file regardless of signal:
+
+- `_schema_version` (int32) — copied from the YAML's `version`.
+- `_schema_id` (string) — `<signal>/v<version>`, e.g. `logs/v1`.
+
+The on-disk Parquet schema is treated as **internal**. A future query layer will be the public read contract; ad-hoc DuckDB queries described below are operator tooling, not a stable public interface.
+
 ## Querying
 
 DuckDB reads the file tree directly:
 
 ```bash
 duckdb -c "
-  SELECT severity_text, body_json, attributes_json
+  SELECT
+    _schema_id,
+    resource_service_name,
+    severity_text,
+    body_json,
+    attributes_json
   FROM read_parquet('var/share/logs/<slug>/**/*.parquet', hive_partitioning=true)
   WHERE date = '2026-05-03'
     AND severity_number >= 17
+    AND resource_service_name = 'checkout'
   LIMIT 100;
 "
 ```
 
-Event-time range queries should filter on `time_unix_nano` rather than the partition columns: a late-arriving log lands in the partition corresponding to its *ingest* time, not its event time.
+Event-time range queries should filter on `time_unix_nano` rather than the partition columns: a late-arriving log lands in the partition corresponding to its *ingest* time, not its event time. Multi-version reads can branch on `_schema_version`/`_schema_id` to handle column renames across schema versions.
 
 ## Running
 
@@ -128,3 +163,14 @@ These are deliberate choices made for the first release; future changes will rev
 - **Tenant changes require a redeploy.** No runtime CRUD for tenants or tokens.
 - **No background workers, no console commands.** The web server is the only running process.
 - **At-least-once via client retry.** A 5xx response means the request was fully rejected; the OTLP client retries the full batch. The server keeps no buffer.
+- **Parquet schema is internal.** The query layer (planned, not yet shipped) will be the public read contract. Schema YAMLs are versioned so renames don't break existing files.
+
+## Schema-breaking deploys
+
+When a schema YAML rename or column removal lands, existing Parquet files become unreadable by the new column conventions. For deployments where the on-disk data has no retention value (e.g. early development), set `CRASHLER_PURGE_OLD_LOGS_ON_DEPLOY=1` for a single `dep deploy` invocation:
+
+```bash
+CRASHLER_PURGE_OLD_LOGS_ON_DEPLOY=1 dep deploy production
+```
+
+This fires the `crashler:purge_old_logs` task before vendors install, removing every `*.parquet` under `<deploy_path>/shared/var/share/logs/`. **Unset the flag for subsequent deploys** so it can't accidentally fire on a host that has accumulated meaningful data. For migrations where data must be preserved, write a one-shot Deployer task that reads each old file and rewrites it with the new schema (option γ in the change's design.md).
