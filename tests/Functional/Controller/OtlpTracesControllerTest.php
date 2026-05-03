@@ -239,4 +239,31 @@ final class OtlpTracesControllerTest extends KernelTestCase
             ->assertStatus(413)
         ;
     }
+
+    public function testWriterFailureReturns5xxAndLeavesNoTmpFile(): void
+    {
+        // Point storage root at a regular file so the partition mkdir fails
+        // inside the ingest service and the pipeline catches the throwable.
+        $junkFile = tempnam(sys_get_temp_dir(), 'crashler-trace-fail-');
+        self::assertNotFalse($junkFile);
+        $_ENV['APP_SHARE_DIR'] = $junkFile;
+
+        try {
+            $this->browser()
+                ->post('/v1/traces', [
+                    'headers' => [
+                        'Authorization' => 'Bearer '.self::VALID_TOKEN,
+                        'Content-Type' => 'application/json',
+                    ],
+                    'body' => $this->validJsonPayload(),
+                ])
+                ->assertStatus(500)
+            ;
+
+            // No .tmp file should be left dangling under the configured root.
+            self::assertSame([], glob($junkFile.'*.tmp') ?: []);
+        } finally {
+            @unlink($junkFile);
+        }
+    }
 }
