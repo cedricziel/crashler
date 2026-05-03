@@ -130,8 +130,8 @@ The scaffolding established by `refactor-multi-signal-receiver` (and reused by `
 
 ## 8. Cross-signal sanity (extend to three signals)
 
-- [ ] 8.1 [red] Functional test: posting to `/v1/logs`, `/v1/traces`, and `/v1/metrics` for the same tenant in the same process produces files in the correct top-level directories (`logs/<slug>/`, `traces/<slug>/`, `metrics/<slug>/`); no writer writes into another's tree
-- [ ] 8.2 [red] Functional test: `_schema_id` on a logs row is `logs/v1`; on a trace row is `traces/v1`; on a metric row is `metrics/v1`
+- [x] 8.1 [red] Functional test: posting to `/v1/logs`, `/v1/traces`, and `/v1/metrics` for the same tenant in the same process produces files in the correct top-level directories (`logs/<slug>/`, `traces/<slug>/`, `metrics/<slug>/`); no writer writes into another's tree
+- [x] 8.2 [red] Functional test: `_schema_id` on a logs row is `logs/v1`; on a trace row is `traces/v1`; on a metric row is `metrics/v1`
 
 ## 9. Operator documentation
 

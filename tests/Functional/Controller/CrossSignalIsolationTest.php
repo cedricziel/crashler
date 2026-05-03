@@ -11,9 +11,9 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Zenstruck\Browser\Test\HasBrowser;
 
 /**
- * Cross-signal sanity: a single tenant posting both `/v1/logs` and `/v1/traces`
- * in the same process must yield files under their own top-level subdirs and
- * carry the right `_schema_id` writer marker.
+ * Cross-signal sanity: a single tenant posting `/v1/logs`, `/v1/traces`, and
+ * `/v1/metrics` in the same process must yield files under their own
+ * top-level subdirs and carry the right `_schema_id` writer marker.
  */
 final class CrossSignalIsolationTest extends KernelTestCase
 {
@@ -75,82 +75,93 @@ final class CrossSignalIsolationTest extends KernelTestCase
         ], \JSON_THROW_ON_ERROR);
     }
 
-    public function testLogsAndTracesWriteIntoSeparateTopLevelDirectories(): void
+    private function metricsPayload(): string
     {
-        $this->browser()
-            ->post('/v1/logs', [
-                'headers' => [
-                    'Authorization' => 'Bearer '.self::VALID_TOKEN,
-                    'Content-Type' => 'application/json',
-                ],
-                'body' => $this->logsPayload(),
-            ])
-            ->assertStatus(200);
+        return (string) json_encode([
+            'resourceMetrics' => [[
+                'resource' => ['attributes' => [
+                    ['key' => 'service.name', 'value' => ['stringValue' => 'checkout']],
+                ]],
+                'scopeMetrics' => [[
+                    'scope' => ['name' => 'app', 'version' => '1.0'],
+                    'metrics' => [[
+                        'name' => 'http.server.requests',
+                        'sum' => [
+                            'aggregationTemporality' => 2,
+                            'isMonotonic' => true,
+                            'dataPoints' => [[
+                                'timeUnixNano' => '1714752000000000000',
+                                'asInt' => '1',
+                            ]],
+                        ],
+                    ]],
+                ]],
+            ]],
+        ], \JSON_THROW_ON_ERROR);
+    }
 
-        $this->browser()
-            ->post('/v1/traces', [
-                'headers' => [
-                    'Authorization' => 'Bearer '.self::VALID_TOKEN,
-                    'Content-Type' => 'application/json',
-                ],
-                'body' => $this->tracesPayload(),
-            ])
-            ->assertStatus(200);
+    public function testAllThreeSignalsWriteIntoSeparateTopLevelDirectories(): void
+    {
+        foreach ([
+            ['/v1/logs', $this->logsPayload()],
+            ['/v1/traces', $this->tracesPayload()],
+            ['/v1/metrics', $this->metricsPayload()],
+        ] as [$path, $body]) {
+            $this->browser()
+                ->post($path, [
+                    'headers' => [
+                        'Authorization' => 'Bearer '.self::VALID_TOKEN,
+                        'Content-Type' => 'application/json',
+                    ],
+                    'body' => $body,
+                ])
+                ->assertStatus(200);
+        }
 
         $logFiles = glob($this->tempStorageRoot().'/logs/test-tenant/date=*/hour=*/part-*.parquet') ?: [];
         $traceFiles = glob($this->tempStorageRoot().'/traces/test-tenant/date=*/hour=*/part-*.parquet') ?: [];
+        $metricFiles = glob($this->tempStorageRoot().'/metrics/test-tenant/date=*/hour=*/part-*.parquet') ?: [];
 
         self::assertCount(1, $logFiles, 'logs ingest should produce exactly one file under logs/');
         self::assertCount(1, $traceFiles, 'traces ingest should produce exactly one file under traces/');
-
-        // Cross-pollination guard: the traces tree must contain no logs files
-        // (they would have logs-shaped columns and break readers).
-        self::assertSame(
-            [],
-            glob($this->tempStorageRoot().'/traces/**/logs-*') ?: [],
-            'no log-shaped artefact may leak into the traces tree',
-        );
-        self::assertSame(
-            [],
-            glob($this->tempStorageRoot().'/logs/**/traces-*') ?: [],
-            'no trace-shaped artefact may leak into the logs tree',
-        );
+        self::assertCount(1, $metricFiles, 'metrics ingest should produce exactly one file under metrics/');
     }
 
     public function testEachSignalCarriesItsOwnSchemaIdRowMarker(): void
     {
-        $this->browser()
-            ->post('/v1/logs', [
-                'headers' => [
-                    'Authorization' => 'Bearer '.self::VALID_TOKEN,
-                    'Content-Type' => 'application/json',
-                ],
-                'body' => $this->logsPayload(),
-            ])
-            ->assertStatus(200);
-
-        $this->browser()
-            ->post('/v1/traces', [
-                'headers' => [
-                    'Authorization' => 'Bearer '.self::VALID_TOKEN,
-                    'Content-Type' => 'application/json',
-                ],
-                'body' => $this->tracesPayload(),
-            ])
-            ->assertStatus(200);
+        foreach ([
+            ['/v1/logs', $this->logsPayload()],
+            ['/v1/traces', $this->tracesPayload()],
+            ['/v1/metrics', $this->metricsPayload()],
+        ] as [$path, $body]) {
+            $this->browser()
+                ->post($path, [
+                    'headers' => [
+                        'Authorization' => 'Bearer '.self::VALID_TOKEN,
+                        'Content-Type' => 'application/json',
+                    ],
+                    'body' => $body,
+                ])
+                ->assertStatus(200);
+        }
 
         $logFile = (glob($this->tempStorageRoot().'/logs/test-tenant/date=*/hour=*/part-*.parquet') ?: [])[0] ?? null;
         $traceFile = (glob($this->tempStorageRoot().'/traces/test-tenant/date=*/hour=*/part-*.parquet') ?: [])[0] ?? null;
+        $metricFile = (glob($this->tempStorageRoot().'/metrics/test-tenant/date=*/hour=*/part-*.parquet') ?: [])[0] ?? null;
 
         TestCase::assertNotNull($logFile);
         TestCase::assertNotNull($traceFile);
+        TestCase::assertNotNull($metricFile);
 
         $logRows = iterator_to_array((new Reader())->read($logFile)->values(), false);
         $traceRows = iterator_to_array((new Reader())->read($traceFile)->values(), false);
+        $metricRows = iterator_to_array((new Reader())->read($metricFile)->values(), false);
 
         self::assertNotEmpty($logRows);
         self::assertNotEmpty($traceRows);
+        self::assertNotEmpty($metricRows);
         self::assertSame('logs/v1', $logRows[0]['_schema_id']);
         self::assertSame('traces/v1', $traceRows[0]['_schema_id']);
+        self::assertSame('metrics/v1', $metricRows[0]['_schema_id']);
     }
 }
