@@ -6,6 +6,13 @@ namespace App\Tests\Functional\Controller;
 
 use App\Controller\OtlpLogsController;
 use App\Tests\Support\TempStorageRoot;
+use Opentelemetry\Proto\Collector\Logs\V1\ExportLogsServiceRequest;
+use Opentelemetry\Proto\Common\V1\AnyValue;
+use Opentelemetry\Proto\Common\V1\KeyValue;
+use Opentelemetry\Proto\Logs\V1\LogRecord;
+use Opentelemetry\Proto\Logs\V1\ResourceLogs;
+use Opentelemetry\Proto\Logs\V1\ScopeLogs;
+use Opentelemetry\Proto\Resource\V1\Resource as OtelResource;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Zenstruck\Browser\Test\HasBrowser;
@@ -29,6 +36,27 @@ final class OtlpLogsControllerTest extends KernelTestCase
     {
         unset($_ENV['APP_SHARE_DIR']);
         parent::tearDown();
+    }
+
+    private function validProtobufPayload(): string
+    {
+        $request = (new ExportLogsServiceRequest())->setResourceLogs([
+            (new ResourceLogs())
+                ->setResource((new OtelResource())->setAttributes([
+                    (new KeyValue())->setKey('service.name')->setValue((new AnyValue())->setStringValue('checkout')),
+                ]))
+                ->setScopeLogs([
+                    (new ScopeLogs())->setLogRecords([
+                        (new LogRecord())
+                            ->setTimeUnixNano(1714752000000000000)
+                            ->setSeverityNumber(9)
+                            ->setSeverityText('INFO')
+                            ->setBody((new AnyValue())->setStringValue('hello protobuf')),
+                    ]),
+                ]),
+        ]);
+
+        return $request->serializeToString();
     }
 
     private function validRequestPayload(): string
@@ -98,7 +126,7 @@ final class OtlpLogsControllerTest extends KernelTestCase
         self::assertSame([], $files);
     }
 
-    public function testWrongContentTypeReturns415(): void
+    public function testProtobufBodyAccepted(): void
     {
         $this->browser()
             ->post('/v1/logs', [
@@ -106,10 +134,58 @@ final class OtlpLogsControllerTest extends KernelTestCase
                     'Authorization' => 'Bearer '.self::VALID_TOKEN,
                     'Content-Type' => 'application/x-protobuf',
                 ],
+                'body' => $this->validProtobufPayload(),
+            ])
+            ->assertStatus(200)
+            ->assertJson()
+        ;
+
+        $files = glob($this->tempStorageRoot().'/logs/test-tenant/date=*/hour=*/part-*.parquet') ?: [];
+        self::assertCount(1, $files, 'protobuf request must produce one parquet file');
+    }
+
+    public function testJsonContentTypeWithCharsetParameterAccepted(): void
+    {
+        $this->browser()
+            ->post('/v1/logs', [
+                'headers' => [
+                    'Authorization' => 'Bearer '.self::VALID_TOKEN,
+                    'Content-Type' => 'application/json; charset=utf-8',
+                ],
+                'body' => $this->validRequestPayload(),
+            ])
+            ->assertStatus(200)
+        ;
+    }
+
+    public function testWrongContentTypeReturns415(): void
+    {
+        $this->browser()
+            ->post('/v1/logs', [
+                'headers' => [
+                    'Authorization' => 'Bearer '.self::VALID_TOKEN,
+                    'Content-Type' => 'text/plain',
+                ],
                 'body' => 'irrelevant',
             ])
             ->assertStatus(415)
             ->assertJson()
+        ;
+    }
+
+    public function testCorruptProtobufBodyReturns400(): void
+    {
+        $this->browser()
+            ->post('/v1/logs', [
+                'headers' => [
+                    'Authorization' => 'Bearer '.self::VALID_TOKEN,
+                    'Content-Type' => 'application/x-protobuf',
+                ],
+                // Tag 0x0a (field 1, length-delimited), claims 64 bytes but
+                // we only follow with 3 — google/protobuf throws on EOF.
+                'body' => "\x0a\x40\x01\x02\x03",
+            ])
+            ->assertStatus(400)
         ;
     }
 

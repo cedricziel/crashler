@@ -4,7 +4,7 @@ Crashler needs a primary ingestion path. OTLP/HTTP-JSON is the de-facto open sta
 
 ## What Changes
 
-- New `POST /v1/logs` endpoint accepting OTLP/HTTP-JSON request bodies (`application/json`, optional `Content-Encoding: gzip`), returning the OTLP `ExportLogsServiceResponse` shape
+- New `POST /v1/logs` endpoint accepting OTLP/HTTP request bodies in either `application/json` (proto3-JSON encoding) or `application/x-protobuf` (binary protobuf encoding), with optional `Content-Encoding: gzip`, returning the OTLP `ExportLogsServiceResponse` shape
 - Bearer-token authentication on `/v1/logs`; tokens are tenant-scoped and revocable
 - Tenant identities and the SHA-256 hashes of their valid tokens are configured in a Symfony config file (`config/packages/crashler.yaml`); there is no database storage for tenants or tokens and no admin UI or CLI for managing them in v1
 - The request handler synchronously encodes a Parquet file containing every log record in the request and commits it to disk via `.tmp + rename` before returning 200. The endpoint blocks on Parquet encode, fsync, and rename.
@@ -29,5 +29,5 @@ Crashler needs a primary ingestion path. OTLP/HTTP-JSON is the de-facto open sta
 - **New routes and controllers**: `POST /v1/logs` plus a security firewall scoped to that path.
 - **New configuration**: `config/packages/crashler.yaml` holds the tenant/token map; `APP_SHARE_DIR` is reused as the storage root; Parquet compression and request size limits are env-tunable.
 - **No new console commands**.
-- **Out of scope (deliberately deferred to follow-up changes)**: write-ahead logging or any durable queue between HTTP and Parquet, asynchronous ingest, file compaction, retention/expiry, OTLP/protobuf binary encoding, OTLP traces and metrics, S3/object-storage backend, a read API, attribute storage as native Parquet `map<string,string>` (v1 uses JSON-string columns), database-backed tenants/tokens, and any admin UI or CLI for tenant management.
+- **Out of scope (deliberately deferred to follow-up changes)**: write-ahead logging or any durable queue between HTTP and Parquet, asynchronous ingest, file compaction, retention/expiry, OTLP traces and metrics, S3/object-storage backend, a read API, attribute storage as native Parquet `map<string,string>` (v1 uses JSON-string columns), database-backed tenants/tokens, and any admin UI or CLI for tenant management.
 - **Tradeoffs accepted in v1**: per-request response latency includes Parquet encoding (typically tens to hundreds of ms for normal batch sizes); each request produces one file, which over time creates a small-files problem that a future compaction change must address; transient handler failures return 5xx and rely on the OTLP client's at-least-once retry semantics rather than a server-side durable buffer.

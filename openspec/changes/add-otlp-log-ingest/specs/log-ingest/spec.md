@@ -1,26 +1,47 @@
 ## ADDED Requirements
 
-### Requirement: OTLP/HTTP-JSON logs endpoint
+### Requirement: OTLP/HTTP logs endpoint
 
-The system SHALL expose `POST /v1/logs` accepting OTLP/HTTP-JSON request bodies as defined by the OpenTelemetry OTLP/HTTP specification for log data (proto3-JSON encoding of `ExportLogsServiceRequest`). The endpoint SHALL accept `Content-Type: application/json` and SHALL accept request bodies optionally compressed with `Content-Encoding: gzip`. The endpoint SHALL be served by the existing Symfony application without a separate process or port.
+The system SHALL expose `POST /v1/logs` accepting OTLP/HTTP request bodies in either of the two encodings defined by the OpenTelemetry OTLP/HTTP specification for log data:
+
+- **JSON** — `Content-Type: application/json`, proto3-JSON encoding of `ExportLogsServiceRequest`
+- **Protobuf** — `Content-Type: application/x-protobuf`, binary protobuf encoding of `ExportLogsServiceRequest`
+
+Either encoding MAY be optionally compressed with `Content-Encoding: gzip`. Content-Type parameters (e.g. `; charset=utf-8`) SHALL be tolerated and ignored. The endpoint SHALL be served by the existing Symfony application without a separate process or port.
 
 #### Scenario: Plain JSON body accepted
 - **WHEN** a valid OTLP/HTTP-JSON `ExportLogsServiceRequest` is POSTed with `Content-Type: application/json`
 - **THEN** the system processes the records
 - **AND** responds with HTTP 200
 
-#### Scenario: Gzip-compressed body accepted
-- **WHEN** a valid OTLP request is POSTed with `Content-Type: application/json` and `Content-Encoding: gzip` containing gzip-compressed bytes
-- **THEN** the system decompresses and processes the records
+#### Scenario: JSON body with charset parameter accepted
+- **WHEN** a valid OTLP/HTTP-JSON request is POSTed with `Content-Type: application/json; charset=utf-8`
+- **THEN** the system processes the records as JSON
 - **AND** responds with HTTP 200
 
-#### Scenario: Wrong Content-Type rejected
-- **WHEN** a request arrives with `Content-Type: application/x-protobuf`
+#### Scenario: Plain protobuf body accepted
+- **WHEN** a valid binary `ExportLogsServiceRequest` is POSTed with `Content-Type: application/x-protobuf`
+- **THEN** the system processes the records via the protobuf decoder
+- **AND** responds with HTTP 200
+- **AND** the resulting Parquet rows are indistinguishable from the JSON encoding of the same logical request
+
+#### Scenario: Gzip-compressed body accepted (either encoding)
+- **WHEN** a valid OTLP request is POSTed with either `Content-Type` and `Content-Encoding: gzip` containing gzip-compressed bytes
+- **THEN** the system decompresses and processes the records using the decoder selected by Content-Type
+- **AND** responds with HTTP 200
+
+#### Scenario: Unsupported Content-Type rejected
+- **WHEN** a request arrives with a `Content-Type` other than `application/json` or `application/x-protobuf`
 - **THEN** the system responds with HTTP 415 Unsupported Media Type
 - **AND** no records are persisted
 
 #### Scenario: Malformed JSON body rejected
-- **WHEN** the request body is not valid JSON
+- **WHEN** the request body is not valid JSON and Content-Type is `application/json`
+- **THEN** the system responds with HTTP 400
+- **AND** no records are persisted
+
+#### Scenario: Malformed protobuf body rejected
+- **WHEN** the request body cannot be parsed as `ExportLogsServiceRequest` and Content-Type is `application/x-protobuf` (e.g. truncated length-delimited field)
 - **THEN** the system responds with HTTP 400
 - **AND** no records are persisted
 
