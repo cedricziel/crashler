@@ -6,6 +6,7 @@ namespace App\Logs;
 
 use App\Otlp\AnyValueJsonEncoder;
 use App\Otlp\AttributeColumnExtractor;
+use App\Otlp\Contract\IngestsSignal;
 use App\Otlp\Dto\AnyValueDto;
 use App\Otlp\Dto\ExportLogsServiceRequestDto;
 use App\Otlp\Dto\KeyValueDto;
@@ -27,7 +28,7 @@ use Symfony\Component\Filesystem\Filesystem;
  * schema YAML's `promotions` block — are filled via {@see AttributeColumnExtractor}
  * so renaming or adding a column is a YAML edit, not a code change.
  */
-final class LogsIngestService
+final class LogsIngestService implements IngestsSignal
 {
     public function __construct(
         private readonly WritesParquetFiles $writer,
@@ -37,8 +38,16 @@ final class LogsIngestService
     ) {
     }
 
-    public function write(ExportLogsServiceRequestDto $request, Tenant $tenant): void
+    public function write(object $request, Tenant $tenant): void
     {
+        if (!$request instanceof ExportLogsServiceRequestDto) {
+            throw new \TypeError(\sprintf(
+                'LogsIngestService expects %s; got %s.',
+                ExportLogsServiceRequestDto::class,
+                $request::class,
+            ));
+        }
+
         $rows = iterator_to_array($this->toRows($request), false);
 
         if ([] === $rows) {

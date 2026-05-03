@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Otlp;
 
+use App\Otlp\Contract\SignalDecoder;
 use App\Otlp\Dto\AnyValueDto;
 use App\Otlp\Dto\ExportLogsServiceRequestDto;
 use App\Otlp\Dto\KeyValueDto;
@@ -25,7 +26,7 @@ use Opentelemetry\Proto\Logs\V1\ScopeLogs;
  * trace_id and span_id come back as the raw bytes the wire delivered (16 and
  * 8 bytes respectively); empty values are normalised to null.
  */
-final class LogsProtobufDecoder
+final class LogsProtobufDecoder implements SignalDecoder
 {
     public function decode(string $bytes): ExportLogsServiceRequestDto
     {

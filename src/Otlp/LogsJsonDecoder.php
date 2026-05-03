@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Otlp;
 
+use App\Otlp\Contract\SignalDecoder;
 use App\Otlp\Dto\AnyValueDto;
 use App\Otlp\Dto\ExportLogsServiceRequestDto;
 use App\Otlp\Dto\KeyValueDto;
@@ -22,7 +23,7 @@ use App\Otlp\Exception\OtlpDecodeException;
  *   strings (32 / 16 chars respectively).
  * - AnyValue is preserved across all variants.
  */
-final class LogsJsonDecoder
+final class LogsJsonDecoder implements SignalDecoder
 {
     public function decode(string $json): ExportLogsServiceRequestDto
     {

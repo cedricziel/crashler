@@ -79,7 +79,10 @@ services:
 
     App\Storage\WritesParquetFiles: '@App\Storage\ParquetFileWriter'
 
-    App\Controller\OtlpLogsController:
+    # Signal-generic ingest pipeline. Per-signal controllers (logs today,
+    # traces and metrics later) inject their three collaborators (JSON
+    # decoder, protobuf decoder, ingest service) at call time.
+    App\Otlp\OtlpRequestPipeline:
         arguments:
             $maxBodyBytes: '%crashler.ingest.max_body_bytes%'
             $maxDecompressedBytes: '%crashler.ingest.max_decompressed_bytes%'
