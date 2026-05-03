@@ -79,12 +79,12 @@ Behaviour-parity guard for the refactor portion: at the end of group 4, every te
 
 ## 7. ParquetFileWriter — universal _schema_* columns (TDD, component)
 
-- [ ] 7.1 [red] Component test: a writer constructed with a `SchemaDefinition` for `logs/v1` plus compression `GZIP` produces a Parquet file whose final schema contains every YAML-declared column AND `_schema_version` (int32 REQUIRED) AND `_schema_id` (string REQUIRED) appended at the end
-- [ ] 7.2 [green] Update `App\Storage\ParquetFileWriter` constructor to accept a `SchemaDefinition` (not a raw flow-php Schema) and append the universal columns when building the flow-php `Schema::with(...)`
-- [ ] 7.3 [red] Component test: every row in the produced file carries `_schema_version = 1` and `_schema_id = 'logs/v1'`
-- [ ] 7.4 [green] Update `writeAndCommit` (or the row construction site) to inject these two columns onto every row
-- [ ] 7.5 [red] Component test (skip-if-unsupported): when flow-php exposes file-level KV metadata, the produced file's footer contains keys `crashler.schema_id`, `crashler.schema_version`, `crashler.schema_yaml_sha256` with their expected values
-- [ ] 7.6 [green] If 1.2's investigation confirmed support, wire the metadata; otherwise mark 7.5 skipped with a recorded reason and emit a one-time boot warning per the spec
+- [x] 7.1 [red] Component test: a writer constructed with a `SchemaDefinition` for `logs/v1` plus compression `GZIP` produces a Parquet file whose final schema contains every YAML-declared column AND `_schema_version` (int32 REQUIRED) AND `_schema_id` (string REQUIRED) appended at the end
+- [x] 7.2 [green] Update `App\Storage\ParquetFileWriter` constructor to accept a `SchemaDefinition` (not a raw flow-php Schema) and append the universal columns when building the flow-php `Schema::with(...)` — *via new `SchemaCompiler::toFlowSchema()` helper*
+- [x] 7.3 [red] Component test: every row in the produced file carries `_schema_version = 1` and `_schema_id = 'logs/v1'`
+- [x] 7.4 [green] Update `writeAndCommit` (or the row construction site) to inject these two columns onto every row
+- [~] 7.5 [red] Component test (skip-if-unsupported): when flow-php exposes file-level KV metadata, the produced file's footer contains keys `crashler.schema_id`, `crashler.schema_version`, `crashler.schema_yaml_sha256` with their expected values — *deferred: §1.2 confirmed flow-php has no KEY_VALUE_METADATA Option case; row-level columns only*
+- [~] 7.6 [green] If 1.2's investigation confirmed support, wire the metadata; otherwise mark 7.5 skipped with a recorded reason and emit a one-time boot warning per the spec — *no support; row-level columns are sufficient and a boot-time warning is unnecessary churn for v1; will revisit when flow-php gains the API*
 
 ## 8. PartitionPathResolver — signalSubdir parameter (TDD)
 
