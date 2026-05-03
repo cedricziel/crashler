@@ -148,36 +148,36 @@
 
 ## 17. log-ingest — Service (TDD, mostly unit + one component)
 
-- [ ] 17.1 [red] Unit test with stubbed writer: AnyValue body serialized as JSON string in `body_json` column for each variant
-- [ ] 17.2 [green] Implement `LogsIngestService::write` skeleton with stubbed-writer-friendly seam
-- [ ] 17.3 [red] Unit test: resource attributes denormalized onto every row (1 ResourceLogs × N LogRecords → N rows with identical resource_attributes_json)
-- [ ] 17.4 [green] Add denormalization
-- [ ] 17.5 [red] Unit test: `service.name` extracted from resource attributes when present; null when absent
-- [ ] 17.6 [green] Add extraction
-- [ ] 17.7 [red] Unit test: scope name/version copied; trace/span IDs hex-encoded as documented
-- [ ] 17.8 [green] Add encoding
-- [ ] 17.9 [red] Unit test: writer exception triggers `abort()` and rethrow
-- [ ] 17.10 [green] Add try/abort/rethrow
-- [ ] 17.11 [red] Component test (real `ParquetFileWriter`, real filesystem, MockClock, StubFilenameGenerator): a known DTO produces a Parquet file at the expected path with the expected rows
+- [x] 17.1 [red] Unit test with stubbed writer: AnyValue body serialized as JSON string in `body_json` column for each variant
+- [x] 17.2 [green] Implement `LogsIngestService::write` skeleton with stubbed-writer-friendly seam
+- [x] 17.3 [red] Unit test: resource attributes denormalized onto every row (1 ResourceLogs × N LogRecords → N rows with identical resource_attributes_json)
+- [x] 17.4 [green] Add denormalization
+- [x] 17.5 [red] Unit test: `service.name` extracted from resource attributes when present; null when absent
+- [x] 17.6 [green] Add extraction
+- [x] 17.7 [red] Unit test: scope name/version copied; trace/span IDs hex-encoded as documented
+- [x] 17.8 [green] Add encoding
+- [x] 17.9 [red] Unit test: writer exception triggers `abort()` and rethrow — *writer interface, not concrete; cleanup is the writer's responsibility (ParquetFileWriter does try/finally with .tmp removal); service rethrows*
+- [x] 17.10 [green] Add try/abort/rethrow
+- [x] 17.11 [red] Component test (real `ParquetFileWriter`, real filesystem, MockClock, StubFilenameGenerator): a known DTO produces a Parquet file at the expected path with the expected rows
 
 ## 18. log-ingest — Controller (TDD, functional via zenstruck/browser)
 
-- [ ] 18.1 [red] Functional: `POST /v1/logs` with valid bearer + valid OTLP/HTTP-JSON body returns 200 `{}` and writes exactly one Parquet file at the expected path containing the expected rows
-- [ ] 18.2 [green] Implement controller happy path
-- [ ] 18.3 [red] Functional: gzip body → 200 with file written
-- [ ] 18.4 [green] Wire `GzipBodyDecoder` into the request pipeline
-- [ ] 18.5 [red] Functional: missing/invalid/malformed-scheme bearer → 401 with `{"message":...}` body
-- [ ] 18.6 [green] (Already covered by authenticator; verify and adjust controller error mapping)
-- [ ] 18.7 [red] Functional: `Content-Type: application/x-protobuf` → 415
-- [ ] 18.8 [green] Add Content-Type guard
-- [ ] 18.9 [red] Functional: malformed JSON → 400
-- [ ] 18.10 [red] Functional: schema-mismatched JSON (e.g., resourceLogs not an array) → 400 with descriptive message
-- [ ] 18.11 [green] Wire decoder exceptions to 400 via `ErrorResponse`
-- [ ] 18.12 [red] Functional: compressed body over `CRASHLER_INGEST_MAX_BODY_BYTES` → 413, body not decompressed
-- [ ] 18.13 [red] Functional: compressed body within compressed limit but expanding past `CRASHLER_INGEST_MAX_DECOMPRESSED_BYTES` → 413
-- [ ] 18.14 [green] Wire size pre-check and decoder size-cap into the controller
-- [ ] 18.15 [red] Functional: simulated writer failure (override the writer service to a throwing decorator) → 5xx and no `.tmp` file remains in the temp storage root
-- [ ] 18.16 [green] Confirm controller maps service exceptions to 5xx via `ErrorResponse`
+- [x] 18.1 [red] Functional: `POST /v1/logs` with valid bearer + valid OTLP/HTTP-JSON body returns 200 `{}` and writes exactly one Parquet file at the expected path containing the expected rows
+- [x] 18.2 [green] Implement controller happy path
+- [x] 18.3 [red] Functional: gzip body → 200 with file written
+- [x] 18.4 [green] Wire `GzipBodyDecoder` into the request pipeline
+- [x] 18.5 [red] Functional: missing/invalid/malformed-scheme bearer → 401 with `{"message":...}` body
+- [x] 18.6 [green] (Already covered by authenticator; verify and adjust controller error mapping)
+- [x] 18.7 [red] Functional: `Content-Type: application/x-protobuf` → 415
+- [x] 18.8 [green] Add Content-Type guard
+- [x] 18.9 [red] Functional: malformed JSON → 400
+- [x] 18.10 [red] Functional: schema-mismatched JSON (e.g., resourceLogs not an array) → 400 with descriptive message
+- [x] 18.11 [green] Wire decoder exceptions to 400 via `ErrorResponse`
+- [x] 18.12 [red] Functional: compressed body over `CRASHLER_INGEST_MAX_BODY_BYTES` → 413, body not decompressed
+- [x] 18.13 [red] Functional: compressed body within compressed limit but expanding past `CRASHLER_INGEST_MAX_DECOMPRESSED_BYTES` → 413
+- [x] 18.14 [green] Wire size pre-check and decoder size-cap into the controller
+- [ ] 18.15 [red] Functional: simulated writer failure (override the writer service to a throwing decorator) → 5xx and no `.tmp` file remains in the temp storage root — *deferred; controller's 5xx path is unit-tested via service exception bubbling, end-to-end simulation requires a kernel test that decorates the writer service*
+- [x] 18.16 [green] Confirm controller maps service exceptions to 5xx via `ErrorResponse`
 
 ## 19. Operator documentation
 

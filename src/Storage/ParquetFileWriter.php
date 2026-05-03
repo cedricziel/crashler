@@ -16,7 +16,7 @@ use Flow\Parquet\Writer;
  * `.tmp` is removed and the exception is re-raised so the request layer can
  * surface a 5xx with no orphan on disk.
  */
-final class ParquetFileWriter
+final class ParquetFileWriter implements WritesParquetFiles
 {
     /** Default Parquet row-group size cap; matches Option::ROW_GROUP_SIZE_BYTES. */
     private const int ROW_GROUP_SIZE_BYTES = 32 * 1024 * 1024;

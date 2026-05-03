@@ -62,5 +62,12 @@ services:
     App\Storage\ParquetFileWriter:
         factory: ['@App\Storage\ParquetFileWriterFactory', 'create']
 
+    App\Storage\WritesParquetFiles: '@App\Storage\ParquetFileWriter'
+
+    App\Controller\OtlpLogsController:
+        arguments:
+            $maxBodyBytes: '%crashler.ingest.max_body_bytes%'
+            $maxDecompressedBytes: '%crashler.ingest.max_decompressed_bytes%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
