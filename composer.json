@@ -89,7 +89,12 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
-        ]
+        ],
+        "test": "phpunit --testsuite=unit,component,functional --no-coverage",
+        "test:unit": "phpunit --testsuite=unit --no-coverage",
+        "test:component": "phpunit --testsuite=component --no-coverage",
+        "test:functional": "phpunit --testsuite=functional --no-coverage",
+        "test:coverage": "phpunit --testsuite=unit,component,functional"
     },
     "conflict": {
         "symfony/symfony": "*"

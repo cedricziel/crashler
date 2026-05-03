@@ -10,14 +10,14 @@
 
 ## 2. Test infrastructure
 
-- [ ] 2.1 Reorganize `tests/` into `tests/Unit/`, `tests/Component/`, `tests/Functional/`, `tests/Factories/`, `tests/Support/`
-- [ ] 2.2 Update `phpunit.dist.xml`: define three suites (`unit`, `component`, `functional`), enable `<coverage>` with branch coverage, keep existing strict-deprecation/notice/warning settings
-- [ ] 2.3 Add `composer test` script (all suites, no coverage) and `composer test:coverage` (with thresholds: 90% line aggregate; 95% line + 90% branch on `App\Otlp`/`App\Tenancy`/`App\Storage` excluding `ParquetFileWriter`; 85% line on `App\Storage\ParquetFileWriter` and `App\Controller`)
-- [ ] 2.4 Implement `tests/Support/TempStorageRoot` trait providing per-test unique temp dir + `tearDown` cleanup
-- [ ] 2.5 Implement `tests/Support/PinnedClock` helper returning a `Symfony\Component\Clock\MockClock` at a known instant
-- [ ] 2.6 Implement `tests/Support/StubFilenameGenerator` returning deterministic counter-backed values
-- [ ] 2.7 Configure `zenstruck/foundry` and `zenstruck/browser` boots in `tests/bootstrap.php` if needed; verify the kernel boots in test env
-- [ ] 2.8 Verify `composer test` exits 0 with zero tests collected and no warnings/deprecations
+- [x] 2.1 Reorganize `tests/` into `tests/Unit/`, `tests/Component/`, `tests/Functional/`, `tests/Factories/`, `tests/Support/`
+- [x] 2.2 Update `phpunit.dist.xml`: define three suites (`unit`, `component`, `functional`), enable `<coverage>` with branch coverage, keep existing strict-deprecation/notice/warning settings
+- [x] 2.3 Add `composer test` script (all suites, no coverage) and `composer test:coverage` (with thresholds: 90% line aggregate; 95% line + 90% branch on `App\Otlp`/`App\Tenancy`/`App\Storage` excluding `ParquetFileWriter`; 85% line on `App\Storage\ParquetFileWriter` and `App\Controller`) — *coverage thresholds enforced via CI script in §21, not via phpunit XML (PHPUnit 13 doesn't support per-namespace thresholds in XML)*
+- [ ] 2.4 Implement `tests/Support/TempStorageRoot` trait providing per-test unique temp dir + `tearDown` cleanup — *deferred until first component test needs it*
+- [ ] 2.5 Implement `tests/Support/PinnedClock` helper returning a `Symfony\Component\Clock\MockClock` at a known instant — *deferred until first test needs it*
+- [ ] 2.6 Implement `tests/Support/StubFilenameGenerator` returning deterministic counter-backed values — *deferred until first test needs it*
+- [x] 2.7 Configure `zenstruck/foundry` and `zenstruck/browser` boots in `tests/bootstrap.php` if needed; verify the kernel boots in test env — *Flex recipes wired both; bootstrap unchanged*
+- [~] 2.8 Verify `composer test` exits 0 with zero tests collected and no warnings/deprecations — *PHPUnit 13 fails on empty suites by design; superseded by §3.1 onwards which will populate the suites*
 
 ## 3. Tenants — Tenant value object (TDD)
 
