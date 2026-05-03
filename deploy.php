@@ -30,6 +30,10 @@ set('bin/php', static fn (): string => getenv('DEPLOY_PHP_BIN') ?: '/usr/bin/env
 
 set('shared_files', [
     '.env.local',
+    // Production tenant + token-hash registry. Lives outside the repo so
+    // tenant slugs/names don't leak via the public source. Managed by
+    // the crashler:tenant:add task (see below).
+    'config/packages/prod/crashler.yaml',
 ]);
 
 set('shared_dirs', [
@@ -140,6 +144,99 @@ task('crashler:bootstrap_env_local', function () {
     info('Bootstrapped shared/.env.local — APP_ENV=prod, fresh APP_SECRET');
 });
 before('deploy:vendors', 'crashler:bootstrap_env_local');
+
+// Bootstrap the shared tenants YAML so the kernel can boot before any
+// tenant has been registered. Symfony's config loader fails on an empty
+// file; this idempotently writes a valid 'tenants: {}' if the file is
+// missing or zero-bytes. Subsequent deploys are no-ops.
+task('crashler:bootstrap_tenants_yaml', function () {
+    $dir = '{{deploy_path}}/shared/config/packages/prod';
+    $path = "$dir/crashler.yaml";
+    run("mkdir -p $dir");
+    if (test("[ -s $path ]")) {
+        return;
+    }
+    run("printf 'crashler:\\n    tenants: {}\\n' > $path");
+    info('Bootstrapped shared/config/packages/prod/crashler.yaml (empty tenants)');
+});
+before('deploy:shared', 'crashler:bootstrap_tenants_yaml');
+
+// Add a tenant to the production registry. Generates a fresh plaintext
+// token on the host (the secret never leaves it except for the one-time
+// stdout print at the end), records its SHA-256 hash in the shared YAML,
+// and clears the prod container cache so the new tenant is picked up
+// without a redeploy.
+//
+// Usage: dep crashler:tenant:add --slug=<slug> [--name='<display name>'] stage=production
+task('crashler:tenant:add', function () {
+    $slug = (string) input()->getOption('slug');
+    $name = (string) input()->getOption('name') ?: $slug;
+
+    if ('' === $slug || 1 !== preg_match('/^[a-z][a-z0-9-]{2,31}$/', $slug) || str_ends_with($slug, '-')) {
+        throw new \RuntimeException(\sprintf(
+            'Invalid slug "%s": must match ^[a-z][a-z0-9-]{2,31}$ and not end with "-".',
+            $slug,
+        ));
+    }
+    // Disallow YAML-breaking characters in the display name.
+    if (1 === preg_match("/['\"\\n\\r\\t]/", $name)) {
+        throw new \RuntimeException('Tenant name must not contain quotes, newlines, or tabs.');
+    }
+
+    $shared = '{{deploy_path}}/shared/config/packages/prod/crashler.yaml';
+    $tmp = "$shared.tmp";
+
+    $script = <<<'BASH'
+set -e
+plaintext="cw_$(openssl rand -hex 16)"
+hash=$(printf '%s' "$plaintext" | shasum -a 256 | cut -d' ' -f1)
+
+# Append-or-create: read existing tenants block via PHP, add the new
+# entry, dump back. Falls back to a clean single-tenant file when the
+# YAML is empty or contains only the bootstrap "tenants: {}".
+"$BIN_PHP" -r "
+  require '$VENDOR_AUTOLOAD';
+  use Symfony\\Component\\Yaml\\Yaml;
+  \$cfg = file_get_contents('$SHARED');
+  \$data = '' === trim(\$cfg) ? ['crashler' => ['tenants' => []]] : Yaml::parse(\$cfg);
+  if (!isset(\$data['crashler']['tenants']) || !is_array(\$data['crashler']['tenants'])) {
+      \$data['crashler']['tenants'] = [];
+  }
+  if (isset(\$data['crashler']['tenants']['$SLUG'])) {
+      fwrite(STDERR, 'tenant \"$SLUG\" already exists; appending an additional token hash to it' . PHP_EOL);
+      \$data['crashler']['tenants']['$SLUG']['token_hashes'][] = '$hash';
+  } else {
+      \$data['crashler']['tenants']['$SLUG'] = [
+          'name' => '$NAME',
+          'token_hashes' => ['$hash'],
+      ];
+  }
+  file_put_contents('$TMP', Yaml::dump(\$data, 6, 4));
+"
+mv "$TMP" "$SHARED"
+chmod 600 "$SHARED"
+
+echo "===CRASHLER_NEW_TENANT_TOKEN==="
+echo "$plaintext"
+echo "===END==="
+BASH;
+
+    $vendorAutoload = '{{deploy_path}}/current/vendor/autoload.php';
+    $output = run(
+        "BIN_PHP={{bin/php}} VENDOR_AUTOLOAD=$vendorAutoload SHARED=$shared TMP=$tmp SLUG='$slug' NAME='$name' bash -c '$script'"
+    );
+
+    // Refresh the prod container so the new tenant is live immediately.
+    run("{{bin/php}} {{deploy_path}}/current/bin/console cache:clear --env=prod --no-debug");
+
+    info("Tenant '$slug' registered. Plaintext token follows (shown once):");
+    writeln('');
+    writeln($output);
+    writeln('');
+    info('Store the token in your client; the server only retains its hash.');
+});
+option('slug', null, \Symfony\Component\Console\Input\InputOption::VALUE_REQUIRED, 'Tenant slug');
+option('name', null, \Symfony\Component\Console\Input\InputOption::VALUE_REQUIRED, 'Tenant display name (defaults to slug)');
 
 // Hooks ------------------------------------------------------------------
 
