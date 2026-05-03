@@ -69,16 +69,16 @@ The scaffolding established by `refactor-multi-signal-receiver` (and reused by `
 
 ## 5. JSON encoders for nested arrays (TDD)
 
-- [ ] 5.1 [red] Unit test: `HistogramBucketsJsonEncoder::encode(null)` returns NULL; populated case returns `{bucketCounts: [...], explicitBounds: [...]}`
-- [ ] 5.2 [green] Implement `App\Otlp\HistogramBucketsJsonEncoder`
-- [ ] 5.3 [red] Unit test: `ExponentialHistogramJsonEncoder` round-trips full ExponentialHistogramDataPoint to OTLP/HTTP-JSON wire shape (positive/negative bucket arrays, scale, zero count, zero threshold)
-- [ ] 5.4 [green] Implement `App\Otlp\ExponentialHistogramJsonEncoder`
-- [ ] 5.5 [red] Unit test: `SummaryQuantilesJsonEncoder::encode([])` returns `[]`; populated case returns OTLP/HTTP-JSON `[{quantile, value}, ...]`
-- [ ] 5.6 [green] Implement `App\Otlp\SummaryQuantilesJsonEncoder`
-- [ ] 5.7 [red] Unit test: `ExemplarJsonEncoder::encode([])` returns `[]`; populated case returns OTLP/HTTP-JSON list with hex traceId/spanId, asInt/asDouble variants, filtered_attributes
-- [ ] 5.8 [green] Implement `App\Otlp\ExemplarJsonEncoder` (reuse `AnyValueJsonEncoder` for filtered_attributes)
-- [ ] 5.9 [red] Unit test: `MetricEnvelopeJsonEncoder::encode($metric)` produces JSON matching the parent Metric envelope minus the data-points list (for round-trip fidelity in `metric_attributes_json`)
-- [ ] 5.10 [green] Implement `App\Otlp\MetricEnvelopeJsonEncoder`
+- [x] 5.1 [red] Unit test: `HistogramBucketsJsonEncoder::encode(null)` returns NULL; populated case returns `{bucketCounts: [...], explicitBounds: [...]}`
+- [x] 5.2 [green] Implement `App\Otlp\HistogramBucketsJsonEncoder`
+- [x] 5.3 [red] Unit test: `ExponentialHistogramJsonEncoder` round-trips full ExponentialHistogramDataPoint to OTLP/HTTP-JSON wire shape (positive/negative bucket arrays, scale, zero count, zero threshold)
+- [x] 5.4 [green] Implement `App\Otlp\ExponentialHistogramJsonEncoder`
+- [x] 5.5 [red] Unit test: `SummaryQuantilesJsonEncoder::encode([])` returns `[]`; populated case returns OTLP/HTTP-JSON `[{quantile, value}, ...]`
+- [x] 5.6 [green] Implement `App\Otlp\SummaryQuantilesJsonEncoder`
+- [x] 5.7 [red] Unit test: `ExemplarJsonEncoder::encode([])` returns `[]`; populated case returns OTLP/HTTP-JSON list with hex traceId/spanId, asInt/asDouble variants, filtered_attributes
+- [x] 5.8 [green] Implement `App\Otlp\ExemplarJsonEncoder` (reuse `AnyValueJsonEncoder` for filtered_attributes)
+- [x] 5.9 [red] Unit test: `MetricEnvelopeJsonEncoder::encode($metric)` produces JSON matching the parent Metric envelope minus the data-points list (for round-trip fidelity in `metric_attributes_json`)
+- [x] 5.10 [green] Implement `App\Otlp\MetricEnvelopeJsonEncoder`
 
 ## 6. MetricsIngestService (TDD)
 
