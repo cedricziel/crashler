@@ -181,21 +181,21 @@
 
 ## 19. Operator documentation
 
-- [ ] 19.1 Update `README.md`: how to author `config/packages/crashler.yaml`, hash one-liner, run instructions, on-disk layout, DuckDB query examples
-- [ ] 19.2 Document v1 design constraints: per-request files, partition by ingest time, no background workers, redeploy required for tenant changes
-- [ ] 19.3 Document OTLP exporter retry expectation (5xx → client retries)
-- [ ] 19.4 Document developer test workflow: `composer test` for the inner loop, `composer test:coverage` for the gate, PCOV vs Xdebug hints, zenstruck/browser examples
+- [x] 19.1 Update `README.md`: how to author `config/packages/crashler.yaml`, hash one-liner, run instructions, on-disk layout, DuckDB query examples
+- [x] 19.2 Document v1 design constraints: per-request files, partition by ingest time, no background workers, redeploy required for tenant changes
+- [x] 19.3 Document OTLP exporter retry expectation (5xx → client retries)
+- [x] 19.4 Document developer test workflow: `composer test` for the inner loop, `composer test:coverage` for the gate, PCOV vs Xdebug hints, zenstruck/browser examples
 
 ## 20. Spec-scenario coverage cross-check
 
-- [ ] 20.1 For each `#### Scenario:` in `specs/tenants/spec.md`, confirm a test method has a `// spec: tenants/<requirement>/<scenario>` marker
-- [ ] 20.2 Same for `specs/log-ingest/spec.md`
-- [ ] 20.3 Same for `specs/log-storage/spec.md`
-- [ ] 20.4 Add tests for any unmapped scenarios
+- [~] 20.1 For each `#### Scenario:` in `specs/tenants/spec.md`, confirm a test method has a `// spec: tenants/<requirement>/<scenario>` marker — *audit performed informally; every requirement in tenants spec is exercised by ConfigurationTest, TenantRegistryTest, IngestTokenAuthenticatorTest, IngestAuthenticationTest. Marker comments deferred as a separate cleanup task.*
+- [~] 20.2 Same for `specs/log-ingest/spec.md` — *exercised by LogsJsonDecoderTest, GzipBodyDecoderTest, ErrorResponseTest, OtlpLogsControllerTest, IngestAuthenticationTest. Markers deferred.*
+- [~] 20.3 Same for `specs/log-storage/spec.md` — *exercised by ParquetSchemaTest, ParquetCompressionTest, UlidFilenameGeneratorTest, PartitionPathResolverTest, ParquetFileWriterTest, LogsIngestServiceComponentTest. Markers deferred.*
+- [ ] 20.4 Add tests for any unmapped scenarios — *no unmapped scenarios identified during informal audit*
 
 ## 21. Cross-cutting validation
 
-- [ ] 21.1 `composer test` passes with zero deprecations/notices/warnings across all three suites
-- [ ] 21.2 `composer test:coverage` passes the configured thresholds
-- [ ] 21.3 `openspec validate add-otlp-log-ingest --strict` passes
-- [ ] 21.4 Manual smoke test: send an OTLP/HTTP-JSON request from the OpenTelemetry Collector's `otlphttp` exporter against a dev instance, verify a Parquet file lands and DuckDB reads it
+- [x] 21.1 `composer test` passes with zero deprecations/notices/warnings across all three suites — *167 tests, 378 assertions, all green*
+- [~] 21.2 `composer test:coverage` passes the configured thresholds — *PCOV/Xdebug not currently loaded in this environment; coverage script is in place. CI must install PCOV before this task can be marked done.*
+- [x] 21.3 `openspec validate add-otlp-log-ingest --strict` passes
+- [ ] 21.4 Manual smoke test: send an OTLP/HTTP-JSON request from the OpenTelemetry Collector's `otlphttp` exporter against a dev instance, verify a Parquet file lands and DuckDB reads it — *operator-only step; deferred to deployment*
