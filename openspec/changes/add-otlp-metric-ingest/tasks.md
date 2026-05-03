@@ -206,8 +206,8 @@ The scaffolding established by `refactor-multi-signal-receiver` (and reused by `
 
 ## 11. Final validation
 
-- [ ] 11.1 `composer test` passes with zero deprecations/notices/warnings across all three suites
-- [ ] 11.2 `openspec validate add-otlp-metric-ingest --strict` passes
-- [ ] 11.3 CI green on main
-- [ ] 11.4 `dep deploy stage=production` (no env flag needed; additive change). Verify smoke test produces a Parquet file at `metrics/<slug>/date=…/hour=…/part-…parquet` with `_schema_id = 'metrics/v1'` and the full row shape
+- [x] 11.1 `composer test` passes with zero deprecations/notices/warnings across all three suites (527 tests, 1489 assertions)
+- [x] 11.2 `openspec validate add-otlp-metric-ingest --strict` passes
+- [ ] 11.3 CI green on main (blocked on push + GitHub Actions run)
+- [ ] 11.4 `dep deploy stage=production` (no env flag needed; additive change). Verify smoke test produces a Parquet file at `metrics/<slug>/date=…/hour=…/part-…parquet` with `_schema_id = 'metrics/v1'` and the full row shape (blocked on user OK)
 - [ ] 11.5 Optional: run an OTel SDK or Collector against `https://crashler.cedric-ziel.com/v1/metrics` end-to-end with a histogram metric
