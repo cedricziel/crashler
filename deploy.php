@@ -161,16 +161,20 @@ task('crashler:bootstrap_tenants_yaml', function () {
 });
 before('deploy:shared', 'crashler:bootstrap_tenants_yaml');
 
-// Add a tenant to the production registry. Generates a fresh plaintext
-// token on the host (the secret never leaves it except for the one-time
-// stdout print at the end), records its SHA-256 hash in the shared YAML,
-// and clears the prod container cache so the new tenant is picked up
-// without a redeploy.
+// Add a tenant to the production registry. Mints a fresh plaintext token
+// on the host (the secret only leaves the host once, via stdout), stores
+// its SHA-256 hash in the shared YAML using Symfony's Yaml component to
+// safely merge with any existing tenants, and clears the prod container
+// cache so the new tenant is live without a redeploy.
 //
 // Usage: dep crashler:tenant:add --slug=<slug> [--name='<display name>'] stage=production
+//
+// The actual mutation lives in .deployer/scripts/tenant_add.php — uploaded
+// fresh on each invocation so the host always runs the version that
+// matches the deploy.php you're invoking from.
 task('crashler:tenant:add', function () {
     $slug = (string) input()->getOption('slug');
-    $name = (string) input()->getOption('name') ?: $slug;
+    $name = (string) (input()->getOption('name') ?: $slug);
 
     if ('' === $slug || 1 !== preg_match('/^[a-z][a-z0-9-]{2,31}$/', $slug) || str_ends_with($slug, '-')) {
         throw new \RuntimeException(\sprintf(
@@ -178,62 +182,32 @@ task('crashler:tenant:add', function () {
             $slug,
         ));
     }
-    // Disallow YAML-breaking characters in the display name.
     if (1 === preg_match("/['\"\\n\\r\\t]/", $name)) {
         throw new \RuntimeException('Tenant name must not contain quotes, newlines, or tabs.');
     }
 
-    $shared = '{{deploy_path}}/shared/config/packages/prod/crashler.yaml';
-    $tmp = "$shared.tmp";
+    $localScript = __DIR__.'/.deployer/scripts/tenant_add.php';
+    $remoteScript = '{{deploy_path}}/.dep/tenant_add.php';
+    $sharedYaml = '{{deploy_path}}/shared/config/packages/prod/crashler.yaml';
 
-    $script = <<<'BASH'
-set -e
-plaintext="cw_$(openssl rand -hex 16)"
-hash=$(printf '%s' "$plaintext" | shasum -a 256 | cut -d' ' -f1)
+    upload($localScript, $remoteScript);
 
-# Append-or-create: read existing tenants block via PHP, add the new
-# entry, dump back. Falls back to a clean single-tenant file when the
-# YAML is empty or contains only the bootstrap "tenants: {}".
-"$BIN_PHP" -r "
-  require '$VENDOR_AUTOLOAD';
-  use Symfony\\Component\\Yaml\\Yaml;
-  \$cfg = file_get_contents('$SHARED');
-  \$data = '' === trim(\$cfg) ? ['crashler' => ['tenants' => []]] : Yaml::parse(\$cfg);
-  if (!isset(\$data['crashler']['tenants']) || !is_array(\$data['crashler']['tenants'])) {
-      \$data['crashler']['tenants'] = [];
-  }
-  if (isset(\$data['crashler']['tenants']['$SLUG'])) {
-      fwrite(STDERR, 'tenant \"$SLUG\" already exists; appending an additional token hash to it' . PHP_EOL);
-      \$data['crashler']['tenants']['$SLUG']['token_hashes'][] = '$hash';
-  } else {
-      \$data['crashler']['tenants']['$SLUG'] = [
-          'name' => '$NAME',
-          'token_hashes' => ['$hash'],
-      ];
-  }
-  file_put_contents('$TMP', Yaml::dump(\$data, 6, 4));
-"
-mv "$TMP" "$SHARED"
-chmod 600 "$SHARED"
+    $output = run(\sprintf(
+        '{{bin/php}} %s %s %s %s',
+        escapeshellarg($remoteScript),
+        escapeshellarg($sharedYaml),
+        escapeshellarg($slug),
+        escapeshellarg($name),
+    ));
+    run("rm -f $remoteScript");
 
-echo "===CRASHLER_NEW_TENANT_TOKEN==="
-echo "$plaintext"
-echo "===END==="
-BASH;
-
-    $vendorAutoload = '{{deploy_path}}/current/vendor/autoload.php';
-    $output = run(
-        "BIN_PHP={{bin/php}} VENDOR_AUTOLOAD=$vendorAutoload SHARED=$shared TMP=$tmp SLUG='$slug' NAME='$name' bash -c '$script'"
-    );
-
-    // Refresh the prod container so the new tenant is live immediately.
-    run("{{bin/php}} {{deploy_path}}/current/bin/console cache:clear --env=prod --no-debug");
+    run('{{bin/php}} {{deploy_path}}/current/bin/console cache:clear --env=prod --no-debug');
 
     info("Tenant '$slug' registered. Plaintext token follows (shown once):");
     writeln('');
     writeln($output);
     writeln('');
-    info('Store the token in your client; the server only retains its hash.');
+    info('Store the token in your client; the server only keeps its hash.');
 });
 option('slug', null, \Symfony\Component\Console\Input\InputOption::VALUE_REQUIRED, 'Tenant slug');
 option('name', null, \Symfony\Component\Console\Input\InputOption::VALUE_REQUIRED, 'Tenant display name (defaults to slug)');
