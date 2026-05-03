@@ -59,7 +59,7 @@ $APP_SHARE_DIR/<signal>/
 
 ## Schemas and column conventions
 
-Each signal's Parquet layout is declared in a versioned YAML at `config/schemas/<signal>/v<n>.yaml`. Today: [`logs/v1`](config/schemas/logs/v1.yaml) (one row per `LogRecord`) and [`traces/v1`](config/schemas/traces/v1.yaml) (one row per `Span`, with `events` and `links` carried as JSON-string columns). The YAML lists every column (name, type, repetition), the OpenTelemetry semantic-convention promotions that turn well-known attributes into top-level columns, and a reserved `transforms:` block for future ingest-time mutations.
+Each signal's Parquet layout is declared in a versioned YAML at `config/schemas/<signal>/v<n>.yaml`. Today: [`logs/v1`](config/schemas/logs/v1.yaml) (one row per `LogRecord`), [`traces/v1`](config/schemas/traces/v1.yaml) (one row per `Span`, with `events` and `links` carried as JSON-string columns), and [`metrics/v1`](config/schemas/metrics/v1.yaml) (one row per **data-point**, with a `metric_type` discriminator and JSON-string columns for histogram buckets, exponential-histogram detail, summary quantiles, and exemplars). The YAML lists every column (name, type, repetition), the OpenTelemetry semantic-convention promotions that turn well-known attributes into top-level columns, and a reserved `transforms:` block for future ingest-time mutations.
 
 Promoted column names follow a three-level prefix convention:
 
@@ -129,7 +129,41 @@ duckdb -c "
 "
 ```
 
-Event-time range queries should filter on `time_unix_nano` (logs) or `start_time_unix_nano` (traces) rather than the partition columns: a late-arriving record lands in the partition corresponding to its *ingest* time, not its event time. Multi-version reads can branch on `_schema_version`/`_schema_id` to handle column renames across schema versions.
+Metrics:
+
+```bash
+duckdb -c "
+  SELECT
+    _schema_id,
+    resource_service_name,
+    metric_name,
+    metric_type,
+    metric_unit,
+    aggregation_temporality_text,
+    value_double,
+    value_int,
+    count,
+    sum,
+    -- bucket structure for histograms; null for sum/gauge
+    json_extract(buckets_json, '$.bucketCounts') AS bucket_counts
+  FROM read_parquet('var/share/metrics/<slug>/**/*.parquet', hive_partitioning=true)
+  WHERE _schema_id = 'metrics/v1'
+    AND date = '2026-05-03'
+    AND metric_name = 'http.server.request.duration'
+    AND metric_type = 'HISTOGRAM'
+  ORDER BY time_unix_nano DESC
+  LIMIT 100;
+"
+```
+
+Each metric type populates a different value column:
+
+- `SUM` / `GAUGE` → `value_double` XOR `value_int` (typed; one is non-null per row)
+- `HISTOGRAM` / `EXPONENTIAL_HISTOGRAM` / `SUMMARY` → `count`, `sum`, `min`, `max` as scalars; the corresponding `buckets_json` / `exponential_histogram_json` / `quantiles_json` blob carries the full structure for `json_extract` queries.
+
+Prefer `HISTOGRAM` or `EXPONENTIAL_HISTOGRAM` over `SUMMARY` when emitting from your application: OpenTelemetry has deprecated Summary in favour of Histogram (Crashler still ingests it for compatibility but the column shape mirrors the deprecation guidance).
+
+Event-time range queries should filter on `time_unix_nano` (logs / metrics) or `start_time_unix_nano` (traces) rather than the partition columns: a late-arriving record lands in the partition corresponding to its *ingest* time, not its event time. Multi-version reads can branch on `_schema_version`/`_schema_id` to handle column renames across schema versions.
 
 ## Running
 
@@ -137,10 +171,11 @@ Event-time range queries should filter on `time_unix_nano` (logs) or `start_time
 symfony serve         # or your web server of choice
 ```
 
-Send a test request from the OpenTelemetry Collector's `otlphttp` exporter or any OTel SDK. Both signals share the same auth header (`Authorization: Bearer <plaintext-token>`); the URLs are:
+Send a test request from the OpenTelemetry Collector's `otlphttp` exporter or any OTel SDK. All three signals share the same auth header (`Authorization: Bearer <plaintext-token>`); the URLs are:
 
 - Logs: `http://localhost:8000/v1/logs`
 - Traces: `http://localhost:8000/v1/traces`
+- Metrics: `http://localhost:8000/v1/metrics`
 
 ## Tests
 

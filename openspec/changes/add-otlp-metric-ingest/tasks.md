@@ -135,10 +135,10 @@ The scaffolding established by `refactor-multi-signal-receiver` (and reused by `
 
 ## 9. Operator documentation
 
-- [ ] 9.1 README: extend the "Schemas and column conventions" section to mention the metrics signal and link to `config/schemas/metrics/v1.yaml`; explain the row-per-data-point model and the `metric_type` discriminator
-- [ ] 9.2 README "Querying" section: add a DuckDB example for metrics (filter by `_schema_id = 'metrics/v1'`, `metric_name`, `metric_type`, etc.); show an example of `json_extract(buckets_json, '$.bucketCounts')` for histogram queries
-- [ ] 9.3 README "Running" section: document that the `otlphttp` exporter URL for metrics is `<host>/v1/metrics`; same auth header as logs and traces
-- [ ] 9.4 README: add a brief "When to prefer Histogram over Summary" note since Summary is deprecated upstream
+- [x] 9.1 README: extend the "Schemas and column conventions" section to mention the metrics signal and link to `config/schemas/metrics/v1.yaml`; explain the row-per-data-point model and the `metric_type` discriminator
+- [x] 9.2 README "Querying" section: add a DuckDB example for metrics (filter by `_schema_id = 'metrics/v1'`, `metric_name`, `metric_type`, etc.); show an example of `json_extract(buckets_json, '$.bucketCounts')` for histogram queries
+- [x] 9.3 README "Running" section: document that the `otlphttp` exporter URL for metrics is `<host>/v1/metrics`; same auth header as logs and traces
+- [x] 9.4 README: add a brief "When to prefer Histogram over Summary" note since Summary is deprecated upstream
 
 ## 10. Spec scenario cross-check
 
