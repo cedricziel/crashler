@@ -47,12 +47,12 @@ Behaviour-parity guard for the refactor portion: at the end of group 4, every te
 
 ## 4. SchemaCatalog wired into the container (component TDD)
 
-- [ ] 4.1 [red] Component test: build a fresh `ContainerBuilder`, run `CrashlerExtension::load` against a fixture YAML directory, assert `SchemaCatalog` is registered as a public service and resolves with the expected entries
-- [ ] 4.2 [green] Update `CrashlerExtension::load` to scan `config/schemas/**/v*.yaml`, build a SchemaCatalog definition, set as parameter or service via factory
-- [ ] 4.3 [red] Component test: a malformed YAML in the fixture dir causes container compilation to fail; error message references the file
-- [ ] 4.4 [green] Surface YAML errors as `InvalidConfigurationException` from the extension
-- [ ] 4.5 [red] Component test: an empty `config/schemas/` directory (no YAML files) is accepted; `SchemaCatalog::all()` returns empty
-- [ ] 4.6 Wire `services.yaml` to expose `App\Schema\SchemaCatalog` (likely via a factory pattern mirroring `TenantRegistryFactory`)
+- [x] 4.1 [red] Component test: build a fresh `ContainerBuilder`, run `CrashlerExtension::load` against a fixture YAML directory, assert `SchemaCatalog` is registered as a public service and resolves with the expected entries — *implemented via ValidateSchemasPass + factory definition rather than load(), since validation must run at compile time*
+- [x] 4.2 [green] Update `CrashlerExtension::load` to scan `config/schemas/**/v*.yaml`, build a SchemaCatalog definition, set as parameter or service via factory — *split: compile-time validation in ValidateSchemasPass, runtime build via services.yaml factory*
+- [x] 4.3 [red] Component test: a malformed YAML in the fixture dir causes container compilation to fail; error message references the file
+- [x] 4.4 [green] Surface YAML errors as `InvalidConfigurationException` from the extension
+- [x] 4.5 [red] Component test: an empty `config/schemas/` directory (no YAML files) is accepted; `SchemaCatalog::all()` returns empty
+- [x] 4.6 Wire `services.yaml` to expose `App\Schema\SchemaCatalog` (likely via a factory pattern mirroring `TenantRegistryFactory`)
 
 ## 5. AttributeColumnExtractor (TDD)
 

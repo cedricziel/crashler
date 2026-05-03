@@ -17,6 +17,10 @@ parameters:
     crashler.ingest.max_body_bytes: '%env(int:CRASHLER_INGEST_MAX_BODY_BYTES)%'
     crashler.ingest.max_decompressed_bytes: '%env(int:CRASHLER_INGEST_MAX_DECOMPRESSED_BYTES)%'
 
+    # Schema-catalog root. Schemas live at config/schemas/<signal>/v<n>.yaml
+    # and are validated at compile time by ValidateSchemasPass.
+    crashler.schema_dir: '%kernel.project_dir%/config/schemas'
+
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -43,6 +47,10 @@ services:
             - '../src/Storage/ParquetSchema.php'
             - '../src/Storage/ParquetFileWriter.php'
             - '../src/Storage/PartitionPaths.php'
+            # Schema infrastructure: value objects + factory-built catalog.
+            - '../src/Schema/SchemaColumn.php'
+            - '../src/Schema/SchemaDefinition.php'
+            - '../src/Schema/SchemaCatalog.php'
 
     # TenantRegistry is built once at boot from validated config; the
     # CrashlerExtension exposes the validated tenants array as a parameter
@@ -73,6 +81,13 @@ services:
         arguments:
             $maxBodyBytes: '%crashler.ingest.max_body_bytes%'
             $maxDecompressedBytes: '%crashler.ingest.max_decompressed_bytes%'
+
+    # SchemaCatalog is rebuilt at runtime from config/schemas/. Compile-time
+    # validation runs separately via ValidateSchemasPass (see CrashlerBundle).
+    App\Schema\SchemaCatalog:
+        factory: ['App\Schema\SchemaCatalog', 'fromDirectory']
+        arguments:
+            - '%crashler.schema_dir%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
