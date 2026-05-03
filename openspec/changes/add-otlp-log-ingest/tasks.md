@@ -27,14 +27,14 @@
 
 ## 4. Tenants — TenantRegistry (TDD)
 
-- [ ] 4.1 [red] Unit test: `findByTokenHash` returns null on miss
-- [ ] 4.2 [green] Implement `TenantRegistry` constructor taking a `array<string $sha256Hex, Tenant>` map; null-return implementation
-- [ ] 4.3 [red] Test: lookup hit returns the matching `Tenant`
-- [ ] 4.4 [green] Implement the lookup
-- [ ] 4.5 [red] Test: constructing with the same hash mapped to two different tenants throws an `InvalidArgumentException` (or domain-specific exception) with a message naming the duplicate
-- [ ] 4.6 [green] Add duplicate-detection in the constructor
-- [ ] 4.7 [red] Test: empty registry is constructible and behaves as expected (always returns null)
-- [ ] 4.8 [red] Foundry factory `TenantFactory` in `tests/Factories/` produces a default tenant for use in higher-level tests
+- [x] 4.1 [red] Unit test: `findByTokenHash` returns null on miss
+- [x] 4.2 [green] Implement `TenantRegistry` constructor taking a `array<string $sha256Hex, Tenant>` map; null-return implementation
+- [x] 4.3 [red] Test: lookup hit returns the matching `Tenant`
+- [x] 4.4 [green] Implement the lookup
+- [x] 4.5 [red] Test: constructing with the same hash mapped to two different tenants throws an `InvalidArgumentException` (or domain-specific exception) with a message naming the duplicate — *added `TenantRegistry::fromEntries()` with `DuplicateTokenHashException`*
+- [x] 4.6 [green] Add duplicate-detection in the constructor
+- [x] 4.7 [red] Test: empty registry is constructible and behaves as expected (always returns null)
+- [ ] 4.8 [red] Foundry factory `TenantFactory` in `tests/Factories/` produces a default tenant for use in higher-level tests — *deferred until first higher-level test needs one*
 
 ## 5. Tenants — Configuration validation (TDD)
 
