@@ -99,6 +99,11 @@ final class LogsJsonDecoder
             $scopeVersion = $this->stringOrNull($raw['scope']['version'] ?? null, "$path.scope.version");
         }
 
+        // schemaUrl lives at the ScopeLogs level (not inside scope itself), per
+        // the OTLP proto. It identifies the OTel schema that the scope's data
+        // is recorded in.
+        $schemaUrl = $this->stringOrNull($raw['schemaUrl'] ?? null, "$path.schemaUrl");
+
         $logRecordsRaw = $raw['logRecords'] ?? null;
         if (!\is_array($logRecordsRaw)) {
             throw OtlpDecodeException::schemaMismatch("$path.logRecords must be an array.");
@@ -109,7 +114,7 @@ final class LogsJsonDecoder
             $logRecords[] = $this->decodeLogRecord($entry, "$path.logRecords[$i]");
         }
 
-        return new ScopeLogsDto($scopeName, $scopeVersion, $logRecords);
+        return new ScopeLogsDto($scopeName, $scopeVersion, $logRecords, $schemaUrl);
     }
 
     /**

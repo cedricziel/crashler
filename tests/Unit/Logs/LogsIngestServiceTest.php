@@ -15,6 +15,7 @@ use App\Storage\PartitionPathResolver;
 use App\Tenancy\Tenant;
 use App\Tests\Support\CapturingParquetWriter;
 use App\Tests\Support\StubFilenameGenerator;
+use App\Tests\Support\LogsSchemaFixture;
 use App\Tests\Support\TempStorageRoot;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -28,7 +29,7 @@ final class LogsIngestServiceTest extends TestCase
     public function testFlattensRequestToRowsAndDispatchesToWriter(): void
     {
         $writer = new CapturingParquetWriter();
-        $service = new LogsIngestService($writer, $this->resolver());
+        $service = new LogsIngestService($writer, $this->resolver(), LogsSchemaFixture::logsV1Extractor());
 
         $service->write($this->buildRequest(), new Tenant('acme', 'Acme Corp'));
 
@@ -102,7 +103,7 @@ final class LogsIngestServiceTest extends TestCase
         ]);
 
         $writer = new CapturingParquetWriter();
-        (new LogsIngestService($writer, $this->resolver()))->write($request, new Tenant('acme', 'Acme Corp'));
+        (new LogsIngestService($writer, $this->resolver(), LogsSchemaFixture::logsV1Extractor()))->write($request, new Tenant('acme', 'Acme Corp'));
 
         self::assertNotNull($writer->capturedRows);
         $rows = $writer->capturedRows;
@@ -124,7 +125,7 @@ final class LogsIngestServiceTest extends TestCase
             }
         };
 
-        $service = new LogsIngestService($writer, $this->resolver());
+        $service = new LogsIngestService($writer, $this->resolver(), LogsSchemaFixture::logsV1Extractor());
         $service->write($this->buildRequest(), new Tenant('acme', 'Acme Corp'));
 
         self::assertNotNull($writer->observedDir);
@@ -136,7 +137,7 @@ final class LogsIngestServiceTest extends TestCase
         $writer = new CapturingParquetWriter();
         $writer->failNextCallWith(new \RuntimeException('disk full'));
 
-        $service = new LogsIngestService($writer, $this->resolver());
+        $service = new LogsIngestService($writer, $this->resolver(), LogsSchemaFixture::logsV1Extractor());
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('disk full');
@@ -147,11 +148,129 @@ final class LogsIngestServiceTest extends TestCase
     public function testEmptyRequestProducesNoFile(): void
     {
         $writer = new CapturingParquetWriter();
-        $service = new LogsIngestService($writer, $this->resolver());
+        $service = new LogsIngestService($writer, $this->resolver(), LogsSchemaFixture::logsV1Extractor());
 
         $service->write(new ExportLogsServiceRequestDto([]), new Tenant('acme', 'Acme Corp'));
 
         self::assertSame(0, $writer->callCount);
+    }
+
+    public function testEveryDocumentedResourcePromotionLandsAsAColumn(): void
+    {
+        $request = new ExportLogsServiceRequestDto([
+            new ResourceLogsDto(
+                resourceAttributes: [
+                    new KeyValueDto('service.name', AnyValueDto::string('checkout')),
+                    new KeyValueDto('service.namespace', AnyValueDto::string('store')),
+                    new KeyValueDto('service.version', AnyValueDto::string('1.2.3')),
+                    new KeyValueDto('service.instance.id', AnyValueDto::string('node-7-pid-1234')),
+                    new KeyValueDto('deployment.environment.name', AnyValueDto::string('prod')),
+                    new KeyValueDto('host.name', AnyValueDto::string('node-7')),
+                    new KeyValueDto('telemetry.sdk.language', AnyValueDto::string('php')),
+                ],
+                scopeLogs: [new ScopeLogsDto(
+                    scopeName: 'app',
+                    scopeVersion: '1.0',
+                    logRecords: [new LogRecordDto(
+                        timeUnixNano: 1, observedTimeUnixNano: null,
+                        severityNumber: null, severityText: null,
+                        body: null, attributes: [],
+                        droppedAttributesCount: 0,
+                        traceId: null, spanId: null, flags: null,
+                    )],
+                    schemaUrl: 'https://opentelemetry.io/schemas/1.30.0',
+                )],
+            ),
+        ]);
+
+        $writer = new CapturingParquetWriter();
+        (new LogsIngestService($writer, $this->resolver(), LogsSchemaFixture::logsV1Extractor()))
+            ->write($request, new Tenant('acme', 'Acme Corp'));
+
+        $row = $writer->capturedRows[0] ?? null;
+        self::assertNotNull($row);
+
+        self::assertSame('checkout', $row['resource_service_name']);
+        self::assertSame('store', $row['resource_service_namespace']);
+        self::assertSame('1.2.3', $row['resource_service_version']);
+        self::assertSame('node-7-pid-1234', $row['resource_service_instance_id']);
+        self::assertSame('prod', $row['resource_deployment_environment']);
+        self::assertSame('node-7', $row['resource_host_name']);
+        self::assertSame('php', $row['resource_telemetry_sdk_language']);
+        self::assertSame('https://opentelemetry.io/schemas/1.30.0', $row['scope_schema_url']);
+
+        // Promotion is a SHADOW: every promoted attribute also stays in the
+        // resource_attributes_json blob unchanged.
+        self::assertStringContainsString('"service.name"', $row['resource_attributes_json']);
+        self::assertStringContainsString('"deployment.environment.name"', $row['resource_attributes_json']);
+    }
+
+    public function testRecordPromotionsCoverEventNameAndException(): void
+    {
+        $request = new ExportLogsServiceRequestDto([
+            new ResourceLogsDto(
+                resourceAttributes: [],
+                scopeLogs: [new ScopeLogsDto(
+                    scopeName: null, scopeVersion: null,
+                    logRecords: [new LogRecordDto(
+                        timeUnixNano: 1, observedTimeUnixNano: null,
+                        severityNumber: null, severityText: null,
+                        body: null,
+                        attributes: [
+                            new KeyValueDto('event.name', AnyValueDto::string('http.server.request')),
+                            new KeyValueDto('exception.type', AnyValueDto::string('RuntimeException')),
+                            new KeyValueDto('exception.message', AnyValueDto::string('boom')),
+                        ],
+                        droppedAttributesCount: 0,
+                        traceId: null, spanId: null, flags: null,
+                    )],
+                )],
+            ),
+        ]);
+
+        $writer = new CapturingParquetWriter();
+        (new LogsIngestService($writer, $this->resolver(), LogsSchemaFixture::logsV1Extractor()))
+            ->write($request, new Tenant('acme', 'Acme Corp'));
+
+        $row = $writer->capturedRows[0] ?? null;
+        self::assertNotNull($row);
+
+        self::assertSame('http.server.request', $row['event_name']);
+        self::assertSame('RuntimeException', $row['exception_type']);
+        self::assertSame('boom', $row['exception_message']);
+
+        // Promoted record-level keys also stay inside attributes_json.
+        self::assertStringContainsString('"event.name"', $row['attributes_json']);
+        self::assertStringContainsString('"exception.type"', $row['attributes_json']);
+    }
+
+    public function testLegacyDeploymentEnvironmentKeyPromotedWhenCanonicalAbsent(): void
+    {
+        $request = new ExportLogsServiceRequestDto([
+            new ResourceLogsDto(
+                resourceAttributes: [
+                    new KeyValueDto('deployment.environment', AnyValueDto::string('staging')),
+                ],
+                scopeLogs: [new ScopeLogsDto(
+                    scopeName: null, scopeVersion: null,
+                    logRecords: [new LogRecordDto(
+                        timeUnixNano: 1, observedTimeUnixNano: null,
+                        severityNumber: null, severityText: null,
+                        body: null, attributes: [],
+                        droppedAttributesCount: 0,
+                        traceId: null, spanId: null, flags: null,
+                    )],
+                )],
+            ),
+        ]);
+
+        $writer = new CapturingParquetWriter();
+        (new LogsIngestService($writer, $this->resolver(), LogsSchemaFixture::logsV1Extractor()))
+            ->write($request, new Tenant('acme', 'Acme Corp'));
+
+        $row = $writer->capturedRows[0] ?? null;
+        self::assertNotNull($row);
+        self::assertSame('staging', $row['resource_deployment_environment']);
     }
 
     private function resolver(): PartitionPathResolver

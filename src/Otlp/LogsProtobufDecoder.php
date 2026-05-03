@@ -74,12 +74,14 @@ final class LogsProtobufDecoder
             $scopeVersion = '' !== $scope->getVersion() ? $scope->getVersion() : null;
         }
 
+        $schemaUrl = '' !== $proto->getSchemaUrl() ? $proto->getSchemaUrl() : null;
+
         $logRecords = [];
         foreach ($proto->getLogRecords() as $lr) {
             $logRecords[] = $this->decodeLogRecord($lr);
         }
 
-        return new ScopeLogsDto($scopeName, $scopeVersion, $logRecords);
+        return new ScopeLogsDto($scopeName, $scopeVersion, $logRecords, $schemaUrl);
     }
 
     private function decodeLogRecord(LogRecord $proto): LogRecordDto

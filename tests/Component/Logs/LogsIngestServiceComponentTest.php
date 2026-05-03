@@ -11,6 +11,7 @@ use App\Otlp\Dto\KeyValueDto;
 use App\Otlp\Dto\LogRecordDto;
 use App\Otlp\Dto\ResourceLogsDto;
 use App\Otlp\Dto\ScopeLogsDto;
+use App\Otlp\AttributeColumnExtractor;
 use App\Schema\SchemaCatalog;
 use App\Storage\ParquetFileWriter;
 use App\Storage\PartitionPathResolver;
@@ -39,8 +40,9 @@ final class LogsIngestServiceComponentTest extends TestCase
         );
 
         $catalog = SchemaCatalog::fromDirectory(\dirname(__DIR__, 3).'/config/schemas');
-        $writer = new ParquetFileWriter($catalog->latestFor('logs'), Compressions::GZIP);
-        $service = new LogsIngestService($writer, $resolver);
+        $logsSchema = $catalog->latestFor('logs');
+        $writer = new ParquetFileWriter($logsSchema, Compressions::GZIP);
+        $service = new LogsIngestService($writer, $resolver, new AttributeColumnExtractor($logsSchema));
 
         $request = new ExportLogsServiceRequestDto([
             new ResourceLogsDto(

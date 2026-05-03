@@ -13,6 +13,7 @@ final readonly class ScopeLogsDto
         public ?string $scopeName,
         public ?string $scopeVersion,
         public array $logRecords,
+        public ?string $schemaUrl = null,
     ) {
     }
 }

@@ -94,15 +94,15 @@ Behaviour-parity guard for the refactor portion: at the end of group 4, every te
 
 ## 9. LogsIngestService — populate promoted columns (TDD)
 
-- [ ] 9.1 [red] Test (unit): given a request whose resource attributes contain `service.name`, `service.namespace`, `host.name`, `telemetry.sdk.language`, the produced rows have those values in `resource_service_name`, `resource_service_namespace`, `resource_host_name`, `resource_telemetry_sdk_language` columns AND those values still appear inside `resource_attributes_json`
-- [ ] 9.2 [green] Inject `AttributeColumnExtractor`; merge resource-promoted columns into each row
-- [ ] 9.3 [red] Test: when `service.name` is absent, `resource_service_name` is `null` (or absent in the row map)
-- [ ] 9.4 [red] Test: scope-level promotion — a scope with `schema_url = 'https://opentelemetry.io/schemas/1.30.0'` populates `scope_schema_url` on every row produced from that scope
-- [ ] 9.5 [green] Add scope extraction (note: scope's `schema_url` is a top-level scope field in OTel, NOT inside `Scope.attributes`; the extractor needs to handle this)
-- [ ] 9.6 [red] Test: record-level promotion — a LogRecord with `event.name = 'foo'` and `exception.type = 'RuntimeException'` produces a row with `event_name = 'foo'` and `exception_type = 'RuntimeException'`
-- [ ] 9.7 [green] Add record extraction
-- [ ] 9.8 [red] Test: legacy `service_name` column is no longer emitted — opening a produced Parquet file does NOT show a `service_name` column in its schema
-- [ ] 9.9 [green] Confirm (the schema YAML doesn't list it)
+- [x] 9.1 [red] Test (unit): given a request whose resource attributes contain `service.name`, `service.namespace`, `host.name`, `telemetry.sdk.language`, the produced rows have those values in `resource_service_name`, `resource_service_namespace`, `resource_host_name`, `resource_telemetry_sdk_language` columns AND those values still appear inside `resource_attributes_json`
+- [x] 9.2 [green] Inject `AttributeColumnExtractor`; merge resource-promoted columns into each row
+- [x] 9.3 [red] Test: when `service.name` is absent, `resource_service_name` is `null` (or absent in the row map)
+- [x] 9.4 [red] Test: scope-level promotion — a scope with `schema_url = 'https://opentelemetry.io/schemas/1.30.0'` populates `scope_schema_url` on every row produced from that scope
+- [x] 9.5 [green] Add scope extraction — *schema_url is decoded as a top-level ScopeLogsDto field; ingest service synthesises a KeyValueDto pair to feed extractScope uniformly*
+- [x] 9.6 [red] Test: record-level promotion — a LogRecord with `event.name = 'foo'` and `exception.type = 'RuntimeException'` produces a row with `event_name = 'foo'` and `exception_type = 'RuntimeException'`
+- [x] 9.7 [green] Add record extraction
+- [x] 9.8 [red] Test: legacy `service_name` column is no longer emitted — opening a produced Parquet file does NOT show a `service_name` column in its schema
+- [x] 9.9 [green] Confirm (the schema YAML doesn't list it)
 
 ## 10. OtlpRequestPipeline extraction (refactor; tests must stay green unmodified)
 

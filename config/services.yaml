@@ -50,6 +50,9 @@ services:
             - '../src/Schema/SchemaColumn.php'
             - '../src/Schema/SchemaDefinition.php'
             - '../src/Schema/SchemaCatalog.php'
+            - '../src/Schema/SchemaCompiler.php'
+            # Extractor is built per-signal via AttributeColumnExtractorFactory.
+            - '../src/Otlp/AttributeColumnExtractor.php'
 
     # TenantRegistry is built once at boot from validated config; the
     # CrashlerExtension exposes the validated tenants array as a parameter
@@ -87,6 +90,13 @@ services:
         factory: ['App\Schema\SchemaCatalog', 'fromDirectory']
         arguments:
             - '%crashler.schema_dir%'
+
+    # Per-signal AttributeColumnExtractor. The factory pulls the latest
+    # schema for the named signal; future signals add their own definition
+    # mirroring this pattern (App\Otlp\TraceAttributeColumnExtractor etc.).
+    App\Otlp\AttributeColumnExtractor:
+        factory: ['@App\Otlp\AttributeColumnExtractorFactory', 'forSignal']
+        arguments: ['logs']
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
