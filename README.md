@@ -94,6 +94,30 @@ composer test            # run all suites, no coverage (fast inner-loop)
 composer test:coverage   # run all suites with coverage and enforce thresholds
 ```
 
+## Deployment
+
+Deployer is pre-configured for the Symfony recipe in [`deploy.php`](deploy.php). Hosts come **purely from environment variables** so no hostnames or paths land in this public repo.
+
+For each stage you deploy to, set `${STAGE}_DEPLOY_*` variables — either as real env vars or in a gitignored `.env.deploy` (see [`.env.deploy.example`](.env.deploy.example) for the schema). Stages with no `HOST` set are silently skipped.
+
+```bash
+# Local one-shot:
+PRODUCTION_DEPLOY_HOST=server.example.com \
+PRODUCTION_DEPLOY_PATH=/var/www/crashler \
+PRODUCTION_DEPLOY_USER=deployer \
+  dep deploy production
+
+# Or copy .env.deploy.example to .env.deploy, fill in values, then:
+dep deploy production
+```
+
+The Symfony recipe handles cache clearing, vendor install (`--no-dev --optimize-autoloader`), and Symfony console wiring. Shared dirs persist across releases:
+
+- `var/log` — application logs
+- `var/share` — ingested Parquet files (deploys never re-emit existing files)
+
+Shared file `.env.local` carries per-host secrets (e.g. `DATABASE_URL`, `CRASHLER_*` overrides).
+
 ## Design constraints (v1)
 
 These are deliberate choices made for the first release; future changes will revisit them:

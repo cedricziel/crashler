@@ -2,6 +2,8 @@
 
 namespace Deployer;
 
+use Symfony\Component\Dotenv\Dotenv;
+
 require 'recipe/symfony.php';
 
 // Project ----------------------------------------------------------------
@@ -10,10 +12,9 @@ set('application', 'crashler');
 set('repository', 'git@github.com:cedricziel/crashler.git');
 
 // Pin the deployed PHP binary so Deployer doesn't accidentally pick a
-// system php older than 8.4 on the host.
-set('bin/php', function () {
-    return parse_home_dir((string) get('php_path', '/usr/bin/env php8.4'));
-});
+// system php older than 8.4 on the host. Override per host via the
+// DEPLOY_PHP_BIN env var if your distro names PHP differently.
+set('bin/php', static fn (): string => getenv('DEPLOY_PHP_BIN') ?: '/usr/bin/env php8.4');
 
 // Symfony recipe wiring --------------------------------------------------
 
@@ -41,18 +42,61 @@ set('composer_options', '--verbose --prefer-dist --no-progress --no-interaction 
 
 // Hosts ------------------------------------------------------------------
 //
-// Replace the placeholders below with your real host(s). The labels are
-// freeform; "production" matches the convention `dep deploy production`.
-// Until a real host is configured this file is intentionally non-functional
-// (Deployer will refuse to deploy to an empty hostname).
+// Hosts are configured purely from environment variables so this file
+// (which is committed to a public repo) carries no hostnames, paths, or
+// user names.
+//
+// Two ways to provide them:
+//
+//   1. Export them in your shell (or your CI's secret store):
+//        export PRODUCTION_DEPLOY_HOST=server.example.com
+//        export PRODUCTION_DEPLOY_PATH=/var/www/crashler
+//        dep deploy production
+//
+//   2. Drop them into a gitignored .env.deploy at the repo root.
+//      See .env.deploy.example for the full list.
+//
+// The variable prefix is the uppercased stage name. `dep deploy production`
+// reads PRODUCTION_DEPLOY_*; `dep deploy staging` reads STAGING_DEPLOY_*.
+// Stages with no HOST set are skipped silently, so an unconfigured stage
+// fails fast with Deployer's "no hosts found" error instead of deploying
+// somewhere unintended.
 
-// host('crashler.example.com')
-//     ->set('labels', ['stage' => 'production'])
-//     ->set('remote_user', 'deployer')
-//     ->set('deploy_path', '/var/www/crashler')
-//     ->set('http_user', 'www-data')
-//     ->set('branch', 'main')
-// ;
+if (is_file($_deployEnv = __DIR__.'/.env.deploy')) {
+    (new Dotenv())->usePutenv()->load($_deployEnv);
+}
+
+/**
+ * Register a host whose connection details come from `${PREFIX}_DEPLOY_*`
+ * environment variables. Returns silently when the HOST var is unset, so
+ * deploy.php works on any machine that only configures a subset of stages.
+ */
+function configure_stage(string $stage): void
+{
+    $prefix = strtoupper($stage).'_DEPLOY_';
+    $hostname = getenv($prefix.'HOST');
+    if (false === $hostname || '' === $hostname) {
+        return;
+    }
+
+    host($hostname)
+        ->set('labels', ['stage' => $stage])
+        ->set('remote_user', getenv($prefix.'USER') ?: 'deployer')
+        ->set('deploy_path', getenv($prefix.'PATH') ?: '/var/www/crashler')
+        ->set('http_user', getenv($prefix.'HTTP_USER') ?: 'www-data')
+        ->set('branch', getenv($prefix.'BRANCH') ?: 'main')
+    ;
+
+    if ($port = getenv($prefix.'PORT')) {
+        host($hostname)->set('port', (int) $port);
+    }
+    if ($identityFile = getenv($prefix.'IDENTITY_FILE')) {
+        host($hostname)->set('identity_file', $identityFile);
+    }
+}
+
+configure_stage('production');
+configure_stage('staging');
 
 // Tasks ------------------------------------------------------------------
 
