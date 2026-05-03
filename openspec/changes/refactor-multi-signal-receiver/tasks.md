@@ -122,9 +122,9 @@ Behaviour-parity guard for the refactor portion: at the end of group 4, every te
 
 ## 12. Deploy task — purge old log files (gated)
 
-- [ ] 12.1 Add `crashler:purge_old_logs` Deployer task in `deploy.php` that removes `<deploy_path>/shared/var/share/logs/**` when `CRASHLER_PURGE_OLD_LOGS_ON_DEPLOY=1`; otherwise no-op with an info log
-- [ ] 12.2 Wire `before('deploy:vendors', 'crashler:purge_old_logs')`
-- [ ] 12.3 Document the env flag in `.env.deploy.example` and the README
+- [x] 12.1 Add `crashler:purge_old_logs` Deployer task in `deploy.php` that removes `<deploy_path>/shared/var/share/logs/**` when `CRASHLER_PURGE_OLD_LOGS_ON_DEPLOY=1`; otherwise no-op with an info log
+- [x] 12.2 Wire `before('deploy:vendors', 'crashler:purge_old_logs')`
+- [x] 12.3 Document the env flag in `.env.deploy.example` and the README
 
 ## 13. Documentation
 

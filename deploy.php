@@ -145,6 +145,39 @@ task('crashler:bootstrap_env_local', function () {
 });
 before('deploy:vendors', 'crashler:bootstrap_env_local');
 
+// One-shot, opt-in purge of the existing Parquet files under
+// shared/var/share/logs/. Used during the refactor-multi-signal-receiver
+// rollout: the v0 schema's column names (service_name, etc.) are
+// incompatible with the v1 layout, and the data has zero retention value
+// (only smoke-test files). Set CRASHLER_PURGE_OLD_LOGS_ON_DEPLOY=1 in the
+// shell that invokes 'dep deploy production' to fire this task; otherwise
+// it's a no-op. Subsequent deploys SHOULD NOT keep this flag set.
+task('crashler:purge_old_logs', function () {
+    if ('1' !== getenv('CRASHLER_PURGE_OLD_LOGS_ON_DEPLOY')) {
+        return;
+    }
+
+    $logsDir = '{{deploy_path}}/shared/var/share/logs';
+    if (!test("[ -d $logsDir ]")) {
+        info('No existing shared/var/share/logs/ directory; nothing to purge.');
+
+        return;
+    }
+
+    $count = (int) trim((string) run("find $logsDir -type f -name '*.parquet' 2>/dev/null | wc -l"));
+    if (0 === $count) {
+        info('Existing log directory has no parquet files; nothing to purge.');
+
+        return;
+    }
+
+    info("Purging $count Parquet file(s) under $logsDir (CRASHLER_PURGE_OLD_LOGS_ON_DEPLOY=1).");
+    run("find $logsDir -type f -name '*.parquet' -delete");
+    run("find $logsDir -type d -empty -delete");
+    info('Purge complete. The new release will repopulate the directory under the v1 schema.');
+});
+before('deploy:vendors', 'crashler:purge_old_logs');
+
 // Bootstrap the shared tenants YAML so the kernel can boot before any
 // tenant has been registered. Symfony's config loader fails on an empty
 // file; this idempotently writes a valid 'tenants: {}' if the file is
