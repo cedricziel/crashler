@@ -13,50 +13,50 @@ The scaffolding established by `refactor-multi-signal-receiver` carries most of 
 
 ## 2. Trace DTOs (TDD)
 
-- [ ] 2.1 [red] Unit tests for `App\Otlp\Dto\SpanDto` — required fields populated, optional ones nullable
-- [ ] 2.2 [green] Implement `SpanDto` (immutable readonly value object)
-- [ ] 2.3 [red] Unit test for `App\Otlp\Dto\SpanEventDto` (name, timeUnixNano, attributes list, droppedAttributesCount)
-- [ ] 2.4 [green] Implement `SpanEventDto`
-- [ ] 2.5 [red] Unit test for `App\Otlp\Dto\SpanLinkDto` (traceId bytes, spanId bytes, traceState, attributes, droppedAttributesCount, flags)
-- [ ] 2.6 [green] Implement `SpanLinkDto`
-- [ ] 2.7 [red] Unit test for `App\Otlp\Dto\SpanStatusDto` (code, message)
-- [ ] 2.8 [green] Implement `SpanStatusDto`
-- [ ] 2.9 [red] Unit tests for `ScopeSpansDto` (scope name/version, schemaUrl, spans list)
-- [ ] 2.10 [green] Implement `ScopeSpansDto`
-- [ ] 2.11 [red] Unit tests for `ResourceSpansDto` (resource attributes, scopeSpans list, schemaUrl)
-- [ ] 2.12 [green] Implement `ResourceSpansDto`
-- [ ] 2.13 [red] Unit tests for `ExportTraceServiceRequestDto` (resourceSpans list)
-- [ ] 2.14 [green] Implement `ExportTraceServiceRequestDto`
+- [x] 2.1 [red] Unit tests for `App\Otlp\Dto\SpanDto` — required fields populated, optional ones nullable
+- [x] 2.2 [green] Implement `SpanDto` (immutable readonly value object)
+- [x] 2.3 [red] Unit test for `App\Otlp\Dto\SpanEventDto` (name, timeUnixNano, attributes list, droppedAttributesCount)
+- [x] 2.4 [green] Implement `SpanEventDto`
+- [x] 2.5 [red] Unit test for `App\Otlp\Dto\SpanLinkDto` (traceId bytes, spanId bytes, traceState, attributes, droppedAttributesCount, flags)
+- [x] 2.6 [green] Implement `SpanLinkDto`
+- [x] 2.7 [red] Unit test for `App\Otlp\Dto\SpanStatusDto` (code, message)
+- [x] 2.8 [green] Implement `SpanStatusDto`
+- [x] 2.9 [red] Unit tests for `ScopeSpansDto` (scope name/version, schemaUrl, spans list)
+- [x] 2.10 [green] Implement `ScopeSpansDto`
+- [x] 2.11 [red] Unit tests for `ResourceSpansDto` (resource attributes, scopeSpans list, schemaUrl)
+- [x] 2.12 [green] Implement `ResourceSpansDto`
+- [x] 2.13 [red] Unit tests for `ExportTraceServiceRequestDto` (resourceSpans list)
+- [x] 2.14 [green] Implement `ExportTraceServiceRequestDto`
 
 ## 3. TracesJsonDecoder (TDD)
 
-- [ ] 3.1 [red] Test: minimal valid OTLP/HTTP-JSON `ExportTraceServiceRequest` decodes to expected DTO tree
-- [ ] 3.2 [green] Implement `TracesJsonDecoder::decode` skeleton (resourceSpans → scopeSpans → spans)
-- [ ] 3.3 [red] Test: `traceId`, `spanId`, `parentSpanId` accepted as lowercase hex strings; empty `parentSpanId` becomes null
-- [ ] 3.4 [green] Add hex decoding (lengths 32/16/16)
-- [ ] 3.5 [red] Test: `startTimeUnixNano` and `endTimeUnixNano` accepted as both string and number
-- [ ] 3.6 [green] Add dual numeric/string parsing
-- [ ] 3.7 [red] Test: `kind` defaults to `SPAN_KIND_UNSPECIFIED` (0) when absent; non-zero values preserved
-- [ ] 3.8 [green] Decode kind enum
-- [ ] 3.9 [red] Tests for `status` decoding: missing → all null; `{code, message}` populated; code ints 0/1/2 preserved
-- [ ] 3.10 [green] Decode `SpanStatus`
-- [ ] 3.11 [red] Tests for span events: zero events → empty list; one event → one `SpanEventDto`; AnyValue variants in event attributes preserved
-- [ ] 3.12 [green] Decode events
-- [ ] 3.13 [red] Tests for span links: zero links → empty list; one link → one `SpanLinkDto` with hex IDs and trace_state
-- [ ] 3.14 [green] Decode links
-- [ ] 3.15 [red] Tests for schema mismatches: missing `resourceSpans`, wrong type for `scopeSpans`, wrong type for `spans`, missing `traceId`, missing `spanId`, missing `name`, missing `startTimeUnixNano` — each throws `OtlpDecodeException` naming the JSONPath
-- [ ] 3.16 [green] Add schema validation
-- [ ] 3.17 Declares `implements App\Otlp\Contract\SignalDecoder`
+- [x] 3.1 [red] Test: minimal valid OTLP/HTTP-JSON `ExportTraceServiceRequest` decodes to expected DTO tree
+- [x] 3.2 [green] Implement `TracesJsonDecoder::decode` skeleton (resourceSpans → scopeSpans → spans)
+- [x] 3.3 [red] Test: `traceId`, `spanId`, `parentSpanId` accepted as lowercase hex strings; empty `parentSpanId` becomes null
+- [x] 3.4 [green] Add hex decoding (lengths 32/16/16)
+- [x] 3.5 [red] Test: `startTimeUnixNano` and `endTimeUnixNano` accepted as both string and number
+- [x] 3.6 [green] Add dual numeric/string parsing
+- [x] 3.7 [red] Test: `kind` defaults to `SPAN_KIND_UNSPECIFIED` (0) when absent; non-zero values preserved
+- [x] 3.8 [green] Decode kind enum
+- [x] 3.9 [red] Tests for `status` decoding: missing → all null; `{code, message}` populated; code ints 0/1/2 preserved
+- [x] 3.10 [green] Decode `SpanStatus`
+- [x] 3.11 [red] Tests for span events: zero events → empty list; one event → one `SpanEventDto`; AnyValue variants in event attributes preserved
+- [x] 3.12 [green] Decode events
+- [x] 3.13 [red] Tests for span links: zero links → empty list; one link → one `SpanLinkDto` with hex IDs and trace_state
+- [x] 3.14 [green] Decode links
+- [x] 3.15 [red] Tests for schema mismatches: missing `resourceSpans`, wrong type for `scopeSpans`, wrong type for `spans`, missing `traceId`, missing `spanId`, missing `name`, missing `startTimeUnixNano` — each throws `OtlpDecodeException` naming the JSONPath
+- [x] 3.16 [green] Add schema validation
+- [x] 3.17 Declares `implements App\Otlp\Contract\SignalDecoder`
 
 ## 4. TracesProtobufDecoder (TDD)
 
-- [ ] 4.1 [red] Test: round-trip via `Opentelemetry\Proto\Collector\Trace\V1\ExportTraceServiceRequest` — known input proto serialised, decoded by us, DTO tree matches
-- [ ] 4.2 [green] Implement `TracesProtobufDecoder::decode`
-- [ ] 4.3 [red] Test: `trace_id`/`span_id` raw bytes (16/8) round-trip; empty parent_span_id becomes null
-- [ ] 4.4 [red] Test: AnyValue variants on span attributes AND on event attributes round-trip via the protobuf path
-- [ ] 4.5 [red] Test: `getKind()` returns the enum int; `getStatus()->getCode()` round-trips
-- [ ] 4.6 [red] Test: garbage bytes (truncated length-delimited) throw `OtlpDecodeException`
-- [ ] 4.7 [green] Wire all of the above; `implements SignalDecoder`
+- [x] 4.1 [red] Test: round-trip via `Opentelemetry\Proto\Collector\Trace\V1\ExportTraceServiceRequest` — known input proto serialised, decoded by us, DTO tree matches
+- [x] 4.2 [green] Implement `TracesProtobufDecoder::decode`
+- [x] 4.3 [red] Test: `trace_id`/`span_id` raw bytes (16/8) round-trip; empty parent_span_id becomes null
+- [x] 4.4 [red] Test: AnyValue variants on span attributes AND on event attributes round-trip via the protobuf path
+- [x] 4.5 [red] Test: `getKind()` returns the enum int; `getStatus()->getCode()` round-trips
+- [x] 4.6 [red] Test: garbage bytes (truncated length-delimited) throw `OtlpDecodeException`
+- [x] 4.7 [green] Wire all of the above; `implements SignalDecoder`
 
 ## 5. SpanEvent / SpanLink JSON encoder (TDD)
 
