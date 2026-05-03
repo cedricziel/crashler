@@ -1,0 +1,123 @@
+# OTLP traces schema, v1.
+#
+# This file is the contract for the on-disk Parquet layout for the traces
+# signal. It is an INTERNAL contract: query consumers go through the
+# planned query layer, not directly. Renames and additions are routine
+# (bump v<n>.yaml when needed).
+#
+# One row per Span. Span events and links carry their nested arrays as
+# JSON-string columns (events_json, links_json) using OTLP/HTTP-JSON wire
+# shape so a future change can lift them to first-class rows without
+# losing data.
+
+signal: traces
+version: 1
+
+columns:
+    # required span identity + timing
+    - { name: trace_id_hex,                    type: string, repetition: required }
+    - { name: span_id_hex,                     type: string, repetition: required }
+    - { name: name,                            type: string, repetition: required }
+    - { name: start_time_unix_nano,            type: int64,  repetition: required }
+    - { name: end_time_unix_nano,              type: int64,  repetition: required }
+    - { name: duration_nano,                   type: int64,  repetition: required }   # derived: end - start
+    - { name: kind,                            type: int32,  repetition: required }   # SpanKind enum (0..5)
+    - { name: kind_text,                       type: string, repetition: required }   # 'INTERNAL' | 'SERVER' | ...
+    - { name: resource_attributes_json,        type: string, repetition: required }
+    - { name: attributes_json,                 type: string, repetition: required }
+    - { name: events_json,                     type: string, repetition: required }   # JSON list, '[]' when empty
+    - { name: links_json,                      type: string, repetition: required }   # JSON list, '[]' when empty
+
+    # optional span fields
+    - { name: parent_span_id_hex,              type: string, repetition: optional }
+    - { name: trace_state,                     type: string, repetition: optional }
+    - { name: flags,                           type: int32,  repetition: optional }
+    - { name: status_code,                     type: int32,  repetition: optional }
+    - { name: status_text,                     type: string, repetition: optional }   # 'UNSET' | 'OK' | 'ERROR'
+    - { name: status_message,                  type: string, repetition: optional }
+    - { name: dropped_attributes_count,        type: int32,  repetition: optional }
+    - { name: dropped_events_count,            type: int32,  repetition: optional }
+    - { name: dropped_links_count,             type: int32,  repetition: optional }
+
+    # tier-1 universal — resource (byte-for-byte identical to logs/v1)
+    - { name: resource_service_name,           type: string, repetition: optional }
+    - { name: resource_service_namespace,      type: string, repetition: optional }
+    - { name: resource_service_version,        type: string, repetition: optional }
+    - { name: resource_service_instance_id,    type: string, repetition: optional }
+    - { name: resource_deployment_environment, type: string, repetition: optional }
+    - { name: resource_host_name,              type: string, repetition: optional }
+    - { name: resource_telemetry_sdk_language, type: string, repetition: optional }
+
+    # scope
+    - { name: scope_name,                      type: string, repetition: optional }
+    - { name: scope_version,                   type: string, repetition: optional }
+    - { name: scope_schema_url,                type: string, repetition: optional }
+
+    # tier-2 traces — record-level promotions
+    - { name: http_request_method,             type: string, repetition: optional }
+    - { name: http_response_status_code,       type: int32,  repetition: optional }
+    - { name: http_route,                      type: string, repetition: optional }
+    - { name: url_scheme,                      type: string, repetition: optional }
+    - { name: db_system_name,                  type: string, repetition: optional }
+    - { name: db_collection_name,              type: string, repetition: optional }
+    - { name: messaging_system,                type: string, repetition: optional }
+    - { name: messaging_destination_name,      type: string, repetition: optional }
+    - { name: rpc_service,                     type: string, repetition: optional }
+    - { name: rpc_method,                      type: string, repetition: optional }
+    - { name: error_type,                      type: string, repetition: optional }
+    - { name: code_function,                   type: string, repetition: optional }
+    - { name: code_namespace,                  type: string, repetition: optional }
+
+promotions:
+    resource:
+        service.name:                  resource_service_name
+        service.namespace:             resource_service_namespace
+        service.version:               resource_service_version
+        service.instance.id:           resource_service_instance_id
+        # Canonical first; legacy fallback second. AttributeColumnExtractor
+        # picks the first present, so canonical wins when both are set.
+        deployment.environment.name:   resource_deployment_environment
+        deployment.environment:        resource_deployment_environment
+        host.name:                     resource_host_name
+        telemetry.sdk.language:        resource_telemetry_sdk_language
+    scope:
+        # ScopeSpans.schema_url is a top-level field (not inside
+        # Scope.attributes); the ingest service surfaces it through a
+        # synthetic KeyValueDto so the extractor's scope path handles
+        # it like any other promotion.
+        schema_url:                    scope_schema_url
+    record:
+        # HTTP semantic conventions (stable). Note we deliberately do
+        # NOT promote url.path or url.full — they are typically high
+        # cardinality and would defeat dictionary encoding.
+        http.request.method:           http_request_method
+        http.response.status_code:     http_response_status_code
+        http.route:                    http_route
+        url.scheme:                    url_scheme
+        # Database semantic conventions. db.query.text is deliberately
+        # omitted (high cardinality, often very long).
+        db.system.name:                db_system_name
+        db.collection.name:            db_collection_name
+        # Messaging
+        messaging.system:              messaging_system
+        messaging.destination.name:    messaging_destination_name
+        # RPC
+        rpc.service:                   rpc_service
+        rpc.method:                    rpc_method
+        # Cross-cutting
+        error.type:                    error_type
+        # Code semantic conventions. code.filepath and code.lineno are
+        # deliberately omitted (line-level changes invalidate dictionary
+        # entries and aren't query-stable).
+        code.function:                 code_function
+        code.namespace:                code_namespace
+
+transforms:
+    drop_keys: []
+    rename_keys: {}
+    defaults:
+        resource: {}
+        record: {}
+    redact_keys: []
+    derive: {}
+    drop_when: []

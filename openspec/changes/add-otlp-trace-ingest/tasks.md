@@ -4,12 +4,12 @@ The scaffolding established by `refactor-multi-signal-receiver` carries most of 
 
 ## 1. traces/v1 YAML
 
-- [ ] 1.1 [red] Component test: `SchemaCatalog::fromDirectory('config/schemas')` returns a definition for `traces/v1` with the documented columns and promotion rules (mirrors `LogsV1SchemaTest`)
-- [ ] 1.2 Author `config/schemas/traces/v1.yaml` per the trace-storage delta spec table (44 columns + universal `_schema_*` appended by writer)
-- [ ] 1.3 [green] Test from 1.1 passes
-- [ ] 1.4 [red] Test: every required column from the spec table is present with correct type and repetition (`DataProvider` per column)
-- [ ] 1.5 [red] Test: every documented record-level promotion (`http.request.method`, `http.response.status_code`, `http.route`, `url.scheme`, `db.system.name`, `db.collection.name`, `messaging.system`, `messaging.destination.name`, `rpc.service`, `rpc.method`, `error.type`, `code.function`, `code.namespace`) maps to its expected column
-- [ ] 1.6 [red] Test: tier-1 resource promotions are byte-for-byte identical to `logs/v1` (same column names + same key order including the canonical-then-legacy `deployment.environment.*` ordering)
+- [x] 1.1 [red] Component test: `SchemaCatalog::fromDirectory('config/schemas')` returns a definition for `traces/v1` with the documented columns and promotion rules (mirrors `LogsV1SchemaTest`)
+- [x] 1.2 Author `config/schemas/traces/v1.yaml` per the trace-storage delta spec table (44 columns + universal `_schema_*` appended by writer)
+- [x] 1.3 [green] Test from 1.1 passes
+- [x] 1.4 [red] Test: every required column from the spec table is present with correct type and repetition (`DataProvider` per column)
+- [x] 1.5 [red] Test: every documented record-level promotion (`http.request.method`, `http.response.status_code`, `http.route`, `url.scheme`, `db.system.name`, `db.collection.name`, `messaging.system`, `messaging.destination.name`, `rpc.service`, `rpc.method`, `error.type`, `code.function`, `code.namespace`) maps to its expected column
+- [x] 1.6 [red] Test: tier-1 resource promotions are byte-for-byte identical to `logs/v1` (same column names + same key order including the canonical-then-legacy `deployment.environment.*` ordering)
 
 ## 2. Trace DTOs (TDD)
 
