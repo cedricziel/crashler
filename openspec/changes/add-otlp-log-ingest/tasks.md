@@ -50,10 +50,10 @@
 
 ## 6. Tenants — DI extension (TDD)
 
-- [ ] 6.1 [red] Component test: instantiate a real Symfony container, load a fixture YAML with two tenants, assert `TenantRegistry` is registered and contains both tenants when retrieved
-- [ ] 6.2 [green] Implement `App\DependencyInjection\CrashlerExtension`
-- [ ] 6.3 [red] Component test: invalid config in YAML causes container compilation failure with a clear message
-- [ ] 6.4 [green] Wire the validation into the extension loader
+- [x] 6.1 [red] Component test: instantiate a real Symfony container, load a fixture YAML with two tenants, assert `TenantRegistry` is registered and contains both tenants when retrieved
+- [x] 6.2 [green] Implement `App\DependencyInjection\CrashlerExtension`
+- [x] 6.3 [red] Component test: invalid config in YAML causes container compilation failure with a clear message
+- [x] 6.4 [green] Wire the validation into the extension loader
 
 ## 7. Tenants — Authenticator (TDD)
 
