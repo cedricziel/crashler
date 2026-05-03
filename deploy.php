@@ -16,7 +16,10 @@ require 'recipe/symfony.php';
 // Project ----------------------------------------------------------------
 
 set('application', 'crashler');
-set('repository', 'git@github.com:cedricziel/crashler.git');
+// HTTPS clone works without a deploy key while the repo is public.
+// If the repo ever goes private, switch to git@github.com:cedricziel/crashler.git
+// and provision a read-only deploy key on the deployment host.
+set('repository', 'https://github.com/cedricziel/crashler.git');
 
 // Pin the deployed PHP binary so Deployer doesn't accidentally pick a
 // system php older than 8.5 on the host. Override per host via the
