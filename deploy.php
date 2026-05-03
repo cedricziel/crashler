@@ -19,9 +19,9 @@ set('application', 'crashler');
 set('repository', 'git@github.com:cedricziel/crashler.git');
 
 // Pin the deployed PHP binary so Deployer doesn't accidentally pick a
-// system php older than 8.4 on the host. Override per host via the
+// system php older than 8.5 on the host. Override per host via the
 // DEPLOY_PHP_BIN env var if your distro names PHP differently.
-set('bin/php', static fn (): string => getenv('DEPLOY_PHP_BIN') ?: '/usr/bin/env php8.4');
+set('bin/php', static fn (): string => getenv('DEPLOY_PHP_BIN') ?: '/usr/bin/env php8.5');
 
 // Symfony recipe wiring --------------------------------------------------
 

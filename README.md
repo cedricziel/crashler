@@ -8,7 +8,7 @@ In active development. The first feature — OTLP/HTTP-JSON log ingest with mult
 
 ## Requirements
 
-- PHP 8.4 with `ext-ctype`, `ext-iconv`
+- PHP 8.5 with `ext-ctype`, `ext-iconv`
 - Composer 2
 - Postgres 16 (used by Symfony / Doctrine; the log ingest path itself does not write to the DB in v1)
 
