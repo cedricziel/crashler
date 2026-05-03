@@ -55,17 +55,17 @@ The scaffolding established by `refactor-multi-signal-receiver` (and reused by `
 
 ## 4. MetricsProtobufDecoder (TDD)
 
-- [ ] 4.1 [red] Test: round-trip via `Opentelemetry\Proto\Collector\Metrics\V1\ExportMetricsServiceRequest` — known input proto serialised, decoded by us, DTO tree matches
-- [ ] 4.2 [green] Implement `MetricsProtobufDecoder::decode`
-- [ ] 4.3 [red] Test: NumberDataPoint asInt and asDouble round-trip via protobuf
-- [ ] 4.4 [red] Test: HistogramDataPoint round-trip with bucket_counts and explicit_bounds
-- [ ] 4.5 [red] Test: ExponentialHistogramDataPoint round-trip preserving scale and bucket arrays
-- [ ] 4.6 [red] Test: SummaryDataPoint round-trip with quantile values
-- [ ] 4.7 [red] Test: Exemplar with raw 16/8-byte traceId/spanId round-trips
-- [ ] 4.8 [red] Test: `aggregationTemporality` enum int round-trips per metric type
-- [ ] 4.9 [red] Test: AnyValue variants on data-point attributes AND on exemplar filtered_attributes round-trip via the protobuf path
-- [ ] 4.10 [red] Test: garbage bytes (truncated length-delimited) throw `OtlpDecodeException`
-- [ ] 4.11 [green] Wire all of the above; `implements SignalDecoder`
+- [x] 4.1 [red] Test: round-trip via `Opentelemetry\Proto\Collector\Metrics\V1\ExportMetricsServiceRequest` — known input proto serialised, decoded by us, DTO tree matches
+- [x] 4.2 [green] Implement `MetricsProtobufDecoder::decode`
+- [x] 4.3 [red] Test: NumberDataPoint asInt and asDouble round-trip via protobuf
+- [x] 4.4 [red] Test: HistogramDataPoint round-trip with bucket_counts and explicit_bounds
+- [x] 4.5 [red] Test: ExponentialHistogramDataPoint round-trip preserving scale and bucket arrays
+- [x] 4.6 [red] Test: SummaryDataPoint round-trip with quantile values
+- [x] 4.7 [red] Test: Exemplar with raw 16/8-byte traceId/spanId round-trips
+- [x] 4.8 [red] Test: `aggregationTemporality` enum int round-trips per metric type
+- [x] 4.9 [red] Test: AnyValue variants on data-point attributes AND on exemplar filtered_attributes round-trip via the protobuf path
+- [x] 4.10 [red] Test: garbage bytes (truncated length-delimited) throw `OtlpDecodeException`
+- [x] 4.11 [green] Wire all of the above; `implements SignalDecoder`
 
 ## 5. JSON encoders for nested arrays (TDD)
 
