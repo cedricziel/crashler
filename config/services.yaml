@@ -22,6 +22,25 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+            - '../src/CrashlerBundle.php'
+            - '../src/Story/'
+            # Value objects, exceptions, factories, and DTOs are not services.
+            - '../src/Tenancy/Tenant.php'
+            - '../src/Tenancy/TenantRegistry.php'
+            - '../src/Tenancy/TenantRegistryFactory.php'
+            - '../src/Tenancy/DuplicateTokenHashException.php'
+
+    # TenantRegistry is built once at boot from validated config; the
+    # CrashlerExtension exposes the validated tenants array as a parameter
+    # which we feed into the factory here.
+    App\Tenancy\TenantRegistry:
+        factory: ['App\Tenancy\TenantRegistryFactory', 'fromValidatedConfig']
+        arguments:
+            - '%crashler.tenants_validated%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

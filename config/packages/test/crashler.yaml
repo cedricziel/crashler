@@ -1,0 +1,9 @@
+# Test fixture tenant used by functional tests.
+# Plaintext token: "cw_test_token_aaaaaaaaaaaaaaaaaa"
+# (sha256 hex below — verified with: printf '%s' "cw_test_token_aaaaaaaaaaaaaaaaaa" | shasum -a 256).
+crashler:
+    tenants:
+        test-tenant:
+            name: 'Test Tenant'
+            token_hashes:
+                - 'f97cb5b46475a635eec18f4f1e9b33365f377d868d86cb2c7a7752db3e07507e'

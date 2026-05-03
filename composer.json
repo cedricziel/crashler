@@ -106,6 +106,7 @@
         }
     },
     "require-dev": {
+        "mtdowling/jmespath.php": "^2.8",
         "phpunit/phpunit": "^13.1",
         "symfony/browser-kit": "8.0.*",
         "symfony/css-selector": "8.0.*",

@@ -6,26 +6,28 @@ security:
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
         users_in_memory: { memory: null }
+        # The IngestTokenAuthenticator self-loads the user via UserBadge; this
+        # provider is wired only because Symfony's firewall config requires one.
+        ingest_provider: { id: App\Security\IngestUserProvider }
 
     firewalls:
         dev:
             # Ensure dev tools and static assets are always allowed
             pattern: ^/(_profiler|_wdt|assets|build)/
             security: false
+        ingest:
+            pattern: ^/v1/
+            stateless: true
+            provider: ingest_provider
+            custom_authenticators:
+                - App\Security\IngestTokenAuthenticator
         main:
             lazy: true
             provider: users_in_memory
 
-            # Activate different ways to authenticate:
-            # https://symfony.com/doc/current/security.html#the-firewall
-
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
-
     # Note: Only the *first* matching rule is applied
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/v1/, roles: ROLE_INGEST }
 
 when@test:
     security:

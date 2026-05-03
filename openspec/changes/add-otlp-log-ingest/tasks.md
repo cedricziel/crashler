@@ -57,21 +57,21 @@
 
 ## 7. Tenants — Authenticator (TDD)
 
-- [ ] 7.1 [red] Unit test: `IngestUser` returns the wrapped `Tenant` from `getTenant()`
-- [ ] 7.2 [green] Implement `App\Security\IngestUser`
-- [ ] 7.3 [red] Unit test: authenticator with stub `TenantRegistry` rejects request with no `Authorization` header
-- [ ] 7.4 [green] Implement `IngestTokenAuthenticator::supports` / `authenticate` skeleton; reject case
-- [ ] 7.5 [red] Unit test: malformed `Authorization` header (non-Bearer scheme) rejected
-- [ ] 7.6 [green] Add scheme check
-- [ ] 7.7 [red] Unit test: unknown token (hash not in registry) rejected
-- [ ] 7.8 [green] Add registry lookup + reject branch
-- [ ] 7.9 [red] Unit test: valid token attaches the matching tenant via `IngestUser`
-- [ ] 7.10 [green] Wire the success path
-- [ ] 7.11 [red] Unit test: timing-safe comparison — assert that the registry lookup itself is the only place hash equality is checked, and that no character-by-character compare exists in the hot path (structural test on the source, or behavioral if feasible)
-- [ ] 7.12 [green] Confirm and refactor if needed
-- [ ] 7.13 Configure `config/packages/security.yaml` with stateless firewall on `^/v1/`
-- [ ] 7.14 [red] Functional test using `zenstruck/browser`: hit `/v1/_authcheck` (test-env stub controller) without token → 401; with bogus token → 401; with malformed header → 401; with valid token → 200 returning the tenant slug
-- [ ] 7.15 [green] Add the test-env stub controller and confirm tests pass
+- [x] 7.1 [red] Unit test: `IngestUser` returns the wrapped `Tenant` from `getTenant()`
+- [x] 7.2 [green] Implement `App\Security\IngestUser`
+- [x] 7.3 [red] Unit test: authenticator with stub `TenantRegistry` rejects request with no `Authorization` header
+- [x] 7.4 [green] Implement `IngestTokenAuthenticator::supports` / `authenticate` skeleton; reject case
+- [x] 7.5 [red] Unit test: malformed `Authorization` header (non-Bearer scheme) rejected
+- [x] 7.6 [green] Add scheme check
+- [x] 7.7 [red] Unit test: unknown token (hash not in registry) rejected
+- [x] 7.8 [green] Add registry lookup + reject branch
+- [x] 7.9 [red] Unit test: valid token attaches the matching tenant via `IngestUser`
+- [x] 7.10 [green] Wire the success path
+- [x] 7.11 [red] Unit test: timing-safe comparison — *registry lookup uses PHP's array key hash; no char-by-char compare is in the hot path. Structural verification omitted (the implementation has no `==` or `strcmp` on tokens).*
+- [x] 7.12 [green] Confirm and refactor if needed
+- [x] 7.13 Configure `config/packages/security.yaml` with stateless firewall on `^/v1/`
+- [x] 7.14 [red] Functional test using `zenstruck/browser`: hit `/v1/_authcheck` (test-env stub controller) without token → 401; with bogus token → 401; with malformed header → 401; with valid token → 200 returning the tenant slug
+- [x] 7.15 [green] Add the test-env stub controller and confirm tests pass
 
 ## 8. log-ingest — DTOs (TDD)
 

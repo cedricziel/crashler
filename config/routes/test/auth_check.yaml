@@ -1,0 +1,4 @@
+crashler_authcheck:
+    path: /v1/_authcheck
+    methods: [GET]
+    controller: App\Controller\Internal\AuthCheckController
