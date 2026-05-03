@@ -70,12 +70,12 @@ Behaviour-parity guard for the refactor portion: at the end of group 4, every te
 
 ## 6. logs/v1 YAML
 
-- [ ] 6.1 [red] Test (component): `SchemaCatalog::latestFor('logs')` against the real `config/schemas/` dir returns a definition with the documented columns and promotion rules
-- [ ] 6.2 Author `config/schemas/logs/v1.yaml` per the log-storage delta spec table
-- [ ] 6.3 [green] Test from 6.1 passes
-- [ ] 6.4 [red] Test: every column listed in the spec table is present with the documented type and repetition
-- [ ] 6.5 [red] Test: every documented promotion rule is present in the loaded definition
-- [ ] 6.6 [red] Test: legacy `deployment.environment` is listed alongside the canonical `deployment.environment.name` for the same column
+- [x] 6.1 [red] Test (component): `SchemaCatalog::latestFor('logs')` against the real `config/schemas/` dir returns a definition with the documented columns and promotion rules
+- [x] 6.2 Author `config/schemas/logs/v1.yaml` per the log-storage delta spec table
+- [x] 6.3 [green] Test from 6.1 passes
+- [x] 6.4 [red] Test: every column listed in the spec table is present with the documented type and repetition
+- [x] 6.5 [red] Test: every documented promotion rule is present in the loaded definition
+- [x] 6.6 [red] Test: legacy `deployment.environment` is listed alongside the canonical `deployment.environment.name` for the same column
 
 ## 7. ParquetFileWriter — universal _schema_* columns (TDD, component)
 
