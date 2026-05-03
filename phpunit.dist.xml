@@ -14,6 +14,10 @@
     <php>
         <ini name="display_errors" value="1" />
         <ini name="error_reporting" value="-1" />
+        <!-- Functional tests across three signals each allocate ~18 MiB
+             strings to exercise the decompressed-body cap; cumulative
+             pressure exceeds the 128 MiB default. -->
+        <ini name="memory_limit" value="512M" />
         <server name="APP_ENV" value="test" force="true" />
         <server name="SHELL_VERBOSITY" value="-1" />
         <server name="BROWSER_ALWAYS_START_WEBSERVER" value="1"/>

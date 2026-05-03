@@ -87,6 +87,12 @@ services:
         factory: ['@App\Storage\ParquetFileWriterFactory', 'create']
         arguments: ['traces']
 
+    # Distinct writer for metrics; same factory pattern as traces.
+    crashler.parquet_writer.metrics:
+        class: App\Storage\ParquetFileWriter
+        factory: ['@App\Storage\ParquetFileWriterFactory', 'create']
+        arguments: ['metrics']
+
     # Signal-generic ingest pipeline. Per-signal controllers (logs today,
     # traces and metrics later) inject their three collaborators (JSON
     # decoder, protobuf decoder, ingest service) at call time.
@@ -115,12 +121,22 @@ services:
         factory: ['@App\Otlp\AttributeColumnExtractorFactory', 'forSignal']
         arguments: ['traces']
 
+    crashler.attribute_extractor.metrics:
+        class: App\Otlp\AttributeColumnExtractor
+        factory: ['@App\Otlp\AttributeColumnExtractorFactory', 'forSignal']
+        arguments: ['metrics']
+
     # TracesIngestService binds the traces-specific writer + extractor so
     # the autowired LogsIngestService stays untouched.
     App\Traces\TracesIngestService:
         arguments:
             $writer: '@crashler.parquet_writer.traces'
             $extractor: '@crashler.attribute_extractor.traces'
+
+    App\Metrics\MetricsIngestService:
+        arguments:
+            $writer: '@crashler.parquet_writer.metrics'
+            $extractor: '@crashler.attribute_extractor.metrics'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

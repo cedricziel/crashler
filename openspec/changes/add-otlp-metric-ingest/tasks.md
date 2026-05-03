@@ -116,17 +116,17 @@ The scaffolding established by `refactor-multi-signal-receiver` (and reused by `
 
 ## 7. OtlpMetricsController + wiring (TDD, functional)
 
-- [ ] 7.1 [red] Functional test (via `zenstruck/browser`): valid bearer + valid OTLP/HTTP-JSON ExportMetricsServiceRequest body returns 200 `{}` and writes exactly one Parquet file at the expected path
-- [ ] 7.2 [green] Implement `App\Controller\OtlpMetricsController` as a thin delegator into `OtlpRequestPipeline` with the three metric collaborators
-- [ ] 7.3 [green] Wire the controller in services.yaml; bind `AttributeColumnExtractor` for metrics via `AttributeColumnExtractorFactory::forSignal('metrics')`; expose a distinct `ParquetFileWriter` service id `crashler.parquet_writer.metrics` bound to the metrics signal; bind `MetricsIngestService` arguments explicitly (mirrors the traces wiring)
-- [ ] 7.4 [red] Functional test: gzip body → 200 with file written
-- [ ] 7.5 [red] Functional test: protobuf body → 200 with file written; rows match the JSON-equivalent request
-- [ ] 7.6 [red] Functional test: missing/invalid bearer → 401
-- [ ] 7.7 [red] Functional test: `Content-Type: text/plain` → 415
-- [ ] 7.8 [red] Functional test: malformed JSON → 400; truncated protobuf → 400
-- [ ] 7.9 [red] Functional test: oversized compressed body → 413; oversized decompressed body → 413
-- [ ] 7.10 [red] Functional test: simulated writer failure → 5xx and no `.tmp` file remains in the temp storage root
-- [ ] 7.11 [red] Functional test: request with only-empty-data-point metrics → 200 and no Parquet file written
+- [x] 7.1 [red] Functional test (via `zenstruck/browser`): valid bearer + valid OTLP/HTTP-JSON ExportMetricsServiceRequest body returns 200 `{}` and writes exactly one Parquet file at the expected path
+- [x] 7.2 [green] Implement `App\Controller\OtlpMetricsController` as a thin delegator into `OtlpRequestPipeline` with the three metric collaborators
+- [x] 7.3 [green] Wire the controller in services.yaml; bind `AttributeColumnExtractor` for metrics via `AttributeColumnExtractorFactory::forSignal('metrics')`; expose a distinct `ParquetFileWriter` service id `crashler.parquet_writer.metrics` bound to the metrics signal; bind `MetricsIngestService` arguments explicitly (mirrors the traces wiring)
+- [x] 7.4 [red] Functional test: gzip body → 200 with file written
+- [x] 7.5 [red] Functional test: protobuf body → 200 with file written; rows match the JSON-equivalent request
+- [x] 7.6 [red] Functional test: missing/invalid bearer → 401
+- [x] 7.7 [red] Functional test: `Content-Type: text/plain` → 415
+- [x] 7.8 [red] Functional test: malformed JSON → 400; truncated protobuf → 400
+- [x] 7.9 [red] Functional test: oversized compressed body → 413; oversized decompressed body → 413
+- [x] 7.10 [red] Functional test: simulated writer failure → 5xx and no `.tmp` file remains in the temp storage root
+- [x] 7.11 [red] Functional test: request with only-empty-data-point metrics → 200 and no Parquet file written
 
 ## 8. Cross-signal sanity (extend to three signals)
 
