@@ -4,6 +4,13 @@ namespace Deployer;
 
 use Symfony\Component\Dotenv\Dotenv;
 
+// Pull in the project's vendored autoloader so we can reach Symfony Dotenv
+// from a globally installed `dep` binary. Falls back silently if vendor/
+// hasn't been installed yet — the .env.deploy loader becomes a no-op then.
+if (is_file(__DIR__.'/vendor/autoload.php')) {
+    require_once __DIR__.'/vendor/autoload.php';
+}
+
 require 'recipe/symfony.php';
 
 // Project ----------------------------------------------------------------
@@ -62,7 +69,7 @@ set('composer_options', '--verbose --prefer-dist --no-progress --no-interaction 
 // fails fast with Deployer's "no hosts found" error instead of deploying
 // somewhere unintended.
 
-if (is_file($_deployEnv = __DIR__.'/.env.deploy')) {
+if (is_file($_deployEnv = __DIR__.'/.env.deploy') && class_exists(Dotenv::class)) {
     (new Dotenv())->usePutenv()->load($_deployEnv);
 }
 
