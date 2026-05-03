@@ -7,6 +7,10 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    crashler.storage_root: '%env(resolve:APP_SHARE_DIR)%'
+    crashler.compression: '%env(string:CRASHLER_PARQUET_COMPRESSION)%'
+    crashler.ingest.max_body_bytes: '%env(int:CRASHLER_INGEST_MAX_BODY_BYTES)%'
+    crashler.ingest.max_decompressed_bytes: '%env(int:CRASHLER_INGEST_MAX_DECOMPRESSED_BYTES)%'
 
 services:
     # default configuration for services in *this* file

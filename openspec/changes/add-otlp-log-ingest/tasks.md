@@ -2,11 +2,11 @@
 
 ## 1. Project setup and dependencies
 
-- [ ] 1.1 Add production deps: `flow-php/parquet`, `symfony/uid`, `symfony/clock`. Add dev deps: `zenstruck/browser`, `zenstruck/foundry`, `zenstruck/assert`. Run `composer require` / `composer require --dev`.
-- [ ] 1.2 Document baseline PHP extensions in the project README (`ext-zstd` recommended; PCOV recommended for coverage)
-- [ ] 1.3 Add `CRASHLER_PARQUET_COMPRESSION` (default `GZIP`), `CRASHLER_INGEST_MAX_BODY_BYTES` (default `4194304`), `CRASHLER_INGEST_MAX_DECOMPRESSED_BYTES` (default `16777216`) to `.env`
-- [ ] 1.4 Confirm `APP_SHARE_DIR` exists and is writable in dev (`var/share`)
-- [ ] 1.5 Bind `APP_SHARE_DIR` to a Symfony container parameter `crashler.storage_root`; bind `CRASHLER_PARQUET_COMPRESSION` to `crashler.compression`; add a compile-time check that the storage root exists/writable and the codec's PHP extension is loaded; both fail fast
+- [x] 1.1 Add production deps: `flow-php/parquet`, `symfony/uid`, `symfony/clock`. Add dev deps: `zenstruck/browser`, `zenstruck/foundry`, `zenstruck/assert`. Run `composer require` / `composer require --dev`.
+- [x] 1.2 Document baseline PHP extensions in the project README (`ext-zstd` recommended; PCOV recommended for coverage)
+- [x] 1.3 Add `CRASHLER_PARQUET_COMPRESSION` (default `GZIP`), `CRASHLER_INGEST_MAX_BODY_BYTES` (default `4194304`), `CRASHLER_INGEST_MAX_DECOMPRESSED_BYTES` (default `16777216`) to `.env`
+- [x] 1.4 Confirm `APP_SHARE_DIR` exists and is writable in dev (`var/share`)
+- [~] 1.5 Bind `APP_SHARE_DIR` to a Symfony container parameter `crashler.storage_root`; bind `CRASHLER_PARQUET_COMPRESSION` to `crashler.compression`; add a compile-time check that the storage root exists/writable and the codec's PHP extension is loaded; both fail fast — *parameter binding done in `config/services.yaml`; fail-fast check deferred to §6 (CrashlerExtension)*
 
 ## 2. Test infrastructure
 
