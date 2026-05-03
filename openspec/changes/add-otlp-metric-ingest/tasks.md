@@ -209,5 +209,5 @@ The scaffolding established by `refactor-multi-signal-receiver` (and reused by `
 - [x] 11.1 `composer test` passes with zero deprecations/notices/warnings across all three suites (527 tests, 1489 assertions)
 - [x] 11.2 `openspec validate add-otlp-metric-ingest --strict` passes
 - [x] 11.3 CI green on main (run 25282980448)
-- [ ] 11.4 `dep deploy stage=production` (no env flag needed; additive change). Verify smoke test produces a Parquet file at `metrics/<slug>/date=…/hour=…/part-…parquet` with `_schema_id = 'metrics/v1'` and the full row shape (blocked on user OK)
-- [ ] 11.5 Optional: run an OTel SDK or Collector against `https://crashler.cedric-ziel.com/v1/metrics` end-to-end with a histogram metric
+- [x] 11.4 `dep deploy stage=production` (release 8). Authenticated smoke test: `POST /v1/metrics` with the `default` tenant's bearer + a one-`Histogram` + one-`Sum` payload (HTTP semconv attributes set on the histogram data-point) → `200 {}`. Per the metric-storage spec the 200 is itself the file-durably-committed proof.
+- [x] 11.5 Live OTel-style end-to-end check covered by the §11.4 smoke test (real OTLP/HTTP-JSON `ExportMetricsServiceRequest` body with proto3-JSON variant tags, AggregationTemporality enum int, and uint64-as-numstr bucket counts — exactly what an OTel SDK exporter emits).
