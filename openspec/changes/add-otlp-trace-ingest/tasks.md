@@ -93,16 +93,16 @@ The scaffolding established by `refactor-multi-signal-receiver` carries most of 
 
 ## 7. OtlpTracesController + wiring (TDD, functional)
 
-- [ ] 7.1 [red] Functional test (via `zenstruck/browser`): valid bearer + valid OTLP/HTTP-JSON ExportTraceServiceRequest body returns 200 `{}` and writes exactly one Parquet file at the expected path
-- [ ] 7.2 [green] Implement `App\Controller\OtlpTracesController` as a thin delegator into `OtlpRequestPipeline` with the three trace collaborators
-- [ ] 7.3 [green] Wire the controller in services.yaml; bind `AttributeColumnExtractor` for traces via `AttributeColumnExtractorFactory::forSignal('traces')`; expose a `ParquetFileWriter` bound to the traces signal (alias or distinct service id)
-- [ ] 7.4 [red] Functional test: gzip body → 200 with file written
-- [ ] 7.5 [red] Functional test: protobuf body → 200 with file written; rows match the JSON-equivalent request
-- [ ] 7.6 [red] Functional test: missing/invalid bearer → 401
-- [ ] 7.7 [red] Functional test: `Content-Type: text/plain` → 415
-- [ ] 7.8 [red] Functional test: malformed JSON → 400; truncated protobuf → 400
-- [ ] 7.9 [red] Functional test: oversized compressed body → 413; oversized decompressed body → 413
-- [ ] 7.10 [red] Functional test: simulated writer failure → 5xx and no `.tmp` file remains in the temp storage root
+- [x] 7.1 [red] Functional test (via `zenstruck/browser`): valid bearer + valid OTLP/HTTP-JSON ExportTraceServiceRequest body returns 200 `{}` and writes exactly one Parquet file at the expected path
+- [x] 7.2 [green] Implement `App\Controller\OtlpTracesController` as a thin delegator into `OtlpRequestPipeline` with the three trace collaborators
+- [x] 7.3 [green] Wire the controller in services.yaml; bind `AttributeColumnExtractor` for traces via `AttributeColumnExtractorFactory::forSignal('traces')`; expose a `ParquetFileWriter` bound to the traces signal (alias or distinct service id)
+- [x] 7.4 [red] Functional test: gzip body → 200 with file written
+- [x] 7.5 [red] Functional test: protobuf body → 200 with file written; rows match the JSON-equivalent request
+- [x] 7.6 [red] Functional test: missing/invalid bearer → 401
+- [x] 7.7 [red] Functional test: `Content-Type: text/plain` → 415
+- [x] 7.8 [red] Functional test: malformed JSON → 400; truncated protobuf → 400
+- [x] 7.9 [red] Functional test: oversized compressed body → 413; oversized decompressed body → 413
+- [x] 7.10 [red] Functional test: simulated writer failure → 5xx and no `.tmp` file remains in the temp storage root
 
 ## 8. Cross-signal sanity
 
