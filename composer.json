@@ -10,10 +10,12 @@
         "doctrine/doctrine-bundle": "^3.2",
         "doctrine/doctrine-migrations-bundle": "^4.0",
         "doctrine/orm": "^3.6",
+        "flow-php/parquet": "^0.36.0",
         "phpdocumentor/reflection-docblock": "^6.0",
         "phpstan/phpdoc-parser": "^2.3",
         "symfony/asset": "8.0.*",
         "symfony/asset-mapper": "8.0.*",
+        "symfony/clock": "8.0.*",
         "symfony/console": "8.0.*",
         "symfony/doctrine-messenger": "8.0.*",
         "symfony/dotenv": "8.0.*",
@@ -37,6 +39,7 @@
         "symfony/string": "8.0.*",
         "symfony/translation": "8.0.*",
         "symfony/twig-bundle": "8.0.*",
+        "symfony/uid": "8.0.*",
         "symfony/ux-turbo": "^3.0",
         "symfony/validator": "8.0.*",
         "symfony/web-link": "8.0.*",
@@ -104,6 +107,9 @@
         "symfony/debug-bundle": "8.0.*",
         "symfony/maker-bundle": "^1.0",
         "symfony/stopwatch": "8.0.*",
-        "symfony/web-profiler-bundle": "8.0.*"
+        "symfony/web-profiler-bundle": "8.0.*",
+        "zenstruck/assert": "^1.7",
+        "zenstruck/browser": "^1.10",
+        "zenstruck/foundry": "^2.9"
     }
 }

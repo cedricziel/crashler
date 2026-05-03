@@ -270,6 +270,15 @@
             "templates/base.html.twig"
         ]
     },
+    "symfony/uid": {
+        "version": "8.0",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "7.0",
+            "ref": "0df5844274d871b37fc3816c57a768ffc60a43a5"
+        }
+    },
     "symfony/ux-turbo": {
         "version": "3.0",
         "recipe": {
@@ -321,5 +330,27 @@
     },
     "twig/extra-bundle": {
         "version": "v3.24.0"
+    },
+    "zenstruck/browser": {
+        "version": "1.10",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "1.9",
+            "ref": "98ea0fbe24749dd1a84976de6f53dbb608046f16"
+        }
+    },
+    "zenstruck/foundry": {
+        "version": "2.9",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "2.7",
+            "ref": "9bd824886195ebe64a24438db1b6d17eb833ac56"
+        },
+        "files": [
+            "config/packages/zenstruck_foundry.yaml",
+            "src/Story/AppStory.php"
+        ]
     }
 }
