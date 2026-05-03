@@ -69,27 +69,27 @@ The scaffolding established by `refactor-multi-signal-receiver` carries most of 
 
 ## 6. TracesIngestService (TDD)
 
-- [ ] 6.1 [red] Unit test (with `CapturingParquetWriter`): a request with one resource + one scope + one span produces exactly one row with the expected base fields (`trace_id_hex`, `span_id_hex`, `name`, `start_time_unix_nano`, `end_time_unix_nano`, `duration_nano`, `kind`, `kind_text`, `resource_attributes_json`, `attributes_json`, `events_json='[]'`, `links_json='[]'`)
-- [ ] 6.2 [green] Implement `TracesIngestService::write` skeleton (flatten DTO → row map; calls `WritesParquetFiles::writeAndCommit`)
-- [ ] 6.3 [red] Test: `duration_nano` equals `end - start`
-- [ ] 6.4 [green] Add the derivation
-- [ ] 6.5 [red] Test: `kind=2` produces `kind_text='SERVER'`; same coverage for the other six SpanKind values via DataProvider
-- [ ] 6.6 [green] Add SpanKind enum → text map
-- [ ] 6.7 [red] Test: `status` populated → `status_code`, `status_text`, `status_message` all set; missing status → all null
-- [ ] 6.8 [green] Decode SpanStatus → row columns
-- [ ] 6.9 [red] Test: `parent_span_id_hex` is null when proto has no parent span; populated lowercase hex when present
-- [ ] 6.10 [green] Add the parent-span hex emission
-- [ ] 6.11 [red] Test: every Tier-1 universal resource promotion lands as a `resource_*` column (mirrors the logs equivalent)
-- [ ] 6.12 [red] Test: scope_schema_url populated when ScopeSpans.schema_url is non-empty
-- [ ] 6.13 [red] Test: every Tier-2 record-level promotion (HTTP, db, messaging, rpc, error, code) lands when the matching span attribute is present; original key still in `attributes_json`
-- [ ] 6.14 [green] Use `AttributeColumnExtractor` (signal='traces') for all three levels
-- [ ] 6.15 [red] Test: a span with two events and one link produces `events_json` with two items and `links_json` with one item; AnyValue variants preserved inside events_json
-- [ ] 6.16 [green] Wire `SpanEventJsonEncoder` + `SpanLinkJsonEncoder`
-- [ ] 6.17 [red] Test: empty events list → `events_json='[]'`; empty links list → `links_json='[]'`
-- [ ] 6.18 [red] Test: `dropped_*_count` columns are 0 (not NULL) when the proto provides 0
-- [ ] 6.19 [green] Coerce default-zero counts
-- [ ] 6.20 [red] Component test (real `ParquetFileWriter`, real filesystem, MockClock, StubFilenameGenerator): a known DTO produces a Parquet file at `<temp>/traces/<slug>/date=…/hour=…/part-<ulid>.parquet` whose rows match the expected schema
-- [ ] 6.21 Declares `implements App\Otlp\Contract\IngestsSignal`
+- [x] 6.1 [red] Unit test (with `CapturingParquetWriter`): a request with one resource + one scope + one span produces exactly one row with the expected base fields (`trace_id_hex`, `span_id_hex`, `name`, `start_time_unix_nano`, `end_time_unix_nano`, `duration_nano`, `kind`, `kind_text`, `resource_attributes_json`, `attributes_json`, `events_json='[]'`, `links_json='[]'`)
+- [x] 6.2 [green] Implement `TracesIngestService::write` skeleton (flatten DTO → row map; calls `WritesParquetFiles::writeAndCommit`)
+- [x] 6.3 [red] Test: `duration_nano` equals `end - start`
+- [x] 6.4 [green] Add the derivation
+- [x] 6.5 [red] Test: `kind=2` produces `kind_text='SERVER'`; same coverage for the other six SpanKind values via DataProvider
+- [x] 6.6 [green] Add SpanKind enum → text map
+- [x] 6.7 [red] Test: `status` populated → `status_code`, `status_text`, `status_message` all set; missing status → all null
+- [x] 6.8 [green] Decode SpanStatus → row columns
+- [x] 6.9 [red] Test: `parent_span_id_hex` is null when proto has no parent span; populated lowercase hex when present
+- [x] 6.10 [green] Add the parent-span hex emission
+- [x] 6.11 [red] Test: every Tier-1 universal resource promotion lands as a `resource_*` column (mirrors the logs equivalent)
+- [x] 6.12 [red] Test: scope_schema_url populated when ScopeSpans.schema_url is non-empty
+- [x] 6.13 [red] Test: every Tier-2 record-level promotion (HTTP, db, messaging, rpc, error, code) lands when the matching span attribute is present; original key still in `attributes_json`
+- [x] 6.14 [green] Use `AttributeColumnExtractor` (signal='traces') for all three levels
+- [x] 6.15 [red] Test: a span with two events and one link produces `events_json` with two items and `links_json` with one item; AnyValue variants preserved inside events_json
+- [x] 6.16 [green] Wire `SpanEventJsonEncoder` + `SpanLinkJsonEncoder`
+- [x] 6.17 [red] Test: empty events list → `events_json='[]'`; empty links list → `links_json='[]'`
+- [x] 6.18 [red] Test: `dropped_*_count` columns are 0 (not NULL) when the proto provides 0
+- [x] 6.19 [green] Coerce default-zero counts
+- [x] 6.20 [red] Component test (real `ParquetFileWriter`, real filesystem, MockClock, StubFilenameGenerator): a known DTO produces a Parquet file at `<temp>/traces/<slug>/date=…/hour=…/part-<ulid>.parquet` whose rows match the expected schema
+- [x] 6.21 Declares `implements App\Otlp\Contract\IngestsSignal`
 
 ## 7. OtlpTracesController + wiring (TDD, functional)
 
