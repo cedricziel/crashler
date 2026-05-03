@@ -134,9 +134,50 @@ Behaviour-parity guard for the refactor portion: at the end of group 4, every te
 
 ## 14. Spec coverage cross-check
 
-- [ ] 14.1 Walk every `#### Scenario:` block in `specs/schema-catalog/spec.md` and confirm a unit/component test covers it
-- [ ] 14.2 Walk every modified scenario in `specs/log-storage/spec.md` and confirm coverage
-- [ ] 14.3 Add tests for any unmapped scenario
+- [x] 14.1 Walk every `#### Scenario:` block in `specs/schema-catalog/spec.md` and confirm a unit/component test covers it — *audited; map below*
+- [x] 14.2 Walk every modified scenario in `specs/log-storage/spec.md` and confirm coverage — *audited; map below*
+- [x] 14.3 Add tests for any unmapped scenario — *all scenarios covered; "Parquet file-level schema metadata" scenarios are intentionally deferred (flow-php API gap, see §7.5)*
+
+### Scenario coverage map (informal — full audit lives in archived change for grep'ability)
+
+`specs/schema-catalog/spec.md`:
+
+| Scenario                                                   | Test |
+| ---------------------------------------------------------- | ---- |
+| Valid YAML is accepted                                     | SchemaCatalogTest::testFromDirectoryScansSignalSubdirectories |
+| Path/header mismatch rejected                              | SchemaCatalogTest::testFilenameVersionMustMatchYamlHeader / testFilenameSignalMustMatchYamlHeader |
+| Invalid column type rejected                               | SchemaDefinitionTest::testInvalidColumnTypeRejected |
+| Reserved column name rejected                              | SchemaDefinitionTest::testReservedColumnNameRejected |
+| Promotion target must exist                                | SchemaDefinitionTest::testPromotionTargetMustExistInColumns |
+| latestFor returns highest version                          | SchemaCatalogTest::testLatestForReturnsHighestVersion |
+| byId returns the named version                             | SchemaCatalogTest::testByIdReturnsExpectedDefinition |
+| latestFor on unknown signal throws                         | SchemaCatalogTest::testLatestForUnknownSignalThrows |
+| yamlSha256 is the content hash                             | SchemaCatalogTest::testYamlSha256IsContentHash |
+| Compile-time failure surfaces at cache:clear               | SchemaCatalogWiringTest::testMalformedYamlFailsCompilationWithFilePath |
+| Empty transforms block accepted in v1                      | SchemaDefinitionTest::testFromArrayExposesHeaderAndColumns (validRaw) |
+| Non-empty transform rejected in v1                         | SchemaDefinitionTest::testNonEmptyTransformRejected |
+| Universal columns present in every file                    | ParquetFileWriterTest::testEveryRowCarriesUniversalSchemaColumns |
+| Universal columns reflect the schema used                  | same |
+| File metadata present when supported                       | DEFERRED (§7.5; flow-php API gap) |
+| Row-level columns sufficient when file metadata unavailable | testCallerDoesNotProvideUniversalColumns |
+| Empty skeleton accepted                                    | (validRaw fixture) |
+| Missing sub-key rejected                                   | SchemaDefinitionTest::testTransformsBlockMissingSubkeyRejected |
+| Non-empty entry rejected                                   | SchemaDefinitionTest::testNonEmptyTransformRejected |
+| Promoted attribute returned in map                         | AttributeColumnExtractorTest::testExtractResourceReturnsPromotedScalar |
+| Unmatched attribute not promoted                           | AttributeColumnExtractorTest::testKeysNotInPromotionsAreAbsentFromMap |
+| Legacy-key fallback                                        | AttributeColumnExtractorTest::testLegacyKeyFallback |
+
+`specs/log-storage/spec.md` (MODIFIED Requirement: Parquet schema and types):
+
+| Scenario                                                   | Test |
+| ---------------------------------------------------------- | ---- |
+| Schema columns present                                     | ParquetFileWriterTest::testWriteCommitProducesFileAtFinalPathReadableByReader + LogsV1SchemaTest |
+| Resource attributes denormalised onto every row, plus promoted columns | LogsIngestServiceTest::testEveryDocumentedResourcePromotionLandsAsAColumn |
+| Legacy deployment.environment key promoted                 | LogsIngestServiceTest::testLegacyDeploymentEnvironmentKeyPromotedWhenCanonicalAbsent |
+| Record-level promotions extracted                          | LogsIngestServiceTest::testRecordPromotionsCoverEventNameAndException |
+| Attributes are JSON strings                                | existing LogsIngestServiceTest::testFlattensRequestToRowsAndDispatchesToWriter |
+| Universal _schema_id reflects the schema used              | ParquetFileWriterTest::testEveryRowCarriesUniversalSchemaColumns |
+| Schema YAML is the source of truth                         | LogsV1SchemaTest (loads from real disk) + SchemaCatalogTest |
 
 ## 15. Final validation
 
