@@ -38,15 +38,15 @@
 
 ## 5. Tenants — Configuration validation (TDD)
 
-- [ ] 5.1 [red] Unit test (using Symfony's config processor): valid config tree builds without error and produces the expected normalized array
-- [ ] 5.2 [green] Implement `App\DependencyInjection\Configuration` with the `crashler.tenants` tree
-- [ ] 5.3 [red] Test: slug rejected when uppercase, leading digit, too short (<3 chars after first), too long (>32 chars), trailing hyphen, contains underscore or other invalid chars (one test per case)
-- [ ] 5.4 [green] Add slug validation rule
-- [ ] 5.5 [red] Test: token hash rejected when wrong length, contains uppercase, contains non-hex
-- [ ] 5.6 [green] Add hash format validation rule
-- [ ] 5.7 [red] Test: same hash under two tenants rejected at config processing time with a message naming both tenants
-- [ ] 5.8 [green] Add cross-tenant duplicate detection
-- [ ] 5.9 [red] Test: empty `crashler.tenants` accepted (boots; just rejects all auth)
+- [x] 5.1 [red] Unit test (using Symfony's config processor): valid config tree builds without error and produces the expected normalized array
+- [x] 5.2 [green] Implement `App\DependencyInjection\Configuration` with the `crashler.tenants` tree
+- [x] 5.3 [red] Test: slug rejected when uppercase, leading digit, too short (<3 chars after first), too long (>32 chars), trailing hyphen, contains underscore or other invalid chars (one test per case)
+- [x] 5.4 [green] Add slug validation rule
+- [x] 5.5 [red] Test: token hash rejected when wrong length, contains uppercase, contains non-hex
+- [x] 5.6 [green] Add hash format validation rule
+- [x] 5.7 [red] Test: same hash under two tenants rejected at config processing time with a message naming both tenants
+- [x] 5.8 [green] Add cross-tenant duplicate detection
+- [x] 5.9 [red] Test: empty `crashler.tenants` accepted (boots; just rejects all auth)
 
 ## 6. Tenants — DI extension (TDD)
 
