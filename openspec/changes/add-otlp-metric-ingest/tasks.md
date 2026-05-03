@@ -33,25 +33,25 @@ The scaffolding established by `refactor-multi-signal-receiver` (and reused by `
 
 ## 3. MetricsJsonDecoder (TDD)
 
-- [ ] 3.1 [red] Test: minimal valid OTLP/HTTP-JSON `ExportMetricsServiceRequest` with one Sum metric / one NumberDataPoint decodes to expected DTO tree
-- [ ] 3.2 [green] Implement `MetricsJsonDecoder::decode` skeleton
-- [ ] 3.3 [red] Test: `startTimeUnixNano` and `timeUnixNano` accepted as both string and number
-- [ ] 3.4 [green] Add dual numeric/string parsing
-- [ ] 3.5 [red] Test: NumberDataPoint `asInt` (numeric string) and `asDouble` (number) both decode and preserve variant
-- [ ] 3.6 [green] Decode the variant-bearing data-point shape
-- [ ] 3.7 [red] Test: HistogramDataPoint with 5-bucket explicit_bounds + 6 bucket_counts decodes losslessly
-- [ ] 3.8 [green] Decode HistogramDataPoint
-- [ ] 3.9 [red] Test: ExponentialHistogramDataPoint with positive + negative buckets, scale, zero count, zero threshold decodes
-- [ ] 3.10 [green] Decode ExponentialHistogramDataPoint
-- [ ] 3.11 [red] Test: SummaryDataPoint with 3 quantile values decodes
-- [ ] 3.12 [green] Decode SummaryDataPoint
-- [ ] 3.13 [red] Test: Exemplar with hex traceId/spanId decodes to raw bytes; AnyValue variants in filtered_attributes preserved
-- [ ] 3.14 [green] Decode Exemplar
-- [ ] 3.15 [red] Test: `aggregationTemporality` enum int (0/1/2) preserved per metric type; absent for Gauge/Summary
-- [ ] 3.16 [green] Decode aggregation temporality + is_monotonic
-- [ ] 3.17 [red] Tests for schema mismatches: missing `resourceMetrics`, wrong type for `scopeMetrics`, wrong type for `metrics`, missing `name`, missing data-point arrays, missing `timeUnixNano` — each throws `OtlpDecodeException` naming the JSONPath
-- [ ] 3.18 [green] Add schema validation
-- [ ] 3.19 Declares `implements App\Otlp\Contract\SignalDecoder`
+- [x] 3.1 [red] Test: minimal valid OTLP/HTTP-JSON `ExportMetricsServiceRequest` with one Sum metric / one NumberDataPoint decodes to expected DTO tree
+- [x] 3.2 [green] Implement `MetricsJsonDecoder::decode` skeleton
+- [x] 3.3 [red] Test: `startTimeUnixNano` and `timeUnixNano` accepted as both string and number
+- [x] 3.4 [green] Add dual numeric/string parsing
+- [x] 3.5 [red] Test: NumberDataPoint `asInt` (numeric string) and `asDouble` (number) both decode and preserve variant
+- [x] 3.6 [green] Decode the variant-bearing data-point shape
+- [x] 3.7 [red] Test: HistogramDataPoint with 5-bucket explicit_bounds + 6 bucket_counts decodes losslessly
+- [x] 3.8 [green] Decode HistogramDataPoint
+- [x] 3.9 [red] Test: ExponentialHistogramDataPoint with positive + negative buckets, scale, zero count, zero threshold decodes
+- [x] 3.10 [green] Decode ExponentialHistogramDataPoint
+- [x] 3.11 [red] Test: SummaryDataPoint with 3 quantile values decodes
+- [x] 3.12 [green] Decode SummaryDataPoint
+- [x] 3.13 [red] Test: Exemplar with hex traceId/spanId decodes to raw bytes; AnyValue variants in filtered_attributes preserved
+- [x] 3.14 [green] Decode Exemplar
+- [x] 3.15 [red] Test: `aggregationTemporality` enum int (0/1/2) preserved per metric type; absent for Gauge/Summary
+- [x] 3.16 [green] Decode aggregation temporality + is_monotonic
+- [x] 3.17 [red] Tests for schema mismatches: missing `resourceMetrics`, wrong type for `scopeMetrics`, wrong type for `metrics`, missing `name`, missing data-point arrays, missing `timeUnixNano` — each throws `OtlpDecodeException` naming the JSONPath
+- [x] 3.18 [green] Add schema validation
+- [x] 3.19 Declares `implements App\Otlp\Contract\SignalDecoder`
 
 ## 4. MetricsProtobufDecoder (TDD)
 
