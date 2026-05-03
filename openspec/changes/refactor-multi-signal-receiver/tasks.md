@@ -128,9 +128,9 @@ Behaviour-parity guard for the refactor portion: at the end of group 4, every te
 
 ## 13. Documentation
 
-- [ ] 13.1 README: add a "Schemas and column conventions" section pointing at `config/schemas/<signal>/v<n>.yaml`, listing the resource_/scope_/record-level prefixes, and documenting `_schema_version`/`_schema_id` as Crashler-internal
-- [ ] 13.2 README: clarify that the on-disk Parquet schema is internal (a query layer is planned) and that DuckDB recipes are operator tooling rather than a stable public interface
-- [ ] 13.3 README "Querying" section: update the example DuckDB query to use `resource_service_name` (the rename) and demonstrate filtering on `_schema_version`
+- [x] 13.1 README: add a "Schemas and column conventions" section pointing at `config/schemas/<signal>/v<n>.yaml`, listing the resource_/scope_/record-level prefixes, and documenting `_schema_version`/`_schema_id` as Crashler-internal
+- [x] 13.2 README: clarify that the on-disk Parquet schema is internal (a query layer is planned) and that DuckDB recipes are operator tooling rather than a stable public interface
+- [x] 13.3 README "Querying" section: update the example DuckDB query to use `resource_service_name` (the rename) and demonstrate filtering on `_schema_version`
 
 ## 14. Spec coverage cross-check
 
