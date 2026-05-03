@@ -43,6 +43,13 @@ set('writable_dirs', [
 set('migrations_config', '');
 set('console_options', '--no-interaction');
 
+// On managed hosts (All-Inkl, Mittwald, …) there is no sudo and no
+// separate web user — files are owned by the SSH user. Set
+// DEPLOY_WRITABLE_MODE=chmod in .env.deploy to skip the chown step
+// that the default 'acl' mode performs. Default stays 'acl' so a
+// traditional VPS deploy is unaffected.
+set('writable_mode', static fn (): string => getenv('DEPLOY_WRITABLE_MODE') ?: 'acl');
+
 // Composer install on deploy: production deps only, optimized autoload,
 // no dev. Aligns with what Symfony's recipe expects.
 set('composer_options', '--verbose --prefer-dist --no-progress --no-interaction --no-dev --optimize-autoloader');
