@@ -178,6 +178,6 @@ The scaffolding established by `refactor-multi-signal-receiver` carries most of 
 
 - [x] 11.1 `composer test` passes with zero deprecations/notices/warnings across all three suites
 - [x] 11.2 `openspec validate add-otlp-trace-ingest --strict` passes
-- [ ] 11.3 CI green on main (blocked on push + GitHub Actions run)
+- [x] 11.3 CI green on main
 - [ ] 11.4 `dep deploy production` (no env flag needed; additive change). Verify smoke test produces a Parquet file at `traces/<slug>/date=…/hour=…/part-…parquet` with `_schema_id = 'traces/v1'` and the full row shape (blocked on user OK)
 - [ ] 11.5 Optional: run an OTel SDK or Collector against `https://crashler.cedric-ziel.com/v1/traces` end-to-end
