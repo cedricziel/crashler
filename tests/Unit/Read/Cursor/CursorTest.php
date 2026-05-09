@@ -130,4 +130,50 @@ final class CursorTest extends TestCase
         $this->expectException(InvalidCursorException::class);
         Cursor::decode('!!!!.!!!!', self::SECRET, 'acme', maxWindowDays: 30);
     }
+
+    public function testCriteriaDigestRoundTrip(): void
+    {
+        $digest = str_repeat('a', 64); // 64 lowercase hex chars
+
+        $opaque = Cursor::mint(
+            criteria: ['since' => 1, 'until' => 2],
+            position: ['lastTimeUnixNano' => 1, 'lastRowId' => 0],
+            tenantSlug: 'acme',
+            secret: self::SECRET,
+            criteriaDigest: $digest,
+        );
+        $decoded = Cursor::decode($opaque, self::SECRET, 'acme', maxWindowDays: 30);
+
+        self::assertSame($digest, $decoded->criteriaDigest);
+    }
+
+    public function testGetCursorHasNullDigest(): void
+    {
+        $opaque = Cursor::mint(
+            criteria: [],
+            position: ['lastTimeUnixNano' => 1, 'lastRowId' => 0],
+            tenantSlug: 'acme',
+            secret: self::SECRET,
+        );
+        $decoded = Cursor::decode($opaque, self::SECRET, 'acme', maxWindowDays: 30);
+
+        self::assertNull($decoded->criteriaDigest);
+    }
+
+    public function testMalformedDigestRejected(): void
+    {
+        // The digest field shape check inside decode() catches non-hex / wrong-length values.
+        // Mint with a malformed digest (uppercase) and assert decode rejects.
+        $this->expectException(InvalidCursorException::class);
+        $this->expectExceptionMessageMatches('/digest is malformed/');
+
+        $opaque = Cursor::mint(
+            criteria: [],
+            position: ['lastTimeUnixNano' => 1, 'lastRowId' => 0],
+            tenantSlug: 'acme',
+            secret: self::SECRET,
+            criteriaDigest: 'NOT-A-VALID-HEX',
+        );
+        Cursor::decode($opaque, self::SECRET, 'acme', maxWindowDays: 30);
+    }
 }

@@ -9,14 +9,18 @@ namespace App\Read\Cursor;
  *
  * The cursor's payload encodes the resolved criteria (filters + absolute
  * `since`/`until` instants + ordering + limit), the position marker
- * `(last_time_unix_nano, last_row_id)`, and the tenant slug. The whole
- * payload is HMAC-SHA256 signed with `crashler.read.cursor_secret` so:
+ * `(last_time_unix_nano, last_row_id)`, the tenant slug, and an optional
+ * criteria digest (only POST-search cursors). The whole payload is
+ * HMAC-SHA256 signed with `crashler.read.cursor_secret` so:
  *
  *   1. Following a `next` link doesn't require the client to re-forward
  *      filters — the server reconstructs them from the cursor.
  *   2. A client can't forge a cursor that escapes the tenant prefix or
  *      bypasses the time-window cap (the signature would not verify).
- *   3. Rotating the secret invalidates outstanding cursors (acceptable —
+ *   3. POST-search cursors carry a digest of the canonicalised criteria
+ *      tree; GET cursors leave the digest null. This binds a cursor to
+ *      both the HTTP method that minted it AND the body that produced it.
+ *   4. Rotating the secret invalidates outstanding cursors (acceptable —
  *      cursors are ephemeral; clients restart from the beginning).
  *
  * Wire format:
@@ -30,11 +34,13 @@ final readonly class Cursor
     /**
      * @param array<string, mixed> $criteria
      * @param array{lastTimeUnixNano: int, lastRowId: int} $position
+     * @param ?string $criteriaDigest SHA-256 hex of the canonicalised POST-search criteria; null for GET cursors
      */
     public function __construct(
         public array $criteria,
         public array $position,
         public string $tenantSlug,
+        public ?string $criteriaDigest = null,
     ) {
     }
 
@@ -42,12 +48,18 @@ final readonly class Cursor
      * @param array<string, mixed> $criteria
      * @param array{lastTimeUnixNano: int, lastRowId: int} $position
      */
-    public static function mint(array $criteria, array $position, string $tenantSlug, string $secret): string
-    {
+    public static function mint(
+        array $criteria,
+        array $position,
+        string $tenantSlug,
+        string $secret,
+        ?string $criteriaDigest = null,
+    ): string {
         $payload = json_encode([
             'c' => $criteria,
             'p' => $position,
             't' => $tenantSlug,
+            'cd' => $criteriaDigest,
         ], \JSON_THROW_ON_ERROR | \JSON_UNESCAPED_SLASHES);
 
         $payloadEncoded = self::base64UrlEncode($payload);
@@ -85,6 +97,14 @@ final readonly class Cursor
         $criteria = $decoded['c'];
         $position = $decoded['p'];
         $tenantSlug = $decoded['t'];
+        $criteriaDigest = null;
+        if (\array_key_exists('cd', $decoded)) {
+            $rawDigest = $decoded['cd'];
+            if (null !== $rawDigest && (!\is_string($rawDigest) || 1 !== preg_match('/^[0-9a-f]{64}$/', $rawDigest))) {
+                throw new InvalidCursorException('Invalid cursor: criteria digest is malformed.');
+            }
+            $criteriaDigest = $rawDigest;
+        }
 
         if ($tenantSlug !== $expectedTenantSlug) {
             throw new InvalidCursorException('Invalid cursor: bound to a different tenant.');
@@ -115,6 +135,7 @@ final readonly class Cursor
             criteria: $criteria,
             position: ['lastTimeUnixNano' => $position['lastTimeUnixNano'], 'lastRowId' => $position['lastRowId']],
             tenantSlug: $tenantSlug,
+            criteriaDigest: $criteriaDigest,
         );
     }
 

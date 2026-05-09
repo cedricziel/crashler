@@ -37,6 +37,10 @@ parameters:
     # invalidates outstanding cursors (acceptable — cursors are ephemeral).
     crashler.read.cursor_secret: '%env(string:APP_SECRET)%'
 
+    # POST /v1/<signal>/search body-size cap. Bounds JSON-decode work.
+    crashler.read.post_search.max_body_bytes: '%env(default:crashler.read.post_search.max_body_bytes_default:int:CRASHLER_READ_POST_SEARCH_MAX_BODY_BYTES)%'
+    crashler.read.post_search.max_body_bytes_default: 65536
+
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -139,6 +143,34 @@ services:
         arguments:
             $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
             $spanLookupWindowHours: '%crashler.read.span_lookup_window_hours%'
+
+    # POST /v1/<signal>/search controllers. Plain Symfony controllers (same
+    # rationale as the by-ID controllers); they share scanner+pruner with
+    # the GET state providers and dispatch through `PostSearchController`.
+    App\Read\Http\PostSearchRequestParser:
+        arguments:
+            $maxBodyBytes: '%crashler.read.post_search.max_body_bytes%'
+
+    App\Read\Controller\PostLogsSearchController:
+        arguments:
+            $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
+            $maxPageSize: '%crashler.read.max_page_size%'
+            $cursorSecret: '%crashler.read.cursor_secret%'
+            $maxAttributeFilters: 5
+
+    App\Read\Controller\PostTracesSearchController:
+        arguments:
+            $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
+            $maxPageSize: '%crashler.read.max_page_size%'
+            $cursorSecret: '%crashler.read.cursor_secret%'
+            $maxAttributeFilters: 5
+
+    App\Read\Controller\PostMetricsSearchController:
+        arguments:
+            $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
+            $maxPageSize: '%crashler.read.max_page_size%'
+            $cursorSecret: '%crashler.read.cursor_secret%'
+            $maxAttributeFilters: 5
 
     # TraceTreeAssembler is a static helper, not a service.
 

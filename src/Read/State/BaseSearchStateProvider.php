@@ -77,6 +77,11 @@ abstract readonly class BaseSearchStateProvider implements ProviderInterface
             } catch (InvalidCursorException $e) {
                 throw new BadRequestException($e->getMessage(), previous: $e);
             }
+            // GET cursors carry no criteria digest; a non-null digest means
+            // this cursor was minted by POST search and isn't replayable here.
+            if (null !== $cursor->criteriaDigest) {
+                throw new BadRequestException('Invalid cursor: minted by POST /v1/<signal>/search and cannot be replayed against the GET endpoint.');
+            }
             $criteria = $cursor->criteria;
             $resumeFrom = $cursor->position;
         } else {
@@ -154,9 +159,14 @@ abstract readonly class BaseSearchStateProvider implements ProviderInterface
     abstract protected function compilePerSignalPredicates(array $criteria): iterable;
 
     /**
+     * Materialise a Parquet row map into the Resource DTO for the signal.
+     *
+     * Public so non-state-provider callers (e.g. POST search controllers)
+     * can reuse the same mapping without duplicating it.
+     *
      * @param array<string, mixed> $row
      */
-    abstract protected function rowToResource(array $row): object;
+    abstract public function rowToResource(array $row): object;
 
     /**
      * Common predicates: time window + service/environment/host. Time

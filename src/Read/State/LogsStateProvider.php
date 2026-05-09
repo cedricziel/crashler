@@ -50,7 +50,7 @@ final readonly class LogsStateProvider extends BaseSearchStateProvider
         }
     }
 
-    protected function rowToResource(array $row): Log
+    public function rowToResource(array $row): Log
     {
         return new Log(
             timeUnixNano: isset($row['time_unix_nano']) ? (string) $row['time_unix_nano'] : '',

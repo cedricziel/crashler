@@ -166,6 +166,91 @@ curl -H "Authorization: Bearer $TOKEN" \
      "https://crashler.example.com/v1/metrics?service=checkout&metricType=HISTOGRAM&since=24h"
 ```
 
+### POST /v1/&lt;signal&gt;/search — complex criteria
+
+The GET search endpoints take URL-shaped filters that compose with AND only. For OR, NOT, IN-lists, and nested predicate trees there's a sibling `POST /v1/<signal>/search` endpoint per signal that takes the same time window and filter set as a JSON body, plus a small predicate-tree DSL.
+
+Body shape:
+
+```json
+{
+  "since": "1h",
+  "until": null,
+  "limit": 100,
+  "cursor": null,
+  "criteria": { /* predicate tree */ }
+}
+```
+
+Predicate tree leaves and combinators:
+
+- `{"all": [<node>, …]}` — AND
+- `{"any": [<node>, …]}` — OR
+- `{"not": <node>}` — NOT (single child)
+- `{"column": "<col>", "op": "<op>", "value": <v>}` — typed-column leaf. `<op>` ∈ `eq`, `ne`, `gte`, `lte`, `prefix`, `suffix`, `in`. `value` is `<v>` for non-`in` ops, an array for `in`.
+- `{"attribute": "<key>", "op": "eq", "value": "<v>"}` — decoded attribute walk against `attributes_json`. Multiple distinct keys compose with logical AND up to a per-request cap (default 5).
+- `{"body": "contains", "value": "<substring>"}` — body substring match (logs only).
+
+Examples:
+
+```bash
+TOKEN="<your-tenant-token>"
+
+# Logs: errors from {checkout, payments} matching "panic" in the body
+curl -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -X POST "https://crashler.example.com/v1/logs/search" \
+     -d '{
+       "since": "1h",
+       "criteria": {
+         "all": [
+           {"any": [
+             {"column": "resource_service_name", "op": "eq", "value": "checkout"},
+             {"column": "resource_service_name", "op": "eq", "value": "payments"}
+           ]},
+           {"column": "severity_number", "op": "gte", "value": 17},
+           {"body": "contains", "value": "panic"}
+         ]
+       }
+     }'
+
+# Traces: SERVER spans on /orders/* whose status is not OK
+curl -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -X POST "https://crashler.example.com/v1/traces/search" \
+     -d '{
+       "since": "1h",
+       "criteria": {
+         "all": [
+           {"column": "kind_text", "op": "eq", "value": "SERVER"},
+           {"column": "name", "op": "prefix", "value": "GET /orders/"},
+           {"not": {"column": "status_text", "op": "eq", "value": "OK"}}
+         ]
+       }
+     }'
+
+# Metrics: a list of metric names by exact match
+curl -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: application/json" \
+     -X POST "https://crashler.example.com/v1/metrics/search" \
+     -d '{
+       "since": "1h",
+       "criteria": {
+         "column": "metric_name",
+         "op": "in",
+         "value": ["http.server.request.duration", "http.client.request.duration"]
+       }
+     }'
+```
+
+Limits:
+- Body: ≤ 64 KiB (`CRASHLER_READ_POST_SEARCH_MAX_BODY_BYTES`).
+- Tree depth: ≤ 8 levels of `all` / `any` / `not` nesting.
+- `in` list: ≤ 256 values per leaf.
+- Distinct `attribute` keys: ≤ 5 per request.
+
+Cursor pagination on POST search: the response carries a top-level `cursor` field when more rows exist. Clients echo the value verbatim into the next request body's `cursor` field. Cursors are bound to both the HTTP method (POST) and the criteria tree they were minted with — mutating the criteria between pages or replaying a GET cursor against POST returns 400. The `since`/`until` window is captured in the cursor, so subsequent POSTs with the same cursor see the same absolute window.
+
 ### Operator/debug recipes — DuckDB on the file tree
 
 The HTTP read API is the contract. The DuckDB recipes below are operator/debug tooling for ad-hoc deep dives directly on the Parquet files (typically over SSH on the host). They are NOT a stable interface — schema renames between versions can break them.

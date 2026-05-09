@@ -73,7 +73,7 @@ final readonly class TracesStateProvider extends BaseSearchStateProvider
         }
     }
 
-    protected function rowToResource(array $row): Trace
+    public function rowToResource(array $row): Trace
     {
         return new Trace(
             traceIdHex: self::bytesToHex($row['trace_id_hex'] ?? null) ?? '',

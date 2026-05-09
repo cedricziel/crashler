@@ -49,7 +49,7 @@ final readonly class MetricsStateProvider extends BaseSearchStateProvider
         }
     }
 
-    protected function rowToResource(array $row): Metric
+    public function rowToResource(array $row): Metric
     {
         return new Metric(
             metricName: $row['metric_name'] ?? '',
