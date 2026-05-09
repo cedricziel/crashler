@@ -10,7 +10,7 @@ Crashler ships OTLP write for all three signals but offers no read path beyond S
 - All responses carry **selective HAL-style `_links`**: always `self` and (where applicable) `next`; per-row links to related resources where the row carries an ID into another signal (`logs.row._links.trace` when `trace_id_hex` is set, etc.). Aggregations and dense bulk pulls deliberately don't get per-row links.
 - Time window is a hard requirement on every search (default last 1 hour, capped at 30 days back) so a stray query never scans the entire on-disk history.
 - Cursor-based pagination with the cursor encoding the original criteria — the `_links.next` URL is the cursor; clients just follow it.
-- Compute via embedded **DuckDB shell-out** (DuckDB binary called per request, runs against the tenant's Parquet partition glob). flow-php native scan is the documented fallback when DuckDB isn't available; auto-detected at boot.
+- Compute via a streaming **flow-php native Parquet scanner** — the same library already in use for the write side. No external binary, no PHP extension, no install step. The scanner reads matching files row-by-row and applies filters in PHP after partition pruning has narrowed the input down to the relevant `date=…/hour=…` directories.
 - Result columns mirror the on-disk schema names (`time_unix_nano`, `trace_id_hex`, `resource_service_name`, …) — emitted as **camelCase** in JSON for OTel parity (`timeUnixNano`, `traceIdHex`, `resourceServiceName`).
 - Response carries a `schemaId` field (e.g. `"logs/v1"`) so clients can branch on schema version exactly the way `_schema_id` already does on disk.
 - README documents the read API; the existing DuckDB recipes stay as operator/debug tooling, not a public interface.
@@ -39,10 +39,10 @@ Out of scope (deferred to follow-ups):
 
 ## Impact
 
-- New code: `App\Read\ReadPipeline` (request → criteria → tenant-scoped query → JSON envelope), `App\Read\Compute\DuckDbExecutor` + `App\Read\Compute\FlowPhpExecutor` (with auto-detection), `App\Read\Criteria\*` (decoders per signal), `App\Read\Cursor` (signed cursor encoding), `App\Read\Hateoas\LinkBuilder`, `App\Controller\ReadLogsController`, `App\Controller\ReadTracesController`, `App\Controller\ReadMetricsController`.
+- New code: `App\Read\ReadPipeline` (request → criteria → tenant-scoped scan → JSON envelope), `App\Read\Compute\ParquetScanner` (streaming flow-php scanner with predicate evaluation), `App\Read\Compute\PartitionPruner` (translates `[since, until]` into the matching `date=…/hour=…` directory globs), `App\Read\Criteria\*` (decoders per signal), `App\Read\Cursor` (signed cursor encoding), `App\Read\Hateoas\LinkBuilder`, `App\Controller\ReadLogsController`, `App\Controller\ReadTracesController`, `App\Controller\ReadMetricsController`.
 - Auth: existing `IngestTokenAuthenticator` already handles bearer → tenant. The firewall pattern `^/v1/` already covers `GET` requests.
-- Config: new `crashler.read.compute_engine` env var (`auto` | `duckdb` | `flow-php`), new `crashler.read.max_time_window_days` (default 30), new `crashler.read.max_page_size` (default 1000), new `crashler.read.cursor_secret` (HMAC for cursor signing — sourced from `APP_SECRET`).
-- Dependencies: optional `duckdb` binary on PATH (production hosts) — already practical to install on All-Inkl shared hosting via prebuilt binary in shared dir.
+- Config: new `crashler.read.max_time_window_days` (default 30), new `crashler.read.max_page_size` (default 1000), new `crashler.read.cursor_secret` (HMAC for cursor signing — sourced from `APP_SECRET`), new `crashler.read.span_lookup_window_hours` (default 24).
+- Dependencies: none — flow-php is already a project dependency.
 - Storage: read-only access to the existing Parquet tree under `<storage-root>/<signal>/<tenant_slug>/`. No new files, no new partitions, no new layout.
-- Tests: unit (criteria parsers, cursor sign/verify, HATEOAS link generation, executor behavior with mocked filesystem), component (real DuckDB against fixture Parquet files, cross-signal `_links` generation), functional (zenstruck/browser auth + tenant scoping + happy paths + error paths).
-- Production deploy: additive, no env flag, no schema-breaking purge. Requires DuckDB binary on the host — deploy task ensures it; falls back to flow-php executor if unavailable.
+- Tests: unit (criteria parsers, cursor sign/verify, HATEOAS link generation, scanner behavior on synthetic fixtures), component (real `ParquetScanner` against fixture Parquet files, cross-signal `_links` generation), functional (zenstruck/browser auth + tenant scoping + happy paths + error paths).
+- Production deploy: additive, no env flag, no schema-breaking purge, no binary to install. `dep deploy stage=production` ships the new code and the new endpoints come up immediately.

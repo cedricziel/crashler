@@ -182,27 +182,26 @@ Unknown parameters SHALL be rejected with HTTP 400 listing the supported ones. F
 - **WHEN** `GET /v1/traces?kind=BANANA&since=1h`
 - **THEN** the system responds with HTTP 400 with a message listing supported kind values
 
-### Requirement: Compute engine with auto-detection
+### Requirement: Compute via streaming flow-php Parquet scanner
 
-The system SHALL execute read queries via either embedded DuckDB (shell-out to a `duckdb` binary) or a flow-php native scanner. The choice SHALL be made at boot:
+The system SHALL execute read queries via a streaming `App\Read\Compute\ParquetScanner` that reads Parquet files row-by-row using flow-php's `Reader`. Files SHALL be iterated in ULID order (creation-time order). Filters SHALL be evaluated in PHP after partition pruning has narrowed the input to matching `date=…/hour=…` directories. Per-request execution time SHALL be bounded by `crashler.read.execution_timeout_seconds` (default 10); when exceeded, the system SHALL respond with HTTP 504 and a message asking the client to narrow the time window or filters.
 
-- If `crashler.read.compute_engine=duckdb`, use DuckDB; fail boot if the binary is missing.
-- If `crashler.read.compute_engine=flow-php`, use flow-php.
-- If `crashler.read.compute_engine=auto` (default), prefer DuckDB if present on `PATH` (or at the path in `CRASHLER_DUCKDB_BIN`), otherwise fall back to flow-php.
+There SHALL NOT be a configurable choice of compute engine; the scanner is the only execution path in v1. (A future change may introduce alternatives behind a `ScansParquet` interface — that is not a v1 contract.)
 
-The selected engine SHALL be visible in `bin/console debug:container` output. Both engines SHALL produce results that are equivalent for the same input (subject to floating-point ordering); the only operational difference is performance.
+#### Scenario: Scanner emits matching rows in ULID order
+- **WHEN** a search request resolves to a partition with three Parquet files written at distinct times
+- **THEN** the scanner reads them in ULID-ascending order
+- **AND** the response's `rows` array reflects that order (older first within a partition)
 
-#### Scenario: DuckDB binary present at boot
-- **WHEN** the kernel boots with `compute_engine=auto` and a DuckDB binary is on PATH
-- **THEN** the active executor is the DuckDB executor
+#### Scenario: Scanner stops early when limit reached
+- **WHEN** a partition contains 10 000 matching rows and `limit=100`
+- **THEN** the scanner reads at most enough row groups to surface 100 rows
+- **AND** does not continue scanning the rest of the partition
 
-#### Scenario: DuckDB binary missing at boot
-- **WHEN** the kernel boots with `compute_engine=auto` and no DuckDB binary is reachable
-- **THEN** the active executor is the flow-php executor
-
-#### Scenario: DuckDB forced but missing fails boot
-- **WHEN** the kernel boots with `compute_engine=duckdb` and no DuckDB binary is reachable
-- **THEN** boot fails with a clear error naming the missing binary and the configured engine
+#### Scenario: Execution timeout returns 504
+- **WHEN** a request takes longer than `crashler.read.execution_timeout_seconds` to materialise the response
+- **THEN** the system responds with HTTP 504
+- **AND** the message asks the client to narrow filters or reduce the time window
 
 ### Requirement: Error response shape
 
@@ -212,9 +211,10 @@ Error responses SHALL carry HTTP status codes per their meaning and a JSON body 
 - 401 — missing or invalid bearer token
 - 404 — by-ID lookup against an ID not present in the configured search window
 - 415 — request carries an unsupported `Content-Type` or `Accept` value
-- 500 — executor failure (DuckDB nonzero exit, file-system error, OOM)
+- 500 — scanner failure (file-system error, corrupted Parquet file, OOM)
+- 504 — execution timeout (per-request scan exceeded `crashler.read.execution_timeout_seconds`)
 
-Error bodies SHALL be valid JSON. Error bodies SHALL NOT leak internal stack traces, file paths under `var/`, or DuckDB internal error messages verbatim.
+Error bodies SHALL be valid JSON. Error bodies SHALL NOT leak internal stack traces, file paths under `var/`, or low-level library error messages verbatim.
 
 #### Scenario: Bad criteria error body
 - **WHEN** any 4xx response is returned
@@ -224,7 +224,7 @@ Error bodies SHALL be valid JSON. Error bodies SHALL NOT leak internal stack tra
 #### Scenario: Internal failure error body
 - **WHEN** a 5xx response is returned
 - **THEN** the body's `message` describes the error in operator-friendly terms
-- **AND** the body does NOT contain a stack trace, an absolute filesystem path, or raw DuckDB output
+- **AND** the body does NOT contain a stack trace, an absolute filesystem path, or raw library output
 
 ### Requirement: Bounded resource consumption per request
 
