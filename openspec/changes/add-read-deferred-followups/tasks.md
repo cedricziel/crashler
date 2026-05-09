@@ -7,7 +7,7 @@
 - [ ] 1.5 Add `_links.search` drill-down to aggregate response shape. Reference: `add-read-aggregations` 5.1, 5.2, 6.8
 - [ ] 1.6 t-digest unit tests against known datasets (uniform, exponential, bimodal). Reference: `add-read-aggregations` 6.2
 - [ ] 1.7 Functional tests for traces and metrics aggregate endpoints. Reference: `add-read-aggregations` 6.4, 6.5
-- [ ] 1.8 Cardinality cap functional test (200+ distinct fixture). Reference: `add-read-aggregations` 6.6
+- [x] 1.8 [PROMOTED to add-read-test-coverage-roundup §6] Cardinality cap functional test
 - [ ] 1.9 Interval cap functional test (over-cap window+interval combo). Reference: `add-read-aggregations` 6.7
 
 ## 2. Theme: add-read-compat-shims-querying
@@ -37,12 +37,12 @@
 
 ## 4. Theme: add-read-test-coverage-roundup
 
-- [ ] 4.1 Dedicated time-window row-group push-down test: multi-hour fixture across partitions; assert leading-window groups skipped. Reference: `add-read-rowgroup-pushdown` 4.2
-- [ ] 4.2 Unit test for "predicate references column not in row group's schema" (mock RowGroup/Schema with absent column). Reference: `add-read-rowgroup-pushdown` 4.3
-- [ ] 4.3 Multi-attribute filter functional test for traces: two `attribute.<key>` parameters compose with AND on a span fixture. Reference: `add-read-multi-attribute-filters` 4.5
-- [ ] 4.4 Multi-attribute filter functional test for metrics: two `attribute.<key>` parameters compose with AND on a metric fixture. Reference: `add-read-multi-attribute-filters` 4.5
-- [ ] 4.5 POST search body-size 413 functional test: synthesize a >64KiB body, expect 413 with cap-naming message. Reference: `add-read-post-search` 7.7
-- [ ] 4.6 Metrics POST search `exemplarTraceId` sugar test: tree containing `{exemplarTraceId: "<hex>"}` compiles to `JsonAttributeEquals('exemplars_json', 'traceId', ...)`. Reference: `add-read-post-search` 7.5
+- [x] 4.1 [PROMOTED to add-read-test-coverage-roundup §1] Dedicated time-window row-group push-down test
+- [x] 4.2 [PROMOTED to add-read-test-coverage-roundup §2] Schema-absent column unit test
+- [x] 4.3 [PROMOTED to add-read-test-coverage-roundup §3] Multi-attribute traces functional test
+- [x] 4.4 [PROMOTED to add-read-test-coverage-roundup §4] Multi-attribute metrics functional test
+- [x] 4.5 [PROMOTED to add-read-test-coverage-roundup §5] POST search body-size 413 test
+- [~] 4.6 [DROPPED] Metrics `exemplarTraceId` sugar test — the sugar wasn't shipped in `add-read-post-search` v1; this test depends on a feature that hasn't shipped. Tracked under a future POST-search-extensions follow-up if/when the sugar is implemented
 
 ## 5. Theme: add-read-docs-roundup
 

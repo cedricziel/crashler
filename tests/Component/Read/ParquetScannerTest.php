@@ -274,6 +274,45 @@ final class ParquetScannerTest extends TestCase
         self::assertSame(2, $result->groupsSkipped, 'two row groups should be elided by min/max push-down');
     }
 
+    public function testRowGroupPushDownSkipsByTimeWindowRange(): void
+    {
+        // Three files in the same partition, each holding rows whose
+        // time_unix_nano falls entirely-before / inside / entirely-after a
+        // requested [since, until] window. The time-window push-down
+        // (a `ColumnInRange` predicate on `time_unix_nano`) should refute
+        // the boundary files and keep only the inside-window file.
+        $tenant = 'acme';
+        $beforeNano = (int) (new \DateTimeImmutable('2026-05-09 13:00:00 UTC'))->format('U') * 1_000_000_000;
+        $insideNano = (int) (new \DateTimeImmutable('2026-05-09 14:30:00 UTC'))->format('U') * 1_000_000_000;
+        $afterNano = (int) (new \DateTimeImmutable('2026-05-09 16:00:00 UTC'))->format('U') * 1_000_000_000;
+        $sinceNano = (int) (new \DateTimeImmutable('2026-05-09 14:00:00 UTC'))->format('U') * 1_000_000_000;
+        $untilNano = (int) (new \DateTimeImmutable('2026-05-09 15:00:00 UTC'))->format('U') * 1_000_000_000;
+
+        $this->writeLogsFixtureForFile($tenant, '2026-05-09', '14', 'AAA', [
+            ['service' => 'checkout', 'severity' => 9, 'body' => 'before-window', 'time_unix_nano' => $beforeNano],
+        ]);
+        $this->writeLogsFixtureForFile($tenant, '2026-05-09', '14', 'BBB', [
+            ['service' => 'checkout', 'severity' => 9, 'body' => 'inside-window', 'time_unix_nano' => $insideNano],
+        ]);
+        $this->writeLogsFixtureForFile($tenant, '2026-05-09', '14', 'CCC', [
+            ['service' => 'checkout', 'severity' => 9, 'body' => 'after-window', 'time_unix_nano' => $afterNano],
+        ]);
+
+        $glob = $this->tempStorageRoot()."/logs/$tenant/date=2026-05-09/hour=14/part-*.parquet";
+
+        $scanner = new ParquetScanner(new MockClock('2026-05-09 14:30:00 UTC'), executionTimeoutSeconds: 10);
+        $result = $scanner->scan(
+            [$glob],
+            [new \App\Read\Compute\Predicates\ColumnInRange('time_unix_nano', $sinceNano, $untilNano)],
+            limit: 100,
+        );
+
+        self::assertCount(1, $result->rows, 'only the inside-window file should produce rows');
+        self::assertSame(json_encode(['stringValue' => 'inside-window']), $result->rows[0]['body_json']);
+        self::assertSame(1, $result->groupsScanned);
+        self::assertSame(2, $result->groupsSkipped, 'before- and after-window row groups must be elided by metadata push-down');
+    }
+
     public function testRowGroupPushDownLeavesStringPredicatesAlone(): void
     {
         // No numeric predicate in this query → row groups cannot be skipped
