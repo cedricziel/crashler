@@ -184,8 +184,25 @@ before('deploy:vendors', 'crashler:purge_old_logs');
 // broken <script src="/bundles/apiplatform/..."> references. Run the
 // command explicitly after vendors install so the public/bundles/
 // directory is always populated for the new release.
+//
+// Then dereference any symlinks `assets:install` created into hard
+// copies. On managed hosts (All-Inkl, etc.) Apache's symlink-follow
+// is sometimes restricted, AND absolute symlinks point at
+// releases/N/vendor/... which breaks when the release is cleaned up.
+// Hard copies sidestep both. Cost: a few hundred KB of duplicated
+// static assets per release.
 task('crashler:assets_install', function () {
     run('cd {{release_path}} && {{bin/php}} bin/console assets:install public --env=prod --no-debug');
+    run(<<<'BASH'
+        cd {{release_path}}/public/bundles 2>/dev/null || exit 0
+        find . -mindepth 1 -maxdepth 1 -type l | while read -r link; do
+            target=$(readlink -f "$link")
+            if [ -d "$target" ]; then
+                rm "$link"
+                cp -rL "$target" "$link"
+            fi
+        done
+        BASH);
 });
 after('deploy:vendors', 'crashler:assets_install');
 
