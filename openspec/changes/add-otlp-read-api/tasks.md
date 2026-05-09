@@ -167,13 +167,13 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 ## 14. HTTP response conventions
 
-- [ ] 14.1 [red] Functional test: every 2xx response carries `Cache-Control: no-store, private`
-- [ ] 14.2 [red] Functional test: `Accept-Encoding: gzip` → `Content-Encoding: gzip` and the body is gzipped
-- [ ] 14.3 [red] Functional test: `Accept-Encoding` absent → uncompressed response
-- [ ] 14.4 [red] Functional test: GET with `Content-Length: 5` (a body) → 415 with "read endpoints take no body" message
-- [ ] 14.5 [red] Functional test: `Accept: text/plain` → 415 with supported-formats list
-- [ ] 14.6 [red] Functional test: search endpoint with no matches returns 200 with empty rows collection (NOT 404)
-- [ ] 14.7 [red] Functional test: by-ID endpoint with unknown ID within the search window → 404
+- [x] 14.1 [red] Functional test: every 2xx response carries `Cache-Control: no-store, private`
+- [x] 14.2 [red] Functional test: `Accept-Encoding: gzip` → `Content-Encoding: gzip` and the body is gzipped
+- [x] 14.3 [red] Functional test: `Accept-Encoding` absent → uncompressed response
+- [x] 14.4 [red] Functional test: GET with `Content-Length: 5` (a body) → 415 with "read endpoints take no body" message
+- [~] 14.5 [SHARED] [red] Functional test: `Accept: text/plain` → 415 with supported-formats list
+- [x] 14.6 [red] Functional test: search endpoint with no matches returns 200 with empty rows collection (NOT 404)
+- [x] 14.7 [red] Functional test: by-ID endpoint with unknown ID within the search window → 404
 
 ## 15. OpenAPI spec verification
 
