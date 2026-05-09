@@ -52,17 +52,17 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 ## 5. ParquetScanner (TDD)
 
-- [ ] 5.1 [red] Component test: `ParquetScanner::scan(predicates, partitionGlobs, limit)` returns rows from a synthetic single-file Parquet fixture
-- [ ] 5.2 [green] Implement `App\Read\Compute\ParquetScanner` opening files via flow-php's `Reader`, streaming rows, evaluating predicates in tier order
-- [ ] 5.3 [red] Test: tier-ordered evaluation — when `service=foo` rejects 99% of rows, the JSON-attribute predicate's `json_decode` is called only on the surviving 1% (verified by counting json_decode calls or by timing comparison)
-- [ ] 5.4 [red] Test: row-group statistics push-down — when a row group's `max(severity_number) = 9` and the predicate is `ColumnGreaterEqual('severity_number', 17)`, the scanner does NOT iterate that group's data pages
-- [ ] 5.5 [red] Test: large fixture (10 K rows) does NOT load all rows into memory; peak memory bounded by `limit` × per-row size
-- [ ] 5.6 [red] Test: ULID-ordered file iteration — three files with ULIDs A < B < C in the same partition are read in A, B, C order
-- [ ] 5.7 [red] Test: early-exit on `limit` — partition with 10 K matching rows + `limit=100` reads at most enough row groups to surface 100 rows
-- [ ] 5.8 [red] Test: scanner respects `execution_timeout_seconds` and surfaces a `ScanTimeoutException`
-- [ ] 5.9 [red] Test: a corrupt Parquet file in the partition surfaces as `ScanIoException` with the partition path masked (no `var/` leakage)
-- [ ] 5.10 [red] Test: integers from Parquet's INT64 columns serialize as JSON strings (preserves int64 precision; mirrors OTLP/HTTP-JSON convention)
-- [ ] 5.11 [red] Test: round-trip — write fixture data via `ParquetFileWriter`, read it back via `ParquetScanner`; rows match exactly
+- [x] 5.1 [red] Component test: `ParquetScanner::scan(predicates, partitionGlobs, limit)` returns rows from a synthetic single-file Parquet fixture
+- [x] 5.2 [green] Implement `App\Read\Compute\ParquetScanner` opening files via flow-php's `Reader`, streaming rows, evaluating predicates in tier order
+- [x] 5.3 [red] Test: tier-ordered evaluation — when `service=foo` rejects 99% of rows, the JSON-attribute predicate's `json_decode` is called only on the surviving 1% (verified by counting json_decode calls or by timing comparison)
+- [~] 5.4 [DEFERRED] [red] Test: row-group statistics push-down — when a row group's `max(severity_number) = 9` and the predicate is `ColumnGreaterEqual('severity_number', 17)`, the scanner does NOT iterate that group's data pages
+- [x] 5.5 [red] Test: large fixture (10 K rows) does NOT load all rows into memory; peak memory bounded by `limit` × per-row size
+- [x] 5.6 [red] Test: ULID-ordered file iteration — three files with ULIDs A < B < C in the same partition are read in A, B, C order
+- [x] 5.7 [red] Test: early-exit on `limit` — partition with 10 K matching rows + `limit=100` reads at most enough row groups to surface 100 rows
+- [~] 5.8 [DEFERRED] [red] Test: scanner respects `execution_timeout_seconds` and surfaces a `ScanTimeoutException`
+- [x] 5.9 [red] Test: a corrupt Parquet file in the partition surfaces as `ScanIoException` with the partition path masked (no `var/` leakage)
+- [~] 5.10 [DEFERRED] [red] Test: integers from Parquet's INT64 columns serialize as JSON strings (preserves int64 precision; mirrors OTLP/HTTP-JSON convention)
+- [x] 5.11 [red] Test: round-trip — write fixture data via `ParquetFileWriter`, read it back via `ParquetScanner`; rows match exactly
 
 ## 6. AP State Providers + filter framework (TDD)
 
