@@ -84,9 +84,91 @@ Two infrastructure columns are appended by the writer to every file regardless o
 - `_schema_version` (int32) — copied from the YAML's `version`.
 - `_schema_id` (string) — `<signal>/v<version>`, e.g. `logs/v1`.
 
-The on-disk Parquet schema is treated as **internal**. A future query layer will be the public read contract; ad-hoc DuckDB queries described below are operator tooling, not a stable public interface.
+The on-disk Parquet schema is treated as **internal**. The HTTP read API (below) is the public read contract; the DuckDB recipes further down are operator/debug tooling, not a stable public interface.
 
-## Querying
+## Reading data
+
+Crashler exposes an HTTP read API alongside the OTLP write endpoints. Same Bearer token grants access to read what you wrote.
+
+### Endpoints
+
+| Path                          | Verb | Returns                                                                  |
+| ----------------------------- | ---- | ------------------------------------------------------------------------ |
+| `/v1/logs`                    | GET  | search log records, paginated                                            |
+| `/v1/traces`                  | GET  | search spans, paginated                                                  |
+| `/v1/traces/{traceId}`        | GET  | one full span tree, OTLP `ResourceSpans`-shaped (32 lowercase hex chars) |
+| `/v1/spans/{spanId}`          | GET  | one span, OTLP `Span`-shaped (16 lowercase hex chars)                    |
+| `/v1/metrics`                 | GET  | search metric data-points, paginated                                     |
+| `/docs.jsonopenapi`           | GET  | auto-generated OpenAPI 3 spec (anonymous)                                |
+| `/docs`                       | GET  | Swagger UI for browsable exploration (anonymous)                         |
+
+Auth is the same Bearer token used for OTLP write — no separate read tokens. Add `Authorization: Bearer <plaintext-token>` to every request.
+
+### Time window
+
+Every search REQUIRES a time window. Default is the last 1 hour; you can override with:
+
+- `since=<RFC3339>` + `until=<RFC3339>` (both absolute), or
+- `since=<unix-nano>` + `until=<unix-nano>`, or
+- `since=2h` (or `30m`, `7d`) — duration shorthand implies `until=<now>`.
+
+Mixing `since=<duration>` with an absolute `until` is rejected. Window > 30 days (configurable via `CRASHLER_READ_MAX_TIME_WINDOW_DAYS`) is rejected. The window prunes which `date=…/hour=…` Hive partitions get scanned, so narrow windows are fast.
+
+### Common filters (all signals)
+
+- `service` — exact match on `resource_service_name`
+- `environment` — exact match on `resource_deployment_environment`
+- `host` — exact match on `resource_host_name`
+- `limit` — page size (default 100, max 1000)
+- `cursor` — opaque pagination token from a previous response
+
+When `cursor` is supplied, every other criterion is ignored — the cursor encodes the original criteria.
+
+### Per-signal filters
+
+```
+/v1/logs    severityNumber severityNumberMin severityText
+            traceId spanId eventName bodyContains
+/v1/traces  name (with optional leading or trailing *) kind statusCode
+            httpStatusCodeMin traceId parentSpanId
+/v1/metrics metricName metricType aggregationTemporality exemplarTraceId
+```
+
+Unknown query parameters → 400. Enum mismatches (`kind`, `metricType`, etc.) → 422 (API Platform's parameter validation kicks in first; semantic violations like `metricName=http.*` wildcards return 400).
+
+### Wire formats
+
+Search responses are content-negotiated based on the `Accept` header:
+
+- `application/ld+json` — Hydra (default; typed, discoverable)
+- `application/hal+json` — HAL with `_links` blocks
+- `application/json` — compact (jq-friendly)
+- `application/vnd.api+json` — JSON:API
+
+Same data, different shapes. The trace-by-id and span-by-id endpoints always return the OTLP shape they're designed for, with a `_links` block alongside.
+
+### Examples
+
+```bash
+TOKEN="<your-tenant-token>"
+
+# Recent errors, compact JSON
+curl -H "Authorization: Bearer $TOKEN" \
+     -H "Accept: application/json" \
+     "https://crashler.example.com/v1/logs?service=checkout&severityNumberMin=17&since=1h"
+
+# Full trace tree by ID
+curl -H "Authorization: Bearer $TOKEN" \
+     "https://crashler.example.com/v1/traces/5b8aa5a2d2c872e8321cf37308d69df2"
+
+# Histograms for a service in the last 24h
+curl -H "Authorization: Bearer $TOKEN" \
+     "https://crashler.example.com/v1/metrics?service=checkout&metricType=HISTOGRAM&since=24h"
+```
+
+### Operator/debug recipes — DuckDB on the file tree
+
+The HTTP read API is the contract. The DuckDB recipes below are operator/debug tooling for ad-hoc deep dives directly on the Parquet files (typically over SSH on the host). They are NOT a stable interface — schema renames between versions can break them.
 
 DuckDB reads the file tree directly. Logs:
 

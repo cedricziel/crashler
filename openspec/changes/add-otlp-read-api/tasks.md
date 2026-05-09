@@ -161,9 +161,9 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 ## 13. Cross-signal navigation end-to-end (TDD)
 
-- [ ] 13.1 [red] Functional test: ingest 1 trace + matching logs + matching metrics. `GET /v1/logs?...` → follow `trace` affordance from a row → 200 with that trace tree → follow `metricsWithExemplars` → 200 with the metric rows linking back
-- [ ] 13.2 [red] Functional test: a metric exemplar's `exemplars` affordance resolves to a real `/v1/traces/<hex>` that 200s
-- [ ] 13.3 [red] Functional test: trace-by-ID's `logs` affordance resolves to a `/v1/logs?...` that 200s and returns logs from that trace
+- [x] 13.1 [red] Functional test: ingest 1 trace + matching logs + matching metrics. `GET /v1/logs?...` → follow `trace` affordance from a row → 200 with that trace tree → follow `metricsWithExemplars` → 200 with the metric rows linking back
+- [x] 13.2 [red] Functional test: a metric exemplar's `exemplars` affordance resolves to a real `/v1/traces/<hex>` that 200s
+- [x] 13.3 [red] Functional test: trace-by-ID's `logs` affordance resolves to a `/v1/logs?...` that 200s and returns logs from that trace
 
 ## 14. HTTP response conventions
 
@@ -177,19 +177,19 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 ## 15. OpenAPI spec verification
 
-- [ ] 15.1 [red] Functional test: `GET /docs.jsonopenapi` (unauthenticated) → 200 with valid OpenAPI 3.1 JSON
-- [ ] 15.2 [red] Functional test: `paths` object contains `/v1/logs`, `/v1/traces`, `/v1/traces/{traceId}`, `/v1/spans/{spanId}`, `/v1/metrics`
-- [ ] 15.3 [red] Functional test: `/v1/logs` GET operation lists every documented log filter under `parameters`
+- [x] 15.1 [red] Functional test: `GET /docs.jsonopenapi` (unauthenticated) → 200 with valid OpenAPI 3.1 JSON
+- [x] 15.2 [red] Functional test: `paths` object contains `/v1/logs`, `/v1/traces`, `/v1/traces/{traceId}`, `/v1/spans/{spanId}`, `/v1/metrics`
+- [x] 15.3 [red] Functional test: `/v1/logs` GET operation lists every documented log filter under `parameters`
 - [ ] 15.4 [red] Functional test: `components.securitySchemes` declares a bearer-token scheme; every read operation references it
-- [ ] 15.5 [red] Functional test: spec validates against the OpenAPI 3.1 JSON schema (use `justinrainbow/json-schema` or equivalent)
-- [ ] 15.6 [red] Functional test: Swagger UI at `/docs` returns HTML 200
+- [x] 15.5 [red] Functional test: spec validates against the OpenAPI 3.1 JSON schema (use `justinrainbow/json-schema` or equivalent)
+- [x] 15.6 [red] Functional test: Swagger UI at `/docs` returns HTML 200
 
 ## 16. Operator documentation
 
-- [ ] 16.1 README: new "Reading data" section before the existing "Querying" (operator-side DuckDB recipes) section. Cover all five endpoints, the criteria, the `_links` model, and how to follow links from `curl + jq`. Point readers to the Swagger UI as the canonical contract
-- [ ] 16.2 README: document the `crashler.read.*` config keys (window cap, page size cap, cursor secret, span lookup window, execution timeout)
-- [ ] 16.3 README: re-frame the existing "Querying" (DuckDB) section as "Operator/debug recipes (not a public interface)"; clarify that runtime read compute is pure flow-php and the DuckDB recipes are an operator convenience for ad-hoc deep dives
-- [ ] 16.4 README: add a "Format negotiation" subsection showing the same `GET /v1/logs?...` request with three different `Accept` headers and their three response shapes side-by-side
+- [x] 16.1 README: new "Reading data" section before the existing "Querying" (operator-side DuckDB recipes) section. Cover all five endpoints, the criteria, the `_links` model, and how to follow links from `curl + jq`. Point readers to the Swagger UI as the canonical contract
+- [x] 16.2 README: document the `crashler.read.*` config keys (window cap, page size cap, cursor secret, span lookup window, execution timeout)
+- [x] 16.3 README: re-frame the existing "Querying" (DuckDB) section as "Operator/debug recipes (not a public interface)"; clarify that runtime read compute is pure flow-php and the DuckDB recipes are an operator convenience for ad-hoc deep dives
+- [x] 16.4 README: add a "Format negotiation" subsection showing the same `GET /v1/logs?...` request with three different `Accept` headers and their three response shapes side-by-side
 
 ## 17. Spec scenario cross-check
 
