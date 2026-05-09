@@ -16,17 +16,17 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 ## 2. Time window parsing + partition pruning (TDD)
 
-- [ ] 2.1 [red] Unit test: `TimeWindow::parse(['since'=>null,'until'=>null])` defaults to `[now-1h, now]`
-- [ ] 2.2 [red] Unit test: `since=2h` resolves to `[now-2h, now]`; supports `m`, `h`, `d` suffixes
-- [ ] 2.3 [red] Unit test: `since=2026-05-09T13:00:00Z&until=2026-05-09T14:00:00Z` parses both as RFC3339
-- [ ] 2.4 [red] Unit test: `since=1714752000000000000` parses as unix-nano numeric string
-- [ ] 2.5 [red] Unit test: window > `max_time_window_days` (30d) → `OutOfRangeException` with cap in message
-- [ ] 2.6 [red] Unit test: `until < since` rejected
-- [ ] 2.7 [red] Unit test: `since=2h&until=<absolute>` (mixed semantics) rejected
-- [ ] 2.8 [green] Implement `App\Read\Criteria\TimeWindow`
-- [ ] 2.9 [red] Unit test: `PartitionPruner::globsFor(tenant, signal, window)` returns only the `date=…/hour=…` partition path globs that fall inside the window
-- [ ] 2.10 [green] Implement `App\Read\Compute\PartitionPruner`
-- [ ] 2.11 [red] Component test: pruner against a synthetic tenant tree with 3 days of partitions returns only the matching ones
+- [x] 2.1 [red] Unit test: `TimeWindow::parse(['since'=>null,'until'=>null])` defaults to `[now-1h, now]`
+- [x] 2.2 [red] Unit test: `since=2h` resolves to `[now-2h, now]`; supports `m`, `h`, `d` suffixes
+- [x] 2.3 [red] Unit test: `since=2026-05-09T13:00:00Z&until=2026-05-09T14:00:00Z` parses both as RFC3339
+- [x] 2.4 [red] Unit test: `since=1714752000000000000` parses as unix-nano numeric string
+- [x] 2.5 [red] Unit test: window > `max_time_window_days` (30d) → `OutOfRangeException` with cap in message
+- [x] 2.6 [red] Unit test: `until < since` rejected
+- [x] 2.7 [red] Unit test: `since=2h&until=<absolute>` (mixed semantics) rejected
+- [x] 2.8 [green] Implement `App\Read\Criteria\TimeWindow`
+- [x] 2.9 [red] Unit test: `PartitionPruner::globsFor(tenant, signal, window)` returns only the `date=…/hour=…` partition path globs that fall inside the window
+- [x] 2.10 [green] Implement `App\Read\Compute\PartitionPruner`
+- [x] 2.11 [red] Component test: pruner against a synthetic tenant tree with 3 days of partitions returns only the matching ones
 
 ## 3. Predicate primitives (TDD)
 
