@@ -1,9 +1,7 @@
 ## Purpose
 
 Defines the `Trace` and `Span` API Platform resources that power `GET /v1/traces`, `GET /v1/traces/{traceId}`, and `GET /v1/spans/{spanId}`. Exposes search-by-criteria over the on-disk `traces/v1` Parquet files plus full-trace-tree retrieval by ID (with OTLP `ResourceSpans`-shaped JSON when negotiated as `application/otlp+json`) and single-span retrieval by ID. Per-row affordances let clients drill from a span search row into the full trace tree and from there into related logs and metrics.
-
 ## Requirements
-
 ### Requirement: Trace ApiResource with GetCollection + Get operations
 
 The system SHALL declare an `App\Read\Resource\Trace` PHP class as an `#[ApiResource]` with two operations:
@@ -29,7 +27,7 @@ The Trace Resource SHALL declare the following `#[ApiFilter]`s in addition to th
 - `httpStatusCodeMin` — inclusive lower bound on `http_response_status_code`; row-group push-down eligible
 - `traceId` — equality on `trace_id_hex` (32 lowercase hex chars; alias for the `/v1/traces/{traceId}` Item operation)
 - `parentSpanId` — equality on `parent_span_id_hex` (16 lowercase hex chars; finds child spans of a given parent)
-- `attribute.<key>` — equality via `JsonAttributeEquals('attributes_json', key, v)` (decoded JSON walk, not substring; one such filter per request in v1)
+- `attribute.<key>` — equality via `JsonAttributeEquals('attributes_json', key, v)` (decoded JSON walk, not substring). Multiple distinct `attribute.<key>` filters compose with logical AND in a single request, up to the per-request cap defined by `read-api` (`crashler.read.max_attribute_filters`, default 5).
 
 #### Scenario: name with trailing wildcard
 - **WHEN** `GET /v1/traces?name=GET+/orders/*&since=1h`
@@ -46,6 +44,15 @@ The Trace Resource SHALL declare the following `#[ApiFilter]`s in addition to th
 #### Scenario: parentSpanId finds child spans
 - **WHEN** `GET /v1/traces?parentSpanId=051581bf3cb55c13&since=1h`
 - **THEN** every returned row has `parentSpanIdHex == "051581bf3cb55c13"`
+
+#### Scenario: Multiple attribute filters compose with AND
+- **WHEN** `GET /v1/traces?attribute.http.method=POST&attribute.http.route=/checkout&since=1h`
+- **THEN** the request is accepted
+- **AND** every returned span's decoded `attributesJson` carries entries for both `http.method=POST` and `http.route=/checkout`
+
+#### Scenario: Six attribute filters in one request rejected
+- **WHEN** the request carries six distinct `attribute.<key>` parameters (and the configured cap is 5)
+- **THEN** the response status is 400 with a message naming the cap (5)
 
 ### Requirement: GET /v1/traces/{traceId} returns the full span tree (OTLP-shaped on negotiation)
 
@@ -119,3 +126,37 @@ When `GET /v1/traces` returns rows from a search, each row SHALL carry an afford
 #### Scenario: Search row links to its trace
 - **WHEN** `GET /v1/traces?service=checkout&since=1h` returns rows
 - **THEN** every row carries an affordance `trace = /v1/traces/<that-row's-traceIdHex>`
+
+### Requirement: POST /v1/traces/search
+
+The system SHALL expose `POST /v1/traces/search` via either a `#[Post]` operation on the `App\Read\Resource\Trace` Resource OR a plain Symfony controller with `#[Route('/v1/traces/search', methods: ['POST'])]` (e.g., `App\Read\Controller\PostTracesSearchController`). The operation SHALL share the firewall, Bearer-token authentication, and tenant scoping of the existing `GET /v1/traces` collection.
+
+The processor SHALL accept a JSON body matching the predicate-tree DSL defined in `read-api`. The allowed columns SHALL match the GET filter set on traces:
+
+- `resource_service_name`, `resource_deployment_environment`, `resource_host_name`
+- `name` (compiles to `ColumnEquals` for `eq`, `ColumnLikePrefix` / `ColumnLikeSuffix` for `prefix` / `suffix` ops)
+- `kind_text`, `status_text`
+- `http_response_status_code`
+- `trace_id_hex`, `parent_span_id_hex`
+- `time_unix_nano`
+
+The `body` leaf SHALL be rejected (logs-only). The `attribute` leaf SHALL compile to `JsonAttributeEquals('attributes_json', key, value)`.
+
+POST search on traces returns the flat collection shape — i.e., one row per matching span — as the GET search does. POST search SHALL NOT return the OTLP `ResourceSpans` tree shape; that shape is reserved for the by-ID `GET /v1/traces/{traceId}` operation.
+
+#### Scenario: POST search returns the flat span collection
+- **WHEN** `POST /v1/traces/search` is invoked with a valid criteria
+- **THEN** the response shape matches `GET /v1/traces?...` — one row per span, not OTLP-grouped
+
+#### Scenario: POST search supports kind OR
+- **WHEN** `POST /v1/traces/search` is invoked with `criteria = {"any": [{"column": "kind_text", "op": "eq", "value": "SERVER"}, {"column": "kind_text", "op": "eq", "value": "CLIENT"}]}`
+- **THEN** the response contains spans whose `kind` is either SERVER or CLIENT
+
+#### Scenario: POST search supports name with prefix and NOT
+- **WHEN** `POST /v1/traces/search` is invoked with `criteria = {"all": [{"column": "name", "op": "prefix", "value": "GET /orders/"}, {"not": {"column": "status_text", "op": "eq", "value": "OK"}}]}`
+- **THEN** the response contains spans whose `name` starts with `GET /orders/` AND whose `statusCode` is not `OK`
+
+#### Scenario: POST search rejects body filter on traces
+- **WHEN** `POST /v1/traces/search` is invoked with a criteria containing a `{"body": "contains", "value": "..."}` leaf
+- **THEN** the system responds with HTTP 400 with a message that body filters are logs-only
+

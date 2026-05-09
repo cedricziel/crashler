@@ -1,9 +1,7 @@
 ## Purpose
 
 Defines the `Metric` API Platform resource that powers `GET /v1/metrics`. Exposes a search-by-criteria collection endpoint over the on-disk `metrics/v1` Parquet files, with typed filters for service / environment / metric name / metric type / aggregation temporality / exemplar trace ID / attribute equality, plus a per-row hypermedia affordance pointing into the trace referenced by a metric's first exemplar. The `exemplarTraceId` filter is also the canonical shorthand used by Trace.Get responses to surface "metrics referencing this trace".
-
 ## Requirements
-
 ### Requirement: Metric ApiResource with GetCollection operation
 
 The system SHALL declare an `App\Read\Resource\Metric` PHP class as an `#[ApiResource]` with a single `GetCollection` operation at `/v1/metrics`. Provider: `App\Read\State\MetricsStateProvider`. The Resource SHALL list properties matching the camelCase form of the on-disk columns: `metricName`, `metricType`, `metricTypeCode`, `timeUnixNano`, `startTimeUnixNano`, `metricUnit`, `aggregationTemporalityText`, `valueDouble`, `valueInt`, `count`, `sum`, `min`, `max`, `bucketsJson`, `exponentialHistogramJson`, `quantilesJson`, `exemplarsJson`, `attributesJson`, `metricAttributesJson`, `resourceServiceName`, etc. The `schemaId` SHALL be `metrics/v1`.
@@ -22,7 +20,7 @@ The Metric Resource SHALL declare the following `#[ApiFilter]`s in addition to t
 - `metricType` — exact match on `metric_type` (`SUM` | `GAUGE` | `HISTOGRAM` | `EXPONENTIAL_HISTOGRAM` | `SUMMARY`)
 - `aggregationTemporality` — exact match on `aggregation_temporality_text` (`UNSPECIFIED` | `DELTA` | `CUMULATIVE`); only meaningful for SUM / HISTOGRAM / EXPONENTIAL_HISTOGRAM rows
 - `exemplarTraceId` — find rows whose `exemplars_json` carries an exemplar referring to that trace ID. Compiles to `JsonAttributeEquals('exemplars_json', 'traceId', v)` which decodes the JSON and walks the exemplar list checking the `traceId` field (NOT a substring match — defends against false positives where a 32-char hex appears in another field). Used by Trace.Get responses to populate the `metricsWithExemplars` affordance
-- `attribute.<key>` — equality via `JsonAttributeEquals('attributes_json', key, v)` (decoded JSON walk; one such filter per request in v1)
+- `attribute.<key>` — equality via `JsonAttributeEquals('attributes_json', key, v)` (decoded JSON walk). Multiple distinct `attribute.<key>` filters compose with logical AND in a single request, up to the per-request cap defined by `read-api` (`crashler.read.max_attribute_filters`, default 5).
 
 #### Scenario: metricType enum mismatch rejected
 - **WHEN** `GET /v1/metrics?metricType=BANANA&since=1h`
@@ -40,6 +38,15 @@ The Metric Resource SHALL declare the following `#[ApiFilter]`s in addition to t
 #### Scenario: Wildcard in metricName is rejected
 - **WHEN** `GET /v1/metrics?metricName=http.*&since=1h`
 - **THEN** the response status is 400 with a message that wildcards in `metricName` are not supported in v1
+
+#### Scenario: Multiple attribute filters compose with AND
+- **WHEN** `GET /v1/metrics?attribute.k8s.cluster=prod&attribute.region=eu-west-1&since=1h`
+- **THEN** the request is accepted
+- **AND** every returned row's decoded `attributesJson` carries entries for both `k8s.cluster=prod` and `region=eu-west-1`
+
+#### Scenario: Six attribute filters in one request rejected
+- **WHEN** the request carries six distinct `attribute.<key>` parameters (and the configured cap is 5)
+- **THEN** the response status is 400 with a message naming the cap (5)
 
 ### Requirement: Per-row exemplar affordance
 
@@ -66,3 +73,28 @@ When a Metric row's `exemplarsJson`, after JSON-decoding, contains at least one 
 - **WHEN** `GET /v1/traces/<hex>` returns a response whose `metricsWithExemplars` affordance is `/v1/metrics?exemplarTraceId=<hex>&since=A&until=B`
 - **AND** a follow-up `GET` against that exact URL is made
 - **THEN** the response status is 200 and every returned metric row's decoded `exemplarsJson` contains an entry whose `traceId` is `<hex>`
+
+### Requirement: POST /v1/metrics/search
+
+The system SHALL expose `POST /v1/metrics/search` via either a `#[Post]` operation on the `App\Read\Resource\Metric` Resource OR a plain Symfony controller with `#[Route('/v1/metrics/search', methods: ['POST'])]` (e.g., `App\Read\Controller\PostMetricsSearchController`). The operation SHALL share the firewall, Bearer-token authentication, and tenant scoping of the existing `GET /v1/metrics` collection.
+
+The processor SHALL accept a JSON body matching the predicate-tree DSL defined in `read-api`. The allowed columns SHALL match the GET filter set on metrics:
+
+- `resource_service_name`, `resource_deployment_environment`, `resource_host_name`
+- `metric_name`, `metric_type`, `aggregation_temporality_text`
+- `time_unix_nano`
+
+The `body` leaf SHALL be rejected (logs-only). The `attribute` leaf SHALL compile to `JsonAttributeEquals('attributes_json', key, value)`. A second leaf form `{"exemplarTraceId": <hex>}` SHALL be accepted as syntactic sugar for `{"attribute": "traceId", "op": "eq", "value": <hex>}` against `exemplars_json`, mirroring the GET endpoint's `exemplarTraceId` parameter.
+
+#### Scenario: POST search supports metric type OR
+- **WHEN** `POST /v1/metrics/search` is invoked with `criteria = {"any": [{"column": "metric_type", "op": "eq", "value": "SUM"}, {"column": "metric_type", "op": "eq", "value": "GAUGE"}]}`
+- **THEN** the response contains rows whose `metricType` is SUM or GAUGE
+
+#### Scenario: POST search supports name IN-list
+- **WHEN** `POST /v1/metrics/search` is invoked with `criteria = {"column": "metric_name", "op": "in", "value": ["http.server.request.duration", "http.client.request.duration"]}`
+- **THEN** the response contains rows whose `metricName` is one of the two listed names
+
+#### Scenario: POST search rejects body filter on metrics
+- **WHEN** `POST /v1/metrics/search` is invoked with a criteria containing a `{"body": "contains", "value": "..."}` leaf
+- **THEN** the system responds with HTTP 400 with a message that body filters are logs-only
+
