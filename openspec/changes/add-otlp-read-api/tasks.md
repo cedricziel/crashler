@@ -42,13 +42,13 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 ## 4. Cursor (encode + sign + decode + verify) (TDD)
 
-- [ ] 4.1 [red] Unit test: `Cursor::mint(criteriaArray, position, tenantSlug, secret)` returns an opaque base64url string
-- [ ] 4.2 [red] Unit test: `Cursor::decode(opaque, secret)` round-trips and returns the original `(criteriaArray, position, tenantSlug)`
-- [ ] 4.3 [red] Unit test: `Cursor::decode` throws `InvalidCursorException` on tampered payload
-- [ ] 4.4 [red] Unit test: `Cursor::decode` throws when the embedded tenantSlug ≠ the current request's tenantSlug
-- [ ] 4.5 [red] Unit test: `Cursor::decode` throws when the embedded criteria's `since`/`until` exceed the configured cap (defense-in-depth)
-- [ ] 4.6 [green] Implement `App\Read\Cursor` (HMAC-SHA256, base64url, no padding)
-- [ ] 4.7 [red] Unit test: secret rotation invalidates pre-rotation cursors with a clear message
+- [x] 4.1 [red] Unit test: `Cursor::mint(criteriaArray, position, tenantSlug, secret)` returns an opaque base64url string
+- [x] 4.2 [red] Unit test: `Cursor::decode(opaque, secret)` round-trips and returns the original `(criteriaArray, position, tenantSlug)`
+- [x] 4.3 [red] Unit test: `Cursor::decode` throws `InvalidCursorException` on tampered payload
+- [x] 4.4 [red] Unit test: `Cursor::decode` throws when the embedded tenantSlug ≠ the current request's tenantSlug
+- [x] 4.5 [red] Unit test: `Cursor::decode` throws when the embedded criteria's `since`/`until` exceed the configured cap (defense-in-depth)
+- [x] 4.6 [green] Implement `App\Read\Cursor` (HMAC-SHA256, base64url, no padding)
+- [x] 4.7 [red] Unit test: secret rotation invalidates pre-rotation cursors with a clear message
 
 ## 5. ParquetScanner (TDD)
 
