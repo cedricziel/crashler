@@ -66,9 +66,16 @@ final class CrossFormatAssertionTest extends KernelTestCase
         self::assertSame('boom', json_decode($body['member'][0]['bodyJson'], true)['stringValue']);
     }
 
-    // testHalReturnsEmbeddedArray — DEFERRED v1.1: api-platform/hal
-    // package is installed but its serializer encoder isn't being
-    // picked up in our setup. v1 supports jsonld + json + jsonapi.
+    public function testHalReturnsEmbeddedArray(): void
+    {
+        $this->writeOneLog();
+        $body = $this->fetchAs('application/hal+json');
+
+        self::assertArrayHasKey('_embedded', $body);
+        $rows = $this->extractEmbeddedRows($body);
+        self::assertCount(1, $rows);
+        self::assertSame('boom', json_decode($rows[0]['bodyJson'], true)['stringValue']);
+    }
 
     public function testCompactJsonReturnsArray(): void
     {
@@ -94,6 +101,22 @@ final class CrossFormatAssertionTest extends KernelTestCase
         self::assertArrayHasKey('attributes', $body['data'][0]);
     }
 
+    public function testInt64ColumnsSerializeAsJsonStrings(): void
+    {
+        // §5.10: Parquet INT64 columns (time_unix_nano) must serialize
+        // as JSON strings in the response, not numbers, so int64
+        // precision is preserved on consumers (mirrors the OTLP/HTTP-JSON
+        // convention). The Resource DTOs declare `string` types for
+        // these fields; this test verifies the wire output.
+        $this->writeOneLog();
+        $body = $this->fetchAs('application/ld+json');
+        $row = $body['member'][0];
+
+        // timeUnixNano must be a JSON string, not a number.
+        self::assertIsString($row['timeUnixNano'], 'timeUnixNano must be a JSON string for int64 precision preservation');
+        self::assertMatchesRegularExpression('/^\d+$/', $row['timeUnixNano']);
+    }
+
     public function testEquivalentRowDataAcrossFormats(): void
     {
         $this->writeOneLog();
@@ -101,13 +124,17 @@ final class CrossFormatAssertionTest extends KernelTestCase
         $compact = $this->fetchAs('application/json');
         $compactRow = (array_is_list($compact) ? $compact : $compact['rows'])[0];
         $jsonApi = $this->fetchAs('application/vnd.api+json')['data'][0]['attributes'];
+        $halBody = $this->fetchAs('application/hal+json');
+        $halRow = $this->extractEmbeddedRows($halBody)[0];
+
         // Property-by-property equivalence on the load-bearing fields.
         // Each format may add its own metadata (Hydra adds @id/@type;
-        // JSON:API wraps in attributes), but the documented columns are
-        // the same. HAL coverage deferred to v1.1.
+        // JSON:API wraps in attributes; HAL adds _links), but the
+        // documented columns are the same.
         foreach (['timeUnixNano', 'severityNumber', 'bodyJson', 'resourceServiceName'] as $key) {
             self::assertSame($hydra[$key], $compactRow[$key], "compact differs from hydra on `$key`");
             self::assertSame($hydra[$key], $jsonApi[$key], "jsonapi differs from hydra on `$key`");
+            self::assertSame($hydra[$key], $halRow[$key], "hal differs from hydra on `$key`");
         }
     }
 

@@ -34,7 +34,7 @@ use App\Read\State\MetricsStateProvider;
     ],
     formats: [
         'jsonld' => ['application/ld+json'],
-        'hal' => ['application/hal+json'],
+        'jsonhal' => ['application/hal+json'],
         'json' => ['application/json'],
         'jsonapi' => ['application/vnd.api+json'],
     ],

@@ -61,7 +61,7 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 - [x] 5.7 [red] Test: early-exit on `limit` — partition with 10 K matching rows + `limit=100` reads at most enough row groups to surface 100 rows
 - [x] 5.8 [red] Test: scanner respects `execution_timeout_seconds` and surfaces a `ScanTimeoutException`
 - [x] 5.9 [red] Test: a corrupt Parquet file in the partition surfaces as `ScanIoException` with the partition path masked (no `var/` leakage)
-- [~] 5.10 [DEFERRED] [red] Test: integers from Parquet's INT64 columns serialize as JSON strings (preserves int64 precision; mirrors OTLP/HTTP-JSON convention)
+- [x] 5.10 [red] Test: integers from Parquet's INT64 columns serialize as JSON strings (preserves int64 precision; mirrors OTLP/HTTP-JSON convention)
 - [x] 5.11 [red] Test: round-trip — write fixture data via `ParquetFileWriter`, read it back via `ParquetScanner`; rows match exactly
 
 ## 6. AP State Providers + filter framework (TDD)
@@ -99,7 +99,7 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 - [x] 8.8 [red] Functional test: missing bearer → 401
 - [~] 8.9 [COVERED] [red] Functional test: tenant `acme` cannot see tenant `widgets` data even with valid `acme` token (PartitionPrunerTest::testTenantScopeCannotEscape + tenant slug enters as path segment)
 - [x] 8.10 [red] Functional test: `Accept: application/json` returns the compact envelope `{schemaId, rows, _links}` (compact format works; explicit cross-format assertion pending)
-- [~] 8.11 [DEFERRED v1.1] [red] Functional test: `Accept: application/hal+json` returns HAL-shaped response with `_embedded.rows`
+- [x] 8.11 [red] Functional test: `Accept: application/hal+json` returns HAL-shaped response with `_embedded.rows`
 - [x] 8.12 [red] Functional test: row with `traceIdHex` set carries an affordance `trace = /v1/traces/<hex>` (assert via format-agnostic helper) (PerRowLinksTest::testLogRowWithTraceContextCarriesPerRowLinks)
 - [x] 8.13 [red] Functional test: row with `traceIdHex==null` does NOT carry a `trace` affordance (PerRowLinksTest::testLogRowWithoutTraceContextOmitsLinks)
 - [~] 8.14 [COVERED] [red] Functional test: `attribute.exception.type=RuntimeException` matches by decoded JSON walk, not substring (assert by writing two log records — one with the structurally-correct attribute and one with the substring elsewhere; only the first is returned) (PredicatesTest::testJsonAttributeEqualsDefendsAgainstSubstringFalsePositives at predicate level)
