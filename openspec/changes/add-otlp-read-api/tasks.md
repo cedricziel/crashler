@@ -152,12 +152,12 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 ## 12. Hypermedia link rendering (shared)
 
-- [~] 12.1 [red] Unit test: `LinkBuilder::self(currentUrl, resolvedWindow)` returns the request URL with the resolved absolute time window (not the duration shorthand)
-- [~] 12.2 [red] Unit test: `LinkBuilder::trace(traceIdHex)`, `::span(spanIdHex)`, `::exemplars(exemplarsJson)` produce well-formed paths; `exemplars` returns null when no exemplar carries a traceId
-- [~] 12.3 [green] Implement `App\Read\Hateoas\LinkBuilder`
-- [~] 12.4 [red] Component test: format-agnostic helper `assertHasLink($response, $rel, $expectedHref)` decodes a response in any of the four formats and verifies the rel is present
-- [~] 12.5 [green] Implement the helper in `App\Tests\Support\HypermediaAssertions`
-- [~] 12.6 [red] Component test: every per-row affordance is rendered correctly into Hydra, HAL, compact JSON, and JSON:API for a fixture row that carries `traceIdHex` + `spanIdHex`
+- [x] 12.1 [red] Unit test: `LinkBuilder::self(currentUrl, resolvedWindow)` returns the request URL with the resolved absolute time window (not the duration shorthand)
+- [x] 12.2 [red] Unit test: `LinkBuilder::trace(traceIdHex)`, `::span(spanIdHex)`, `::exemplars(exemplarsJson)` produce well-formed paths; `exemplars` returns null when no exemplar carries a traceId
+- [x] 12.3 [green] Implement `App\Read\Hateoas\LinkBuilder`
+- [x] 12.4 [red] Component test: format-agnostic helper `assertHasLink($response, $rel, $expectedHref)` decodes a response in any of the four formats and verifies the rel is present
+- [x] 12.5 [green] Implement the helper in `App\Tests\Support\HypermediaAssertions`
+- [x] 12.6 [red] Component test: every per-row affordance is rendered correctly into Hydra, HAL, compact JSON, and JSON:API for a fixture row that carries `traceIdHex` + `spanIdHex`
 
 ## 13. Cross-signal navigation end-to-end (TDD)
 
