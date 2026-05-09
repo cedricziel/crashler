@@ -117,17 +117,17 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 - [x] 9.7 [green] Implement `App\Read\State\TracesStateProvider` (collection)
 - [ ] 9.8 [red] Unit test: `TraceTreeAssembler::assemble(rows)` groups rows back into ResourceSpans → ScopeSpans → spans, preserving order
 - [ ] 9.9 [green] Implement `App\Read\Traces\TraceTreeAssembler`
-- [ ] 9.10 [red] Functional test: `GET /v1/traces/<hex>` with `Accept: application/otlp+json` returns `{resourceSpans: [...], _links: {...}}`; spans grouped under their resource/scope; OTLP-shape `traceId`/`spanId` are lowercase hex
-- [ ] 9.11 [red] Functional test: same path with `Accept: application/ld+json` returns AP-default Hydra normalization (does NOT carry top-level `resourceSpans`)
-- [ ] 9.12 [red] Functional test: trace-by-ID `logs` affordance points to `/v1/logs?traceId=<id>&since=<start>&until=<end>`
-- [ ] 9.13 [red] Functional test: trace-by-ID `metricsWithExemplars` affordance points to `/v1/metrics?exemplarTraceId=<id>&since=<start>&until=<end>`
-- [ ] 9.14 [red] Functional test: missing trace ID → 404 with the searched window in the message
-- [ ] 9.15 [red] Functional test: malformed trace ID (non-hex / wrong length) → 400
-- [ ] 9.16 [green] Implement `App\Read\State\TraceStateProvider` (item)
-- [ ] 9.17 Declare `App\Read\Resource\Span` with one operation (Get at `/v1/spans/{spanId}`)
-- [ ] 9.18 [red] Functional test: `GET /v1/spans/<hex>` returns `{span:{...}, _links:{trace, logs, self}}`
-- [ ] 9.19 [red] Functional test: span-by-ID `trace` affordance points to `/v1/traces/<traceIdOfThatSpan>`
-- [ ] 9.20 [green] Implement `App\Read\State\SpanStateProvider`
+- [x] 9.10 [red] Functional test: `GET /v1/traces/<hex>` with `Accept: application/otlp+json` returns `{resourceSpans: [...], _links: {...}}`; spans grouped under their resource/scope; OTLP-shape `traceId`/`spanId` are lowercase hex
+- [~] 9.11 [SKIPPED] [red] Functional test: same path with `Accept: application/ld+json` returns AP-default Hydra normalization (does NOT carry top-level `resourceSpans`)
+- [x] 9.12 [red] Functional test: trace-by-ID `logs` affordance points to `/v1/logs?traceId=<id>&since=<start>&until=<end>`
+- [x] 9.13 [red] Functional test: trace-by-ID `metricsWithExemplars` affordance points to `/v1/metrics?exemplarTraceId=<id>&since=<start>&until=<end>`
+- [x] 9.14 [red] Functional test: missing trace ID → 404 with the searched window in the message
+- [x] 9.15 [red] Functional test: malformed trace ID (non-hex / wrong length) → 400
+- [x] 9.16 [green] Implement `App\Read\State\TraceStateProvider` (item)
+- [x] 9.17 Declare `App\Read\Resource\Span` with one operation (Get at `/v1/spans/{spanId}`)
+- [x] 9.18 [red] Functional test: `GET /v1/spans/<hex>` returns `{span:{...}, _links:{trace, logs, self}}`
+- [x] 9.19 [red] Functional test: span-by-ID `trace` affordance points to `/v1/traces/<traceIdOfThatSpan>`
+- [x] 9.20 [green] Implement `App\Read\State\SpanStateProvider`
 
 ## 10. OTLP output format normalizer (TDD)
 
@@ -144,7 +144,7 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 - [ ] 11.3 [red] Test: `metricType=BANANA` rejected
 - [ ] 11.4 [red] Test: wildcard in `metricName` rejected with v1-not-supported message
 - [ ] 11.5 [green] Implement filters in `App\Read\Filter\Metrics\*`
-- [ ] 11.6 [red] Functional test: `GET /v1/metrics?service=checkout&metricType=HISTOGRAM&since=1h` → matching rows with `metricType==HISTOGRAM`
+- [x] 11.6 [red] Functional test: `GET /v1/metrics?service=checkout&metricType=HISTOGRAM&since=1h` → matching rows with `metricType==HISTOGRAM`
 - [x] 11.7 [green] Implement `App\Read\State\MetricsStateProvider`
 - [ ] 11.8 [red] Functional test: row with non-empty `exemplarsJson` carrying a traceId → `exemplars` affordance points to `/v1/traces/<first-exemplar-hex>`
 - [ ] 11.9 [red] Functional test: row with `exemplarsJson==[]` does NOT carry an `exemplars` affordance

@@ -80,6 +80,7 @@ services:
             - '../src/Read/Cursor/Cursor.php'
             - '../src/Read/Cursor/InvalidCursorException.php'
             - '../src/Read/Criteria/'
+            - '../src/Read/Controller/TraceTreeAssembler.php'
 
     # TenantRegistry is built once at boot from validated config; the
     # CrashlerExtension exposes the validated tenants array as a parameter
@@ -125,6 +126,21 @@ services:
             $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
             $maxPageSize: '%crashler.read.max_page_size%'
             $cursorSecret: '%crashler.read.cursor_secret%'
+
+    # By-ID read controllers (item operations). Plain Symfony controllers
+    # because the OTLP-faithful response shape doesn't fit AP's "single
+    # Resource" convention cleanly. Same firewall + Bearer auth.
+    App\Read\Controller\ReadTraceController:
+        arguments:
+            $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
+            $spanLookupWindowHours: '%crashler.read.span_lookup_window_hours%'
+
+    App\Read\Controller\ReadSpanController:
+        arguments:
+            $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
+            $spanLookupWindowHours: '%crashler.read.span_lookup_window_hours%'
+
+    # TraceTreeAssembler is a static helper, not a service.
 
     # Default Parquet writer wires the configured compression codec at boot.
     # ParquetCompression::resolve fails fast if the codec's PHP extension is
