@@ -17,22 +17,25 @@ use Psr\Clock\ClockInterface;
  * (cheap-first, short-circuit on first failure). Stops early once `limit`
  * rows have been collected. Wall-clock timeout enforced between rows.
  *
+ * Tier-1 push-down: BEFORE iterating rows the scanner reads each file's
+ * row-group metadata via `ParquetFile::metadata()->rowGroups()` and applies
+ * {@see RowGroupSkipper} to refute groups against the active numeric
+ * predicates. Skipped groups are coalesced into runs and only the surviving
+ * runs are passed to flow-php's `values(offset, limit)` so their data pages
+ * are never opened. `groupsScanned` / `groupsSkipped` on the returned
+ * {@see ScanResult} expose the skip count for tests and structured logging.
+ *
  * Errors:
  *  - {@see ScanTimeoutException} when execution exceeds the timeout.
  *  - {@see ScanIoException} when a Parquet file is corrupted or unreadable.
  *    Both carry operator-friendly messages with absolute paths masked.
- *
- * The scanner owns ULID ordering, predicate sorting, position tracking,
- * and the "more results exist" signal. It does NOT own:
- *  - Time-window resolution (see {@see TimeWindow}, supplied as a predicate)
- *  - Partition glob computation (see {@see PartitionPruner})
- *  - Pagination cursor encoding (see {@see \App\Read\Cursor\Cursor})
  */
 final readonly class ParquetScanner
 {
     public function __construct(
         private ClockInterface $clock,
         private int $executionTimeoutSeconds,
+        private RowGroupSkipper $rowGroupSkipper = new RowGroupSkipper(),
     ) {
     }
 
@@ -56,6 +59,8 @@ final readonly class ParquetScanner
         $lastPosition = null;
         $hasMore = false;
         $rowsCollected = 0;
+        $groupsScanned = 0;
+        $groupsSkipped = 0;
 
         $reader = new Reader();
         foreach ($files as $file) {
@@ -68,45 +73,66 @@ final readonly class ParquetScanner
                 );
             }
 
-            $rowIdInFile = -1;
             try {
-                foreach ($parquetFile->values() as $row) {
-                    ++$rowIdInFile;
+                $rowGroups = $parquetFile->metadata()->rowGroups()->all();
+                $schema = $parquetFile->schema();
+            } catch (\Throwable $e) {
+                throw new ScanIoException(
+                    \sprintf('Failed to read row-group metadata from %s: %s', basename($file), $e->getMessage()),
+                    previous: $e,
+                );
+            }
 
-                    // Wall-clock timeout check (cheap — once per row, not
-                    // once per predicate). PHP's set_time_limit is
-                    // unreliable in mod_php; explicit check is robust.
-                    if ($this->clock->now()->getTimestamp() >= $deadline) {
-                        throw new ScanTimeoutException(\sprintf(
-                            'Read exceeded the configured execution timeout of %d seconds. Narrow your filters or reduce the time window.',
-                            $this->executionTimeoutSeconds,
-                        ));
+            // Classify each row group: skip-or-scan based on per-group stats.
+            // Coalesce contiguous scan-runs so we can read each surviving run
+            // via a single `values(offset, limit)` call.
+            $runs = [];
+            $cumulativeOffset = 0;
+            $currentRunStart = null;
+            $currentRunCount = 0;
+            foreach ($rowGroups as $group) {
+                $rowsInGroup = $group->rowsCount();
+                if ($this->rowGroupSkipper->canSkip($group, $schema, $predicates)) {
+                    ++$groupsSkipped;
+                    if (null !== $currentRunStart) {
+                        $runs[] = ['offset' => $currentRunStart, 'count' => $currentRunCount];
+                        $currentRunStart = null;
+                        $currentRunCount = 0;
                     }
-
-                    // Resume-from check: skip rows up to and including the
-                    // previous cursor position.
-                    if (null !== $resumeFrom && self::rowAtOrBeforePosition($row, $rowIdInFile, $resumeFrom)) {
-                        continue;
+                } else {
+                    ++$groupsScanned;
+                    if (null === $currentRunStart) {
+                        $currentRunStart = $cumulativeOffset;
                     }
+                    $currentRunCount += $rowsInGroup;
+                }
+                $cumulativeOffset += $rowsInGroup;
+            }
+            if (null !== $currentRunStart) {
+                $runs[] = ['offset' => $currentRunStart, 'count' => $currentRunCount];
+            }
+            if ([] === $runs) {
+                continue; // entire file refuted by metadata — nothing to scan
+            }
 
-                    if (!self::rowMatches($row, $predicates)) {
-                        continue;
-                    }
-
-                    if ($rowsCollected === $limit) {
-                        // We already had `limit` rows; finding one more
-                        // proves more exist beyond the page boundary.
+            try {
+                foreach ($runs as $run) {
+                    if ($this->scanRun(
+                        $parquetFile,
+                        $file,
+                        $run['offset'],
+                        $run['count'],
+                        $predicates,
+                        $limit,
+                        $resumeFrom,
+                        $deadline,
+                        $rows,
+                        $lastPosition,
+                        $rowsCollected,
+                    )) {
                         $hasMore = true;
                         break 2;
                     }
-
-                    $rows[] = $row;
-                    ++$rowsCollected;
-
-                    $lastPosition = [
-                        'lastTimeUnixNano' => self::extractTimeUnixNano($row),
-                        'lastRowId' => $rowIdInFile,
-                    ];
                 }
             } catch (ScanTimeoutException $e) {
                 throw $e;
@@ -120,7 +146,76 @@ final readonly class ParquetScanner
             }
         }
 
-        return new ScanResult($rows, $lastPosition, $hasMore);
+        return new ScanResult($rows, $lastPosition, $hasMore, $groupsScanned, $groupsSkipped);
+    }
+
+    /**
+     * Scans one contiguous run of row groups inside a Parquet file.
+     *
+     * Returns `true` if the limit was reached and there's at least one more
+     * matching row beyond it (signalling `hasMore`). Returns `false` when
+     * the run is exhausted without exceeding the limit.
+     *
+     * @param list<Predicate>                              $predicates
+     * @param ?array{lastTimeUnixNano: int, lastRowId: int} $resumeFrom
+     * @param list<array<string, mixed>>                   $rows           (mutated)
+     * @param ?array{lastTimeUnixNano: int, lastRowId: int} $lastPosition (mutated)
+     */
+    private function scanRun(
+        \Flow\Parquet\ParquetFile $parquetFile,
+        string $file,
+        int $runOffset,
+        int $runCount,
+        array $predicates,
+        int $limit,
+        ?array $resumeFrom,
+        int $deadline,
+        array &$rows,
+        ?array &$lastPosition,
+        int &$rowsCollected,
+    ): bool {
+        try {
+            $iter = $parquetFile->values(columns: [], limit: $runCount, offset: $runOffset);
+        } catch (\Throwable $e) {
+            throw new ScanIoException(
+                \sprintf('Failed reading rows from %s: %s', basename($file), $e->getMessage()),
+                previous: $e,
+            );
+        }
+
+        $rowIdInFile = $runOffset - 1;
+        foreach ($iter as $row) {
+            ++$rowIdInFile;
+
+            if ($this->clock->now()->getTimestamp() >= $deadline) {
+                throw new ScanTimeoutException(\sprintf(
+                    'Read exceeded the configured execution timeout of %d seconds. Narrow your filters or reduce the time window.',
+                    $this->executionTimeoutSeconds,
+                ));
+            }
+
+            if (null !== $resumeFrom && self::rowAtOrBeforePosition($row, $rowIdInFile, $resumeFrom)) {
+                continue;
+            }
+
+            if (!self::rowMatches($row, $predicates)) {
+                continue;
+            }
+
+            if ($rowsCollected === $limit) {
+                return true; // hasMore
+            }
+
+            $rows[] = $row;
+            ++$rowsCollected;
+
+            $lastPosition = [
+                'lastTimeUnixNano' => self::extractTimeUnixNano($row),
+                'lastRowId' => $rowIdInFile,
+            ];
+        }
+
+        return false;
     }
 
     /**
@@ -141,10 +236,6 @@ final readonly class ParquetScanner
             }
         }
 
-        // ULID-ascending = lexicographic (ULIDs are time-sortable strings).
-        // Within a partition that's chronological; across partitions the
-        // glob order from PartitionPruner is already chronological so any
-        // ULID ordering inside a partition is consistent.
         sort($files);
 
         return $files;
@@ -183,9 +274,6 @@ final readonly class ParquetScanner
     }
 
     /**
-     * Pulls the time value from whichever signal-specific column carries it.
-     * Logs and metrics use `time_unix_nano`; traces use `start_time_unix_nano`.
-     *
      * @param array<string, mixed> $row
      */
     private static function extractTimeUnixNano(array $row): int

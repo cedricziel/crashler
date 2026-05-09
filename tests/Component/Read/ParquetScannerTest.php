@@ -237,6 +237,64 @@ final class ParquetScannerTest extends TestCase
         $scanner->scan([$glob], [], limit: 100);
     }
 
+    public function testRowGroupPushDownSkipsFilesViaMinMaxStatistics(): void
+    {
+        // Three files in the same partition. Each file holds one row group
+        // (default writer config). Severities chosen so the row-group
+        // statistics make the skip-or-scan decision unambiguous:
+        //   file A: severity_number ∈ {9}        → max=9
+        //   file B: severity_number ∈ {17, 20}   → min=17, max=20
+        //   file C: severity_number ∈ {15}       → max=15
+        // With severityNumberMin=17, A and C are refuted by metadata; B is kept.
+        $tenant = 'acme';
+        $this->writeLogsFixtureForFile($tenant, '2026-05-09', '14', 'AAA', [
+            ['service' => 'checkout', 'severity' => 9, 'body' => 'a1'],
+        ]);
+        $this->writeLogsFixtureForFile($tenant, '2026-05-09', '14', 'BBB', [
+            ['service' => 'checkout', 'severity' => 17, 'body' => 'b1'],
+            ['service' => 'checkout', 'severity' => 20, 'body' => 'b2'],
+        ]);
+        $this->writeLogsFixtureForFile($tenant, '2026-05-09', '14', 'CCC', [
+            ['service' => 'checkout', 'severity' => 15, 'body' => 'c1'],
+        ]);
+
+        $glob = $this->tempStorageRoot()."/logs/$tenant/date=2026-05-09/hour=14/part-*.parquet";
+
+        $scanner = new ParquetScanner(new MockClock('2026-05-09 14:30:00 UTC'), executionTimeoutSeconds: 10);
+        $result = $scanner->scan([$glob], [new ColumnGreaterEqual('severity_number', 17)], limit: 100);
+
+        // Only file B's two rows should be returned.
+        self::assertCount(2, $result->rows);
+        $bodies = array_column($result->rows, 'body_json');
+        self::assertContains(json_encode(['stringValue' => 'b1']), $bodies);
+        self::assertContains(json_encode(['stringValue' => 'b2']), $bodies);
+
+        // Counters: 2 row groups skipped (A and C), 1 scanned (B).
+        self::assertSame(1, $result->groupsScanned, 'one row group should be scanned');
+        self::assertSame(2, $result->groupsSkipped, 'two row groups should be elided by min/max push-down');
+    }
+
+    public function testRowGroupPushDownLeavesStringPredicatesAlone(): void
+    {
+        // No numeric predicate in this query → row groups cannot be skipped
+        // by metadata; every group's data is opened.
+        $this->writeLogsFixtureForFile('acme', '2026-05-09', '14', 'AAA', [
+            ['service' => 'checkout', 'severity' => 9, 'body' => 'a'],
+        ]);
+        $this->writeLogsFixtureForFile('acme', '2026-05-09', '14', 'BBB', [
+            ['service' => 'payments', 'severity' => 9, 'body' => 'b'],
+        ]);
+
+        $glob = $this->tempStorageRoot().'/logs/acme/date=2026-05-09/hour=14/part-*.parquet';
+
+        $scanner = new ParquetScanner(new MockClock('2026-05-09 14:30:00 UTC'), executionTimeoutSeconds: 10);
+        $result = $scanner->scan([$glob], [new ColumnEquals('resource_service_name', 'checkout')], limit: 100);
+
+        self::assertCount(1, $result->rows);
+        self::assertSame(2, $result->groupsScanned, 'string-only predicates do not refute row groups');
+        self::assertSame(0, $result->groupsSkipped);
+    }
+
     public function testGreaterEqualPredicate(): void
     {
         $glob = $this->writeLogsFixture('acme', '2026-05-09', '14', [
@@ -251,6 +309,32 @@ final class ParquetScannerTest extends TestCase
         self::assertCount(2, $result->rows);
         self::assertGreaterThanOrEqual(17, $result->rows[0]['severity_number']);
         self::assertGreaterThanOrEqual(17, $result->rows[1]['severity_number']);
+    }
+
+    /**
+     * Writes a single Parquet file into the partition with a stable ULID
+     * prefix so multi-file tests can sort/identify the file.
+     *
+     * @param list<array{service: string, severity: int, body: string, time_unix_nano?: int}> $records
+     */
+    private function writeLogsFixtureForFile(string $tenant, string $date, string $hour, string $ulidPrefix, array $records): string
+    {
+        $catalog = SchemaCatalog::fromDirectory(\dirname(__DIR__, 3).'/config/schemas');
+        $logsSchema = $catalog->latestFor('logs');
+        $writer = new ParquetFileWriter($logsSchema, Compressions::GZIP);
+        $extractor = new AttributeColumnExtractor($logsSchema);
+
+        $clock = new MockClock("$date $hour:30:00 UTC");
+        $resolver = new PartitionPathResolver(
+            $clock,
+            new StubFilenameGenerator($ulidPrefix.str_repeat('0', max(0, 26 - \strlen($ulidPrefix)))),
+            $this->tempStorageRoot(),
+        );
+
+        $service = new LogsIngestService($writer, $resolver, $extractor);
+        $service->write($this->buildLogsRequest($records), new Tenant($tenant, $tenant));
+
+        return $this->tempStorageRoot()."/logs/$tenant/date=$date/hour=$hour/part-*.parquet";
     }
 
     /**

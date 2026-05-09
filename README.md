@@ -166,6 +166,25 @@ curl -H "Authorization: Bearer $TOKEN" \
      "https://crashler.example.com/v1/metrics?service=checkout&metricType=HISTOGRAM&since=24h"
 ```
 
+### Performance: row-group push-down
+
+The streaming scanner reads each Parquet file's row-group metadata (via flow-php's `ParquetFile::metadata()->rowGroups()`) before opening any data pages. For every active numeric predicate it compares the predicate's accepted bounds against the per-row-group `min`/`max` statistics; row groups whose `[min, max]` interval is provably disjoint from the predicate are skipped entirely — their data pages are never decompressed.
+
+Filters that benefit from push-down (numeric column with stats):
+
+- `since` / `until` — bounds on `time_unix_nano` / `start_time_unix_nano`
+- `severityNumberMin` (logs)
+- `severityNumber` (logs)
+- `httpStatusCodeMin` (traces)
+
+Filters that do NOT push down — combine them with at least one filter from the list above (or a tight time window) for selectivity:
+
+- `bodyContains` — substring scan over `body_json`
+- `attribute.<key>=<value>` — decoded JSON walk over `attributes_json`
+- `metricName`, `service`, `environment`, `host`, `kind`, `statusCode` — string predicates (string-stats push-down deferred)
+
+The scanner's `ScanResult` exposes `groupsScanned` and `groupsSkipped` counters for tests and structured logging; they are NOT surfaced in the HTTP response body.
+
 ### POST /v1/&lt;signal&gt;/search — complex criteria
 
 The GET search endpoints take URL-shaped filters that compose with AND only. For OR, NOT, IN-lists, and nested predicate trees there's a sibling `POST /v1/<signal>/search` endpoint per signal that takes the same time window and filter set as a JSON body, plus a small predicate-tree DSL.
