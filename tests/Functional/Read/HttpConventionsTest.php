@@ -93,16 +93,15 @@ final class HttpConventionsTest extends KernelTestCase
         self::assertNull($contentEncoding);
     }
 
-    public function testMultipleAttributeFiltersInOneRequestRejected(): void
+    public function testMultipleAttributeFiltersInOneRequestAccepted(): void
     {
-        $browser = $this->browser()
+        // Two distinct attribute keys compose with AND (cap is 5 by default).
+        // Empty data set is fine — we only assert the request was accepted.
+        $this->browser()
             ->get('/v1/logs?since=1h&attribute.exception.type=A&attribute.foo=B', [
                 'headers' => ['Authorization' => 'Bearer '.self::VALID_TOKEN],
             ])
-            ->assertStatus(400);
-
-        $body = json_decode((string) $browser->client()->getResponse()->getContent(), true);
-        self::assertStringContainsString('At most one', $body['message']);
+            ->assertStatus(200);
     }
 
     public function testCacheControlOnTraceByIdNotSetOnNon2xx(): void

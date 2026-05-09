@@ -29,6 +29,10 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 final class ReadResponseConventionsListener implements EventSubscriberInterface
 {
+    public function __construct(private readonly int $maxAttributeFilters = 5)
+    {
+    }
+
     public static function getSubscribedEvents(): array
     {
         return [
@@ -89,19 +93,18 @@ final class ReadResponseConventionsListener implements EventSubscriberInterface
                 }
                 $seen[$name] = true;
 
-                // Track `attribute.<key>` filters — V1 supports at most
-                // one per request. We count here (raw query string) because
-                // PHP's parse_str maps the dots in `attribute.<key>` to
-                // underscores by the time state providers see the criteria
-                // map.
+                // Distinct `attribute.<key>` filters compose with logical
+                // AND up to `crashler.read.max_attribute_filters` (default 5).
+                // Repeating the *same* key remains a "repeated parameter"
+                // violation handled above.
                 if (str_starts_with($name, 'attribute.')) {
                     ++$attributeFilterCount;
                 }
             }
 
-            if ($attributeFilterCount > 1) {
+            if ($attributeFilterCount > $this->maxAttributeFilters) {
                 $event->setResponse(new JsonResponse(
-                    ['message' => 'At most one `attribute.<key>` filter per request is supported in v1. Multi-attribute composition is deferred to a follow-up change.'],
+                    ['message' => \sprintf('At most %d `attribute.<key>` filters per request. Narrow your query.', $this->maxAttributeFilters)],
                     Response::HTTP_BAD_REQUEST,
                 ));
 

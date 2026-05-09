@@ -10,6 +10,7 @@ use App\Read\Compute\ParquetScanner;
 use App\Read\Compute\PartitionPruner;
 use App\Read\Compute\Predicates\ColumnEquals;
 use App\Read\Compute\Predicates\ColumnInRange;
+use App\Read\Compute\Predicates\JsonAttributeEquals;
 use App\Read\Compute\Predicates\Predicate;
 use App\Read\Criteria\TimeWindow;
 use App\Read\Cursor\Cursor;
@@ -116,6 +117,12 @@ abstract readonly class BaseSearchStateProvider implements ProviderInterface
         foreach ($this->compilePerSignalPredicates($criteria) as $predicate) {
             $predicates[] = $predicate;
         }
+        // Multi-attribute filters: parse `attribute.<key>=<value>` from the
+        // raw query string (PHP's parse_str collapses the dots in the keys).
+        // The cap is enforced upstream by ReadResponseConventionsListener.
+        foreach (self::extractAttributeFiltersFromRequestUri($request->getRequestUri()) as $attrKey => $attrValue) {
+            $predicates[] = new JsonAttributeEquals('attributes_json', $attrKey, $attrValue);
+        }
 
         $globs = $this->pruner->globsFor($tenantSlug, $this->signalSubdir(), $window);
 
@@ -202,6 +209,45 @@ abstract readonly class BaseSearchStateProvider implements ProviderInterface
     protected function timeColumn(): string
     {
         return 'time_unix_nano';
+    }
+
+    /**
+     * Walks the raw request URI's query string and extracts every
+     * `attribute.<key>=<value>` pair, preserving the dot-bearing keys
+     * that PHP's `parse_str` would collapse to underscores.
+     *
+     * @return array<string, string> map of attribute key → string value
+     */
+    protected static function extractAttributeFiltersFromRequestUri(string $requestUri): array
+    {
+        $queryPos = strpos($requestUri, '?');
+        if (false === $queryPos) {
+            return [];
+        }
+        $queryString = substr($requestUri, $queryPos + 1);
+        if ('' === $queryString) {
+            return [];
+        }
+
+        $out = [];
+        foreach (explode('&', $queryString) as $pair) {
+            if ('' === $pair) {
+                continue;
+            }
+            $parts = explode('=', $pair, 2);
+            $name = urldecode($parts[0]);
+            if (!str_starts_with($name, 'attribute.')) {
+                continue;
+            }
+            $key = substr($name, \strlen('attribute.'));
+            if ('' === $key) {
+                continue;
+            }
+            $value = isset($parts[1]) ? urldecode($parts[1]) : '';
+            $out[$key] = $value;
+        }
+
+        return $out;
     }
 
     /**

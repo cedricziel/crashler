@@ -29,7 +29,7 @@ final class ReadResponseConventionsListenerTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->listener = new ReadResponseConventionsListener();
+        $this->listener = new ReadResponseConventionsListener(maxAttributeFilters: 5);
         $this->kernel = $this->createStub(HttpKernelInterface::class);
     }
 
@@ -96,9 +96,24 @@ final class ReadResponseConventionsListenerTest extends TestCase
         self::assertNull($event->getResponse(), 'POST is not a read path; listener must not short-circuit');
     }
 
-    public function testMultipleAttributeFiltersRejected(): void
+    public function testMultipleDistinctAttributeFiltersAccepted(): void
     {
+        // Up to the configured cap (5) of distinct attribute keys composes.
         $request = Request::create('/v1/logs?since=1h&attribute.exception.type=A&attribute.foo=B', 'GET');
+        $event = new RequestEvent($this->kernel, $request, HttpKernelInterface::MAIN_REQUEST);
+
+        $this->listener->onKernelRequest($event);
+
+        self::assertNull($event->getResponse(), 'two distinct attribute keys must compose, not 400');
+    }
+
+    public function testAttributeFilterCapExceeded(): void
+    {
+        // Six distinct keys against a cap of 5 → 400.
+        $url = '/v1/logs?since=1h'
+            .'&attribute.a=1&attribute.b=2&attribute.c=3'
+            .'&attribute.d=4&attribute.e=5&attribute.f=6';
+        $request = Request::create($url, 'GET');
         $event = new RequestEvent($this->kernel, $request, HttpKernelInterface::MAIN_REQUEST);
 
         $this->listener->onKernelRequest($event);
@@ -107,7 +122,21 @@ final class ReadResponseConventionsListenerTest extends TestCase
         self::assertInstanceOf(JsonResponse::class, $response);
         self::assertSame(400, $response->getStatusCode());
         $body = json_decode((string) $response->getContent(), true);
-        self::assertStringContainsString('At most one', $body['message']);
+        self::assertStringContainsString('At most 5', $body['message']);
+    }
+
+    public function testRepeatedSameAttributeKeyRejected(): void
+    {
+        $request = Request::create('/v1/logs?since=1h&attribute.exception.type=A&attribute.exception.type=B', 'GET');
+        $event = new RequestEvent($this->kernel, $request, HttpKernelInterface::MAIN_REQUEST);
+
+        $this->listener->onKernelRequest($event);
+
+        $response = $event->getResponse();
+        self::assertInstanceOf(JsonResponse::class, $response);
+        self::assertSame(400, $response->getStatusCode());
+        $body = json_decode((string) $response->getContent(), true);
+        self::assertStringContainsString('multiple times', $body['message']);
     }
 
     public function testSingleAttributeFilterPasses(): void

@@ -134,6 +134,8 @@ When `cursor` is supplied, every other criterion is ignored — the cursor encod
 /v1/metrics metricName metricType aggregationTemporality exemplarTraceId
 ```
 
+Every signal also accepts `attribute.<key>=<value>` filters that match against the per-row `attributes_json` column. Multiple distinct keys compose with logical AND; the per-request cap is `crashler.read.max_attribute_filters` (default 5, env `CRASHLER_READ_MAX_ATTRIBUTE_FILTERS`). Repeating the *same* attribute key (`?attribute.k=a&attribute.k=b`) returns 400 — that's a "repeated query parameter" violation. For OR-of-values on a key, use `POST /v1/<signal>/search` (below).
+
 Unknown query parameters → 400. Enum mismatches (`kind`, `metricType`, etc.) → 422 (API Platform's parameter validation kicks in first; semantic violations like `metricName=http.*` wildcards return 400).
 
 ### Wire formats

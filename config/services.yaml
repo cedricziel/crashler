@@ -41,6 +41,12 @@ parameters:
     crashler.read.post_search.max_body_bytes: '%env(default:crashler.read.post_search.max_body_bytes_default:int:CRASHLER_READ_POST_SEARCH_MAX_BODY_BYTES)%'
     crashler.read.post_search.max_body_bytes_default: 65536
 
+    # Per-request cap on `attribute.<key>` filters. Distinct keys compose
+    # with logical AND; repeating the same key remains rejected as a
+    # repeated query parameter.
+    crashler.read.max_attribute_filters: '%env(default:crashler.read.max_attribute_filters_default:int:CRASHLER_READ_MAX_ATTRIBUTE_FILTERS)%'
+    crashler.read.max_attribute_filters_default: 5
+
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -156,21 +162,25 @@ services:
             $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
             $maxPageSize: '%crashler.read.max_page_size%'
             $cursorSecret: '%crashler.read.cursor_secret%'
-            $maxAttributeFilters: 5
+            $maxAttributeFilters: '%crashler.read.max_attribute_filters%'
 
     App\Read\Controller\PostTracesSearchController:
         arguments:
             $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
             $maxPageSize: '%crashler.read.max_page_size%'
             $cursorSecret: '%crashler.read.cursor_secret%'
-            $maxAttributeFilters: 5
+            $maxAttributeFilters: '%crashler.read.max_attribute_filters%'
 
     App\Read\Controller\PostMetricsSearchController:
         arguments:
             $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
             $maxPageSize: '%crashler.read.max_page_size%'
             $cursorSecret: '%crashler.read.cursor_secret%'
-            $maxAttributeFilters: 5
+            $maxAttributeFilters: '%crashler.read.max_attribute_filters%'
+
+    App\Read\Http\ReadResponseConventionsListener:
+        arguments:
+            $maxAttributeFilters: '%crashler.read.max_attribute_filters%'
 
     # TraceTreeAssembler is a static helper, not a service.
 
