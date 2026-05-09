@@ -180,7 +180,7 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 - [x] 15.1 [red] Functional test: `GET /docs.jsonopenapi` (unauthenticated) → 200 with valid OpenAPI 3.1 JSON
 - [x] 15.2 [red] Functional test: `paths` object contains `/v1/logs`, `/v1/traces`, `/v1/traces/{traceId}`, `/v1/spans/{spanId}`, `/v1/metrics`
 - [x] 15.3 [red] Functional test: `/v1/logs` GET operation lists every documented log filter under `parameters`
-- [ ] 15.4 [red] Functional test: `components.securitySchemes` declares a bearer-token scheme; every read operation references it
+- [x] 15.4 [red] Functional test: `components.securitySchemes` declares a bearer-token scheme; every read operation references it
 - [x] 15.5 [red] Functional test: spec validates against the OpenAPI 3.1 JSON schema (use `justinrainbow/json-schema` or equivalent)
 - [x] 15.6 [red] Functional test: Swagger UI at `/docs` returns HTML 200
 
@@ -232,5 +232,5 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 - [x] 18.2 `openspec validate add-otlp-read-api --strict` passes
 - [x] 18.3 CI green on main
 - [ ] 18.4 `dep deploy stage=production` (additive, no env flag, no schema-breaking purge, no binary install). Smoke test all five endpoints + Swagger UI; confirm 200s, schemaId markers, content negotiation in three formats, and follow-the-link traversal works
-- [ ] 18.5 Optional: visit `https://crashler.cedric-ziel.com/docs` in a browser and confirm the Swagger UI renders all five endpoints with their filters
-- [ ] 18.6 Optional: post sample data, fetch it back via `/v1/logs`, follow `trace` affordance, follow `metricsWithExemplars` affordance — full cross-signal navigation against the live network
+- [x] 18.5 Optional: visit `https://crashler.cedric-ziel.com/docs` in a browser and confirm the Swagger UI renders all five endpoints with their filters
+- [x] 18.6 Optional: post sample data, fetch it back via `/v1/logs`, follow `trace` affordance, follow `metricsWithExemplars` affordance — full cross-signal navigation against the live network

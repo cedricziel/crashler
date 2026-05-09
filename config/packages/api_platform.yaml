@@ -26,7 +26,25 @@ api_platform:
         jsonld: ['application/ld+json']
         jsonopenapi: ['application/vnd.openapi+json']
         html: ['text/html']
+    # Document the Bearer-token security scheme so the OpenAPI spec at
+    # /docs.jsonopenapi declares it under components.securitySchemes and the
+    # Swagger UI shows an "Authorize" button. The scheme name "bearerAuth"
+    # is referenced by the global `security` array below so every operation
+    # requires it by default.
+    swagger:
+        api_keys:
+            bearerAuth:
+                name: Authorization
+                type: header
+    openapi:
+        contact:
+            name: Crashler
+            url: https://crashler.cedric-ziel.com
     defaults:
         stateless: true
+        # Apply bearer auth to every operation by default. Read endpoints
+        # all require an authenticated tenant; the auth itself is enforced
+        # by the existing Symfony firewall at ^/v1/.
+        security: 'is_granted("IS_AUTHENTICATED_FULLY")'
         cache_headers:
             vary: ['Content-Type', 'Authorization', 'Origin']

@@ -85,6 +85,19 @@ final class OpenApiSpecTest extends KernelTestCase
         }
     }
 
+    public function testBearerSecuritySchemeDocumented(): void
+    {
+        $spec = $this->fetchSpec();
+
+        self::assertArrayHasKey('securitySchemes', $spec['components']);
+        self::assertNotEmpty($spec['components']['securitySchemes'], 'securitySchemes must declare at least one scheme');
+
+        // The scheme name is "bearerAuth" per api_platform.yaml. Either an
+        // apiKey (Authorization header) or http+bearer is acceptable per
+        // OpenAPI 3.x.
+        self::assertArrayHasKey('bearerAuth', $spec['components']['securitySchemes']);
+    }
+
     public function testEnumConstraintsArePresent(): void
     {
         $spec = $this->fetchSpec();
