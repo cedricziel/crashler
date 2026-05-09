@@ -69,6 +69,17 @@ services:
             - '../src/Schema/SchemaCompiler.php'
             # Extractor is built per-signal via AttributeColumnExtractorFactory.
             - '../src/Otlp/AttributeColumnExtractor.php'
+            # Read-side: API Platform Resource DTOs and value objects are
+            # not services. Exceptions and the Cursor codec (static helpers)
+            # are also not services.
+            - '../src/Read/Resource/'
+            - '../src/Read/Compute/Predicates/'
+            - '../src/Read/Compute/ScanResult.php'
+            - '../src/Read/Compute/ScanIoException.php'
+            - '../src/Read/Compute/ScanTimeoutException.php'
+            - '../src/Read/Cursor/Cursor.php'
+            - '../src/Read/Cursor/InvalidCursorException.php'
+            - '../src/Read/Criteria/'
 
     # TenantRegistry is built once at boot from validated config; the
     # CrashlerExtension exposes the validated tenants array as a parameter
@@ -82,6 +93,26 @@ services:
     App\Storage\PartitionPathResolver:
         arguments:
             $storageRoot: '%crashler.storage_root%'
+
+    # Read-side compute services. ParquetScanner is the only execution
+    # path; PartitionPruner translates the time window into the file
+    # globs the scanner consumes.
+    App\Read\Compute\PartitionPruner:
+        arguments:
+            $storageRoot: '%crashler.storage_root%'
+
+    App\Read\Compute\ParquetScanner:
+        arguments:
+            $executionTimeoutSeconds: '%crashler.read.execution_timeout_seconds%'
+
+    # State providers per signal. Each one wraps the scanner with the
+    # signal-specific predicate compilation; AP picks them via the
+    # `provider:` argument on the operation.
+    App\Read\State\LogsStateProvider:
+        arguments:
+            $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
+            $maxPageSize: '%crashler.read.max_page_size%'
+            $cursorSecret: '%crashler.read.cursor_secret%'
 
     # Default Parquet writer wires the configured compression codec at boot.
     # ParquetCompression::resolve fails fast if the codec's PHP extension is

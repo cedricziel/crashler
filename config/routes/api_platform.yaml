@@ -1,4 +1,9 @@
 api_platform:
     resource: .
     type: api_platform
-    prefix: /api
+    # Resources declare their own /v1/<plural> uriTemplate; AP's framework
+    # routes (/docs, /contexts, /errors, /.well-known) come along at the
+    # root. We keep AP's docs at /api/docs by mounting a duplicate prefix
+    # for the framework routes only, but a simpler v1 stance is: AP's
+    # framework routes live at /docs etc.; if we ever need them at /api,
+    # add a separate mount in a follow-up.

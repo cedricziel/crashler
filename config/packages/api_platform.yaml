@@ -12,6 +12,11 @@ api_platform:
     # hal, json (compact), and jsonapi are also negotiated via Accept header.
     # otlp+json is registered only on the Trace.Get operation via a custom
     # normalizer (see App\Read\Format\OtlpTraceNormalizer).
+    # Scan our Read resource directory in addition to the default.
+    mapping:
+        paths:
+            - '%kernel.project_dir%/src/ApiResource'
+            - '%kernel.project_dir%/src/Read/Resource'
     formats:
         jsonld: ['application/ld+json']
         hal: ['application/hal+json']
@@ -22,9 +27,6 @@ api_platform:
         jsonopenapi: ['application/vnd.openapi+json']
         html: ['text/html']
     defaults:
-        # Read endpoints sit alongside the OTLP write endpoints under /v1/.
-        # Default AP prefix is /api; we override to /v1 so /v1/logs, /v1/traces, etc.
-        route_prefix: /v1
         stateless: true
         cache_headers:
             vary: ['Content-Type', 'Authorization', 'Origin']

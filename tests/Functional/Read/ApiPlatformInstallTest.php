@@ -21,15 +21,15 @@ final class ApiPlatformInstallTest extends KernelTestCase
     public function testOpenApiSpecIsReachable(): void
     {
         $this->browser()
-            ->get('/api/docs.jsonopenapi')
+            ->get('/docs.jsonopenapi')
             ->assertStatus(200);
     }
 
     public function testSwaggerUiHtmlIsReachable(): void
     {
-        // /api/docs (no extension) negotiates the html docs format.
+        // /docs (no extension) negotiates the html docs format.
         $this->browser()
-            ->get('/api/docs', [
+            ->get('/docs', [
                 'headers' => ['Accept' => 'text/html'],
             ])
             ->assertStatus(200);
