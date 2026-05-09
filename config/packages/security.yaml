@@ -16,7 +16,7 @@ security:
             pattern: ^/(_profiler|_wdt|assets|build)/
             security: false
         ingest:
-            pattern: ^/v1/
+            pattern: ^/(v1|compat)/
             stateless: true
             provider: ingest_provider
             custom_authenticators:
@@ -28,6 +28,7 @@ security:
     # Note: Only the *first* matching rule is applied
     access_control:
         - { path: ^/v1/, roles: ROLE_INGEST }
+        - { path: ^/compat/, roles: ROLE_INGEST }
 
 when@test:
     security:

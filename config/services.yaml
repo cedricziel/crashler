@@ -51,6 +51,15 @@ parameters:
     crashler.read.aggregate.max_groups: '%env(default:crashler.read.aggregate.max_groups_default:int:CRASHLER_READ_AGGREGATE_MAX_GROUPS)%'
     crashler.read.aggregate.max_groups_default: 200
 
+    # Per-shim feature flags. Default false; routes are not registered
+    # when off. See compat-shims capability for the contract.
+    crashler.compat.tempo.enabled: '%env(default:crashler.compat.tempo.enabled_default:bool:CRASHLER_COMPAT_TEMPO_ENABLED)%'
+    crashler.compat.tempo.enabled_default: false
+    crashler.compat.loki.enabled: '%env(default:crashler.compat.loki.enabled_default:bool:CRASHLER_COMPAT_LOKI_ENABLED)%'
+    crashler.compat.loki.enabled_default: false
+    crashler.compat.prometheus.enabled: '%env(default:crashler.compat.prometheus.enabled_default:bool:CRASHLER_COMPAT_PROMETHEUS_ENABLED)%'
+    crashler.compat.prometheus.enabled_default: false
+
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -202,6 +211,22 @@ services:
     App\Read\Controller\AggregateMetricsController:
         arguments:
             $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
+
+    # Compat shims — feature-flagged Grafana data-source compatibility.
+    # All shims are OFF by default; controllers return 404 when their
+    # flag is false. v1 ships only the connection-test endpoints; full
+    # search/query_range coverage is a follow-up.
+    App\Read\Compat\Tempo\EchoController:
+        arguments:
+            $enabled: '%crashler.compat.tempo.enabled%'
+
+    App\Read\Compat\Loki\LabelsController:
+        arguments:
+            $enabled: '%crashler.compat.loki.enabled%'
+
+    App\Read\Compat\Prometheus\LabelsController:
+        arguments:
+            $enabled: '%crashler.compat.prometheus.enabled%'
 
     # TraceTreeAssembler is a static helper, not a service.
 
