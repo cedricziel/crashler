@@ -178,6 +178,17 @@ task('crashler:purge_old_logs', function () {
 });
 before('deploy:vendors', 'crashler:purge_old_logs');
 
+// Symfony Flex's auto-scripts run `assets:install` from composer's
+// post-install-cmd, but only when Flex's plugin loads cleanly under
+// --no-dev — and a silent failure there leaves /docs (Swagger UI) with
+// broken <script src="/bundles/apiplatform/..."> references. Run the
+// command explicitly after vendors install so the public/bundles/
+// directory is always populated for the new release.
+task('crashler:assets_install', function () {
+    run('cd {{release_path}} && {{bin/php}} bin/console assets:install public --env=prod --no-debug');
+});
+after('deploy:vendors', 'crashler:assets_install');
+
 // Bootstrap the shared tenants YAML so the kernel can boot before any
 // tenant has been registered. Symfony's config loader fails on an empty
 // file; this idempotently writes a valid 'tenants: {}' if the file is
