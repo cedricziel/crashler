@@ -102,6 +102,11 @@ abstract readonly class BaseSearchStateProvider implements ProviderInterface
             throw new BadRequestException(\sprintf('`limit` exceeds max_page_size (%d).', $this->maxPageSize));
         }
 
+        // (V1 multi-attribute filter limit — `attribute.<k>` keys come
+        // through PHP's parse_str with dots converted to underscores, so
+        // the count happens up-front in ReadResponseConventionsListener
+        // where the raw query string is available.)
+
         $predicates = $this->compileCommonPredicates($criteria, $window);
         foreach ($this->compilePerSignalPredicates($criteria) as $predicate) {
             $predicates[] = $predicate;

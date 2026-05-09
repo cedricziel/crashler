@@ -55,6 +55,58 @@ final class ReadResponseConventionsListener implements EventSubscriberInterface
                 ['message' => 'Read endpoints take no request body.'],
                 Response::HTTP_UNSUPPORTED_MEDIA_TYPE,
             ));
+
+            return;
+        }
+
+        // Repeated query parameters: `?service=foo&service=bar` is
+        // ambiguous for our exact-match filters. Reject with 400.
+        // `Request::getQueryString()` normalizes (collapses dupes via
+        // parse_str). The Symfony test client doesn't populate the
+        // QUERY_STRING server var, so we extract the raw query off the
+        // requestUri (`/path?...`) and parse it ourselves.
+        $rawUri = $request->getRequestUri();
+        $queryString = '';
+        $queryPos = strpos($rawUri, '?');
+        if (false !== $queryPos) {
+            $queryString = substr($rawUri, $queryPos + 1);
+        }
+        if ('' !== $queryString) {
+            $seen = [];
+            $attributeFilterCount = 0;
+            foreach (explode('&', $queryString) as $pair) {
+                if ('' === $pair) {
+                    continue;
+                }
+                $name = urldecode(explode('=', $pair, 2)[0]);
+                if (isset($seen[$name])) {
+                    $event->setResponse(new JsonResponse(
+                        ['message' => \sprintf('Query parameter `%s` was supplied multiple times. Read endpoints accept exactly one value per filter; supply just one.', $name)],
+                        Response::HTTP_BAD_REQUEST,
+                    ));
+
+                    return;
+                }
+                $seen[$name] = true;
+
+                // Track `attribute.<key>` filters — V1 supports at most
+                // one per request. We count here (raw query string) because
+                // PHP's parse_str maps the dots in `attribute.<key>` to
+                // underscores by the time state providers see the criteria
+                // map.
+                if (str_starts_with($name, 'attribute.')) {
+                    ++$attributeFilterCount;
+                }
+            }
+
+            if ($attributeFilterCount > 1) {
+                $event->setResponse(new JsonResponse(
+                    ['message' => 'At most one `attribute.<key>` filter per request is supported in v1. Multi-attribute composition is deferred to a follow-up change.'],
+                    Response::HTTP_BAD_REQUEST,
+                ));
+
+                return;
+            }
         }
     }
 

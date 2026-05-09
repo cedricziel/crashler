@@ -93,6 +93,18 @@ final class HttpConventionsTest extends KernelTestCase
         self::assertNull($contentEncoding);
     }
 
+    public function testMultipleAttributeFiltersInOneRequestRejected(): void
+    {
+        $browser = $this->browser()
+            ->get('/v1/logs?since=1h&attribute.exception.type=A&attribute.foo=B', [
+                'headers' => ['Authorization' => 'Bearer '.self::VALID_TOKEN],
+            ])
+            ->assertStatus(400);
+
+        $body = json_decode((string) $browser->client()->getResponse()->getContent(), true);
+        self::assertStringContainsString('At most one', $body['message']);
+    }
+
     public function testCacheControlOnTraceByIdNotSetOnNon2xx(): void
     {
         // 404 is not "successful"; listener checks isSuccessful() so the

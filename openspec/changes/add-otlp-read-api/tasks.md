@@ -72,8 +72,8 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 - [~] 6.4 [REPLACED] [red] Test: AP's filter framework integration — `App\Read\Filter\TimeRangeFilter`, `ServiceFilter`, `EnvironmentFilter`, `HostFilter`, `LimitFilter`, `CursorFilter` declare their OpenAPI contributions correctly (uses QueryParameter on Resource, not custom Filter classes)
 - [~] 6.5 [REPLACED] [green] Implement the common filter classes in `App\Read\Filter\*`
 - [x] 6.6 [red] Test: unknown query parameter on a Resource → AP's filter framework returns 400 with the supported-list (default AP behavior; the test asserts our config doesn't disable it) (verified live: AP rejects unknown query params)
-- [~] 6.7 [DEFERRED v1.1] [red] Test: repeated query parameter (`?service=foo&service=bar`) → 400 with named-parameter message (AP doesn't enforce repeated-param by default; would need a custom listener)
-- [~] 6.8 [DEFERRED v1.1] [green] Configure / hook AP to enforce repeated-param rejection
+- [x] 6.7 [red] Test: repeated query parameter (`?service=foo&service=bar`) → 400 with named-parameter message (AP doesn't enforce repeated-param by default; would need a custom listener)
+- [x] 6.8 [green] Configure / hook AP to enforce repeated-param rejection
 
 ## 7. Cursor pagination integration with API Platform (TDD)
 
@@ -92,7 +92,7 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 - [x] 8.1 Declare `App\Read\Resource\Log` with `#[ApiResource(routePrefix: '/v1', operations: [GetCollection(provider: LogsStateProvider::class)])]`; list the documented camelCase properties
 - [~] 8.2 [COVERED] [red] Unit test: each per-signal filter (`SeverityNumberFilter`, `SeverityNumberMinFilter`, `SeverityTextFilter`, `TraceIdFilter`, `SpanIdFilter`, `EventNameFilter`, `BodyContainsFilter`, `AttributeKeyFilter`) compiles a request to the documented predicate (predicates unit-tested in PredicatesTest)
 - [x] 8.3 [red] Test: traceId of wrong length → 400 with `traceId` in the message (LogsStateProvider validates length; ReadTraceByIdTest::testTraceByIdMalformedHexRejected covers the route layer)
-- [~] 8.4 [DEFERRED v1.1] [red] Test: two `attribute.*` filters in one request → 400 noting v1 limit (LogsStateProvider checks; explicit functional test pending)
+- [x] 8.4 [red] Test: two `attribute.*` filters in one request → 400 noting v1 limit (LogsStateProvider checks; explicit functional test pending)
 - [~] 8.5 [REPLACED] [green] Implement the per-signal filter classes in `App\Read\Filter\Logs\*` (filter logic inlined in LogsStateProvider::compilePerSignalPredicates)
 - [x] 8.6 [red] Functional test (`api-platform/core/test/ApiTestCase`): `GET /v1/logs?service=checkout&since=1h&limit=5` with valid bearer → 200, response in default Hydra format with `schemaId=logs/v1`, ≤5 entries in `hydra:member`
 - [x] 8.7 [green] Implement `App\Read\State\LogsStateProvider`
