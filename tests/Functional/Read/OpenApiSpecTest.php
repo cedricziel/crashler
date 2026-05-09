@@ -39,6 +39,34 @@ final class OpenApiSpecTest extends KernelTestCase
         self::assertArrayHasKey('components', $spec);
     }
 
+    public function testSpecMinimumOpenApi31Compliance(): void
+    {
+        // Structural checks for the load-bearing 3.1 requirements:
+        // info.{title, version}, paths is an object, components is an
+        // object, every operation declares at least one response.
+        $spec = $this->fetchSpec();
+
+        self::assertSame('3.1.0', $spec['openapi'] ?? null);
+        self::assertArrayHasKey('info', $spec);
+        self::assertNotEmpty($spec['info']['title'] ?? null);
+        self::assertNotEmpty($spec['info']['version'] ?? null);
+        self::assertIsArray($spec['paths']);
+        self::assertIsArray($spec['components']);
+
+        foreach ($spec['paths'] as $path => $pathItem) {
+            foreach (['get', 'post', 'put', 'delete', 'patch'] as $method) {
+                if (!isset($pathItem[$method])) {
+                    continue;
+                }
+                $op = $pathItem[$method];
+                self::assertNotEmpty(
+                    $op['responses'] ?? null,
+                    "{$method} {$path} must declare at least one response",
+                );
+            }
+        }
+    }
+
     public function testSpecCoversAllSearchPaths(): void
     {
         $spec = $this->fetchSpec();

@@ -222,6 +222,21 @@ final class ParquetScannerTest extends TestCase
         self::assertSame('logs/v1', $row['_schema_id']);
     }
 
+    public function testScanTimeoutSurfacesAsScanTimeoutException(): void
+    {
+        $glob = $this->writeLogsFixture('acme', '2026-05-09', '14', [
+            ['service' => 'checkout', 'severity' => 9, 'body' => 'a'],
+            ['service' => 'checkout', 'severity' => 9, 'body' => 'b'],
+        ]);
+
+        // executionTimeoutSeconds=0 → deadline equals current timestamp;
+        // first row tripping the check raises ScanTimeoutException.
+        $scanner = new ParquetScanner(new MockClock('2026-05-09 14:30:00 UTC'), executionTimeoutSeconds: 0);
+
+        $this->expectException(ScanTimeoutException::class);
+        $scanner->scan([$glob], [], limit: 100);
+    }
+
     public function testGreaterEqualPredicate(): void
     {
         $glob = $this->writeLogsFixture('acme', '2026-05-09', '14', [

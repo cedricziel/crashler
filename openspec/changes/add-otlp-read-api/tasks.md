@@ -59,7 +59,7 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 - [x] 5.5 [red] Test: large fixture (10 K rows) does NOT load all rows into memory; peak memory bounded by `limit` × per-row size
 - [x] 5.6 [red] Test: ULID-ordered file iteration — three files with ULIDs A < B < C in the same partition are read in A, B, C order
 - [x] 5.7 [red] Test: early-exit on `limit` — partition with 10 K matching rows + `limit=100` reads at most enough row groups to surface 100 rows
-- [~] 5.8 [DEFERRED] [red] Test: scanner respects `execution_timeout_seconds` and surfaces a `ScanTimeoutException`
+- [x] 5.8 [red] Test: scanner respects `execution_timeout_seconds` and surfaces a `ScanTimeoutException`
 - [x] 5.9 [red] Test: a corrupt Parquet file in the partition surfaces as `ScanIoException` with the partition path masked (no `var/` leakage)
 - [~] 5.10 [DEFERRED] [red] Test: integers from Parquet's INT64 columns serialize as JSON strings (preserves int64 precision; mirrors OTLP/HTTP-JSON convention)
 - [x] 5.11 [red] Test: round-trip — write fixture data via `ParquetFileWriter`, read it back via `ParquetScanner`; rows match exactly
@@ -152,12 +152,12 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 ## 12. Hypermedia link rendering (shared)
 
-- [ ] 12.1 [red] Unit test: `LinkBuilder::self(currentUrl, resolvedWindow)` returns the request URL with the resolved absolute time window (not the duration shorthand)
-- [ ] 12.2 [red] Unit test: `LinkBuilder::trace(traceIdHex)`, `::span(spanIdHex)`, `::exemplars(exemplarsJson)` produce well-formed paths; `exemplars` returns null when no exemplar carries a traceId
-- [ ] 12.3 [green] Implement `App\Read\Hateoas\LinkBuilder`
-- [ ] 12.4 [red] Component test: format-agnostic helper `assertHasLink($response, $rel, $expectedHref)` decodes a response in any of the four formats and verifies the rel is present
-- [ ] 12.5 [green] Implement the helper in `App\Tests\Support\HypermediaAssertions`
-- [ ] 12.6 [red] Component test: every per-row affordance is rendered correctly into Hydra, HAL, compact JSON, and JSON:API for a fixture row that carries `traceIdHex` + `spanIdHex`
+- [~] 12.1 [red] Unit test: `LinkBuilder::self(currentUrl, resolvedWindow)` returns the request URL with the resolved absolute time window (not the duration shorthand)
+- [~] 12.2 [red] Unit test: `LinkBuilder::trace(traceIdHex)`, `::span(spanIdHex)`, `::exemplars(exemplarsJson)` produce well-formed paths; `exemplars` returns null when no exemplar carries a traceId
+- [~] 12.3 [green] Implement `App\Read\Hateoas\LinkBuilder`
+- [~] 12.4 [red] Component test: format-agnostic helper `assertHasLink($response, $rel, $expectedHref)` decodes a response in any of the four formats and verifies the rel is present
+- [~] 12.5 [green] Implement the helper in `App\Tests\Support\HypermediaAssertions`
+- [~] 12.6 [red] Component test: every per-row affordance is rendered correctly into Hydra, HAL, compact JSON, and JSON:API for a fixture row that carries `traceIdHex` + `spanIdHex`
 
 ## 13. Cross-signal navigation end-to-end (TDD)
 
