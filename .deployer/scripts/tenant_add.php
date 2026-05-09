@@ -20,7 +20,9 @@ if ($argc !== 4) {
 
 [$_, $yamlPath, $slug, $name] = $argv;
 
-$autoload = dirname(__DIR__, 2).'/current/vendor/autoload.php';
+// Script lives at {{deploy_path}}/.dep/tenant_add.php; the active release's
+// autoload is at {{deploy_path}}/current/vendor/autoload.php.
+$autoload = dirname(__DIR__).'/current/vendor/autoload.php';
 if (!is_file($autoload)) {
     fwrite(STDERR, "vendor autoload not found at $autoload (run a deploy first)\n");
     exit(2);
