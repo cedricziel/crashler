@@ -178,19 +178,22 @@ task('crashler:purge_old_logs', function () {
 });
 before('deploy:vendors', 'crashler:purge_old_logs');
 
-// Symfony Flex's auto-scripts run `assets:install` from composer's
-// post-install-cmd, but only when Flex's plugin loads cleanly under
-// --no-dev — and a silent failure there leaves /docs (Swagger UI) with
-// broken <script src="/bundles/apiplatform/..."> references. Run the
-// command explicitly after vendors install so the public/bundles/
-// directory is always populated for the new release.
+// Two-step asset deploy for /docs (Swagger UI) to load cleanly:
 //
-// Then dereference any symlinks `assets:install` created into hard
-// copies. On managed hosts (All-Inkl, etc.) Apache's symlink-follow
-// is sometimes restricted, AND absolute symlinks point at
-// releases/N/vendor/... which breaks when the release is cleaned up.
-// Hard copies sidestep both. Cost: a few hundred KB of duplicated
-// static assets per release.
+//   1. `assets:install public` — copies each bundle's Resources/public/
+//      into public/bundles/<bundle>/. Flex's auto-scripts try to do
+//      this from composer post-install-cmd, but a silent failure under
+//      --no-dev leaves the directory empty. Running it explicitly is
+//      defensive; the symlink-dereferencer that follows is for managed
+//      hosts (All-Inkl) where Apache's FollowSymLinks is restricted
+//      and absolute symlinks would break across release cleanup.
+//
+//   2. `asset-map:compile` — materialises Symfony AssetMapper's
+//      hashed-URL output into public/assets/. The api-platform docs
+//      template references its CSS/JS via AssetMapper's hashed scheme
+//      (e.g. /assets/bundles/apiplatform/style-3GfETb1.css), so without
+//      this step the Swagger UI page renders but its assets 404.
+//      Idempotent — re-running rewrites the manifest deterministically.
 task('crashler:assets_install', function () {
     run('cd {{release_path}} && {{bin/php}} bin/console assets:install public --env=prod --no-debug');
     run(<<<'BASH'
@@ -203,6 +206,7 @@ task('crashler:assets_install', function () {
             fi
         done
         BASH);
+    run('cd {{release_path}} && {{bin/php}} bin/console asset-map:compile --env=prod --no-debug');
 });
 after('deploy:vendors', 'crashler:assets_install');
 
