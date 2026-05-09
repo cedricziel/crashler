@@ -230,7 +230,7 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 - [x] 18.1 `composer test` passes with zero deprecations/notices/warnings across all three suites
 - [x] 18.2 `openspec validate add-otlp-read-api --strict` passes
-- [ ] 18.3 CI green on main
+- [x] 18.3 CI green on main
 - [ ] 18.4 `dep deploy stage=production` (additive, no env flag, no schema-breaking purge, no binary install). Smoke test all five endpoints + Swagger UI; confirm 200s, schemaId markers, content negotiation in three formats, and follow-the-link traversal works
 - [ ] 18.5 Optional: visit `https://crashler.cedric-ziel.com/docs` in a browser and confirm the Swagger UI renders all five endpoints with their filters
 - [ ] 18.6 Optional: post sample data, fetch it back via `/v1/logs`, follow `trace` affordance, follow `metricsWithExemplars` affordance — full cross-signal navigation against the live network
