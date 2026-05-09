@@ -4,15 +4,15 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 ## 1. API Platform installation + read-side configuration
 
-- [ ] 1.1 `composer require api-platform/symfony` and confirm the recipe runs (creates `config/packages/api_platform.yaml`)
-- [ ] 1.2 Override `api_platform.route_prefix` to `/v1` so resource routes land at `/v1/<plural>` instead of the default `/api/<plural>`
-- [ ] 1.3 Configure the supported `formats` list: `jsonld` (default), `hal`, `json` (compact), `jsonapi`, plus `otlp+json` (registered for the Trace.Get operation only — see §10)
-- [ ] 1.4 Configure the OpenAPI title, description, and bearer-token security scheme so it shows up at `/api/docs.json` and `/api/docs`
-- [ ] 1.5 Add config keys to `CrashlerExtension`: `crashler.read.max_time_window_days` (30), `crashler.read.max_page_size` (1000), `crashler.read.cursor_secret` (sourced from `APP_SECRET`), `crashler.read.span_lookup_window_hours` (24), `crashler.read.execution_timeout_seconds` (10)
-- [ ] 1.6 [red] Component test: kernel boot exposes the keys as DI parameters with documented defaults
-- [ ] 1.7 [green] Wire the parameters
-- [ ] 1.8 [red] Test: missing/empty `cursor_secret` fails boot with a clear message
-- [ ] 1.9 [red] Component test: Swagger UI is reachable at `/api/docs` (200) and `/api/docs.json` returns valid OpenAPI 3.1 JSON
+- [x] 1.1 `composer require api-platform/symfony` and confirm the recipe runs (creates `config/packages/api_platform.yaml`)
+- [x] 1.2 Override `api_platform.route_prefix` to `/v1` so resource routes land at `/v1/<plural>` instead of the default `/api/<plural>`
+- [x] 1.3 Configure the supported `formats` list: `jsonld` (default), `hal`, `json` (compact), `jsonapi`, plus `otlp+json` (registered for the Trace.Get operation only — see §10)
+- [x] 1.4 Configure the OpenAPI title, description, and bearer-token security scheme so it shows up at `/api/docs.json` and `/api/docs`
+- [x] 1.5 Add config keys to `CrashlerExtension`: `crashler.read.max_time_window_days` (30), `crashler.read.max_page_size` (1000), `crashler.read.cursor_secret` (sourced from `APP_SECRET`), `crashler.read.span_lookup_window_hours` (24), `crashler.read.execution_timeout_seconds` (10)
+- [x] 1.6 [red] Component test: kernel boot exposes the keys as DI parameters with documented defaults
+- [x] 1.7 [green] Wire the parameters
+- [x] 1.8 [red] Test: missing/empty `cursor_secret` fails boot with a clear message
+- [x] 1.9 [red] Component test: Swagger UI is reachable at `/api/docs` (200) and `/api/docs.json` returns valid OpenAPI 3.1 JSON
 
 ## 2. Time window parsing + partition pruning (TDD)
 

@@ -1,0 +1,30 @@
+api_platform:
+    title: 'Crashler Read API'
+    description: 'Self-hosted OTLP read API. Bearer auth, tenant-scoped, time-windowed.'
+    version: '1.0.0'
+    # Crashler is a file-based read API; no Doctrine ORM, no Doctrine MongoDB.
+    use_symfony_listeners: true
+    doctrine:
+        enabled: false
+    doctrine_mongodb_odm:
+        enabled: false
+    # Content-negotiated response formats. jsonld is the default (Hydra);
+    # hal, json (compact), and jsonapi are also negotiated via Accept header.
+    # otlp+json is registered only on the Trace.Get operation via a custom
+    # normalizer (see App\Read\Format\OtlpTraceNormalizer).
+    formats:
+        jsonld: ['application/ld+json']
+        hal: ['application/hal+json']
+        json: ['application/json']
+        jsonapi: ['application/vnd.api+json']
+    docs_formats:
+        jsonld: ['application/ld+json']
+        jsonopenapi: ['application/vnd.openapi+json']
+        html: ['text/html']
+    defaults:
+        # Read endpoints sit alongside the OTLP write endpoints under /v1/.
+        # Default AP prefix is /api; we override to /v1 so /v1/logs, /v1/traces, etc.
+        route_prefix: /v1
+        stateless: true
+        cache_headers:
+            vary: ['Content-Type', 'Authorization', 'Origin']
