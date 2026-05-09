@@ -116,6 +116,31 @@ abstract readonly class BaseSearchStateProvider implements ProviderInterface
 
         $result = $this->scanner->scan($globs, $predicates, $limit, $resumeFrom);
 
+        // If more rows exist, mint the next-page cursor and stash it on
+        // the request as an attribute. NextCursorInjector picks it up at
+        // kernel.response time and injects the next URL into the
+        // appropriate format-specific affordance.
+        if ($result->hasMore && null !== $result->position) {
+            // Persist the resolved (absolute) since/until in the cursor's
+            // criteria so the next page reproduces them exactly even when
+            // the original request used a duration shorthand.
+            $criteriaForCursor = $criteria;
+            $criteriaForCursor['since'] = (string) $window->sinceUnixNano;
+            $criteriaForCursor['until'] = (string) $window->untilUnixNano;
+            $criteriaForCursor['limit'] = $limit;
+            // Cursor takes precedence over other params on next request,
+            // so we don't need to forward filter values themselves —
+            // but we keep them for traceability.
+
+            $opaque = Cursor::mint(
+                criteria: $criteriaForCursor,
+                position: $result->position,
+                tenantSlug: $tenantSlug,
+                secret: $this->cursorSecret,
+            );
+            $request->attributes->set('_read_next_cursor_url', $request->getPathInfo().'?cursor='.urlencode($opaque));
+        }
+
         return array_map($this->rowToResource(...), $result->rows);
     }
 

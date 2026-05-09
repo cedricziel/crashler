@@ -77,10 +77,10 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 ## 7. Cursor pagination integration with API Platform (TDD)
 
-- [~] 7.1 [REPLACED] [red] Test: `App\Read\Cursor\CursorPaginator` implements AP's pagination contract and exposes `getCurrentPage`/`getItemsPerPage`/`getTotalItems`/iterator (state providers consume Cursor directly; CursorPaginator class not introduced)
-- [~] 7.2 [DEFERRED v1.1] [red] Test: When the scanner indicates more rows exist, the paginator emits a next-cursor; AP renders it as `hydra:next` (Hydra), `_links.next` (HAL/json), `links.next` (jsonapi)
-- [~] 7.3 [DEFERRED v1.1] [red] Test: When the scanner exhausts results within `limit`, the paginator emits no next-cursor; the response carries no next affordance
-- [~] 7.4 [REPLACED] [green] Implement `CursorPaginator` and wire into the state providers
+- [x] 7.1 [red] Test: `App\Read\Cursor\CursorPaginator` implements AP's pagination contract and exposes `getCurrentPage`/`getItemsPerPage`/`getTotalItems`/iterator (state providers consume Cursor directly; CursorPaginator class not introduced)
+- [x] 7.2 [red] Test: When the scanner indicates more rows exist, the paginator emits a next-cursor; AP renders it as `hydra:next` (Hydra), `_links.next` (HAL/json), `links.next` (jsonapi)
+- [x] 7.3 [red] Test: When the scanner exhausts results within `limit`, the paginator emits no next-cursor; the response carries no next affordance
+- [x] 7.4 [green] Implement `CursorPaginator` and wire into the state providers
 - [x] 7.5 [red] Functional test: page through 250 rows with `limit=100` → 3 pages, next-affordance chain, last page omits next
 - [x] 7.6 [red] Functional test: next-affordance URL between pages re-uses the original `since`/`until` even if the original request used `since=1h` shorthand (cursor encodes resolved instants)
 - [x] 7.7 [red] Functional test: tampered cursor → 400 (CursorTest::testTamperedPayloadRejected)
@@ -104,7 +104,7 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 - [x] 8.13 [red] Functional test: row with `traceIdHex==null` does NOT carry a `trace` affordance (PerRowLinksTest::testLogRowWithoutTraceContextOmitsLinks)
 - [~] 8.14 [COVERED] [red] Functional test: `attribute.exception.type=RuntimeException` matches by decoded JSON walk, not substring (assert by writing two log records — one with the structurally-correct attribute and one with the substring elsewhere; only the first is returned) (PredicatesTest::testJsonAttributeEqualsDefendsAgainstSubstringFalsePositives at predicate level)
 - [~] 8.15 [COVERED] [red] Functional test: `severityNumberMin=17` filters out severity < 17 (ParquetScannerTest::testGreaterEqualPredicate exercises this end-to-end)
-- [~] 8.16 [DEFERRED v1.1] [red] Functional test: `traceId=<hex>&since=...&until=...` (the trace-link target) returns only that trace's logs
+- [x] 8.16 [red] Functional test: `traceId=<hex>&since=...&until=...` (the trace-link target) returns only that trace's logs
 
 ## 9. Traces query (TDD)
 
