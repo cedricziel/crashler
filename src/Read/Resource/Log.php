@@ -7,6 +7,7 @@ namespace App\Read\Resource;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\QueryParameter;
+use ApiPlatform\OpenApi\Model\Parameter as OpenApiParameter;
 use App\Read\State\LogsStateProvider;
 
 /**
@@ -35,66 +36,79 @@ use App\Read\State\LogsStateProvider;
                     description: 'Lower bound of the time window. RFC3339 timestamp, unix-nano numeric string, or duration shorthand (30m / 2h / 7d). When omitted, defaults to 1 hour ago.',
                     required: false,
                     schema: ['type' => 'string'],
+                    openApi: new OpenApiParameter(name: 'since', in: 'query', example: '1h'),
                 ),
                 'until' => new QueryParameter(
                     description: 'Upper bound of the time window. RFC3339 timestamp or unix-nano numeric string. When omitted, defaults to now.',
                     required: false,
                     schema: ['type' => 'string'],
+                    openApi: new OpenApiParameter(name: 'until', in: 'query', example: '2026-05-09T15:00:00Z'),
                 ),
                 'service' => new QueryParameter(
                     description: 'Filter by resource_service_name (exact match).',
                     required: false,
                     schema: ['type' => 'string'],
+                    openApi: new OpenApiParameter(name: 'service', in: 'query', example: 'checkout'),
                 ),
                 'environment' => new QueryParameter(
                     description: 'Filter by resource_deployment_environment (exact match).',
                     required: false,
                     schema: ['type' => 'string'],
+                    openApi: new OpenApiParameter(name: 'environment', in: 'query', example: 'production'),
                 ),
                 'host' => new QueryParameter(
                     description: 'Filter by resource_host_name (exact match).',
                     required: false,
                     schema: ['type' => 'string'],
+                    openApi: new OpenApiParameter(name: 'host', in: 'query', example: 'app-001'),
                 ),
                 'severityNumber' => new QueryParameter(
                     description: 'Filter by exact severity number (1-24 per OTLP).',
                     required: false,
                     schema: ['type' => 'integer', 'minimum' => 1, 'maximum' => 24],
+                    openApi: new OpenApiParameter(name: 'severityNumber', in: 'query', example: 17),
                 ),
                 'severityNumberMin' => new QueryParameter(
                     description: 'Inclusive lower bound on severity number (>=).',
                     required: false,
                     schema: ['type' => 'integer', 'minimum' => 1, 'maximum' => 24],
+                    openApi: new OpenApiParameter(name: 'severityNumberMin', in: 'query', example: 17),
                 ),
                 'severityText' => new QueryParameter(
                     description: 'Filter by severity_text (exact match).',
                     required: false,
                     schema: ['type' => 'string'],
+                    openApi: new OpenApiParameter(name: 'severityText', in: 'query', example: 'ERROR'),
                 ),
                 'traceId' => new QueryParameter(
                     description: 'Filter by trace_id_hex (32 lowercase hex chars).',
                     required: false,
                     schema: ['type' => 'string', 'pattern' => '^[0-9a-f]{32}$'],
+                    openApi: new OpenApiParameter(name: 'traceId', in: 'query', example: '5b8aa5a2d2c872e8321cf37308d69df2'),
                 ),
                 'spanId' => new QueryParameter(
                     description: 'Filter by span_id_hex (16 lowercase hex chars).',
                     required: false,
                     schema: ['type' => 'string', 'pattern' => '^[0-9a-f]{16}$'],
+                    openApi: new OpenApiParameter(name: 'spanId', in: 'query', example: '051581bf3cb55c13'),
                 ),
                 'eventName' => new QueryParameter(
                     description: 'Filter by event_name (exact match).',
                     required: false,
                     schema: ['type' => 'string'],
+                    openApi: new OpenApiParameter(name: 'eventName', in: 'query', example: 'auth.failed'),
                 ),
                 'bodyContains' => new QueryParameter(
                     description: 'Substring match against body_json. No row-group push-down — combine with a service or time filter for performance.',
                     required: false,
                     schema: ['type' => 'string'],
+                    openApi: new OpenApiParameter(name: 'bodyContains', in: 'query', example: 'panic'),
                 ),
                 'cursor' => new QueryParameter(
                     description: 'Opaque pagination cursor returned by a previous response. When supplied, all other filter parameters are ignored.',
                     required: false,
                     schema: ['type' => 'string'],
+                    openApi: new OpenApiParameter(name: 'cursor', in: 'query', example: 'eyJjIjp7InNlcnZpY2UiOiJjaGVja291dCJ9fQ.abc123'),
                 ),
             ],
         ),

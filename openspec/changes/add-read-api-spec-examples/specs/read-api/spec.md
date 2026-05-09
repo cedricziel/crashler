@@ -1,64 +1,52 @@
 ## ADDED Requirements
 
-### Requirement: OpenAPI document carries simple and medium-complex examples on every read operation
+### Requirement: OpenAPI document carries examples on every read operation parameter
 
-The auto-generated OpenAPI 3.1 document SHALL carry, for every read API operation, at minimum:
+The auto-generated OpenAPI 3.1 document SHALL carry, for every read API operation, an `example` (or non-empty `examples` map) on every documented query parameter. The example value SHALL be a realistic value resembling on-disk OTLP shapes (real-shape hex IDs, OTLP-aligned severity numbers, real service names, RFC3339 or unix-nano timestamps). Placeholder values such as `"string"`, `"<value>"`, or `0` SHALL NOT be used.
 
-- An `example` (or named entry under `examples`) on every documented query parameter.
-- A simple-case example AND a medium-complex example on each operation's request body (where the operation accepts a body) and on each operation's primary `200` response body per documented media type.
+The examples SHALL be declared on the API Platform Resource declarations via the `openApi` extension on `#[QueryParameter]` (using `\ApiPlatform\OpenApi\Model\Parameter` with the `example` field set), so they are co-located with the parameter they document.
 
-The "simple" example SHALL exercise the minimum useful set of parameters: typically a time window plus zero or one filter (e.g. `?since=1h&service=checkout`).
+This requirement applies to operations on paths matching `^/v1/(logs|traces|metrics|spans)(/.*)?$`. Framework-injected pagination parameters (`page`, `itemsPerPage`) and the OTLP write endpoints are out of scope.
 
-The "medium-complex" example SHALL exercise three or more orthogonal capabilities of the endpoint (e.g. service filter + severity filter + attribute filter + non-default `limit`; or a body-search criteria-tree mixing `all` / `any` / a column op and an attribute op; or a Trace.Get with `since`/`until` + `Accept: application/otlp+json`).
-
-Both examples SHALL use realistic values resembling on-disk OTLP shapes (real-shape hex IDs, OTLP-aligned severity numbers, real-shape service names, well-formed timestamps in both RFC3339 and unix-nano forms). Placeholder values such as `"string"`, `"<value>"`, or `0` SHALL NOT be used.
-
-The examples SHALL be declared on the API Platform Resource declarations through the `openapi` / `openapiContext` extension keys on `#[QueryParameter]` and `#[Get]` / `#[GetCollection]` / `#[Post]` operations, so they are co-located with the parameter or operation they document.
-
-This requirement applies to operations on paths matching `^/v1/(logs|traces|metrics|spans)(/.*)?$`. The OTLP write endpoints, although they share these paths on POST, are out of scope for this requirement (they are not declared via API Platform attributes and are governed by the OTLP protocol contract).
+Per-operation request-body and response-body examples (named simple + medium-complex maps under `examples`) are deferred to a follow-up change. The parameter-level examples shipped here cover the dominant DX use case (Swagger UI's "Try it" form auto-fill, generated client fixtures, copy-paste curl recipes).
 
 #### Scenario: Every read query parameter has at least one example
 - **WHEN** the OpenAPI document is loaded
-- **THEN** for every operation under a read API path, every `parameters[*]` entry has `example` set OR a non-empty `examples` map
-
-#### Scenario: Every read operation has at least two named examples
-- **WHEN** the OpenAPI document is loaded
-- **THEN** for every read API operation, the union of named `examples` declared on its parameters, request body (if any), and `200` response body contains at least one `simple` and at least one `complex` (or equivalently named) entry
+- **THEN** for every operation under a read API path, every documented `parameters[*]` entry (excluding framework parameters like `page` / `itemsPerPage`) has `example` set OR a non-empty `examples` map
 
 #### Scenario: Examples use realistic values
 - **WHEN** an OpenAPI parameter `traceId` carries an example
 - **THEN** the example value is a 32-character lowercase-hex string conforming to the `^[0-9a-f]{32}$` schema
 
-#### Scenario: Swagger UI surfaces the simple example as the default
+#### Scenario: Swagger UI surfaces the example as the default
 - **WHEN** an operator opens `/docs` and selects a read operation's "Try it"
-- **THEN** the form's input fields are pre-populated with the simple-example values declared on the parameters
+- **THEN** the form's input fields are pre-populated with the example values declared on the parameters
 
 ### Requirement: CI lint enforces example coverage on the OpenAPI document
 
-The system SHALL ship a CI lint that, on every build, loads the auto-generated OpenAPI document and verifies the example-coverage rule above. The lint SHALL exit non-zero on any violation, printing the offending operation, parameter, response status, and the missing element.
+The system SHALL ship a CI lint command that loads the auto-generated OpenAPI document and verifies the example-coverage rule above. The lint SHALL exit non-zero on any violation, printing each offending operation path, HTTP method, and parameter name.
 
-The lint SHALL be invokable as `bin/console app:openapi:lint-examples` (or equivalent) and SHALL run as a step in the existing test pipeline alongside the unit/functional test runs.
+The lint SHALL be invokable as `bin/console app:openapi:lint-examples` and SHALL be runnable as a CI step alongside the unit/functional test runs. A functional test (`OpenApiLintExamplesTest`) verifies the lint passes against the current spec.
 
-The lint SHALL apply only to read API operations (paths matching `^/v1/(logs|traces|metrics|spans)(/.*)?$`); operations outside this scope SHALL be ignored.
+The lint SHALL scope to read API operations (paths matching `^/v1/(logs|traces|metrics|spans)(/.*)?$`) and SHALL skip framework-injected parameters by name (`page`, `itemsPerPage`, `pagination`).
 
 #### Scenario: Lint passes on a fully populated spec
-- **WHEN** every read API operation declares its examples per the rule above
+- **WHEN** every in-scope read API parameter declares an example
 - **AND** the lint command is run
 - **THEN** the command exits with status 0
 
 #### Scenario: Lint fails on a missing parameter example
-- **WHEN** any read API parameter lacks both `example` and a non-empty `examples` map
+- **WHEN** any in-scope read API parameter lacks both `example` and a non-empty `examples` map
 - **AND** the lint command is run
 - **THEN** the command exits with non-zero status
 - **AND** the output names the offending operation path, HTTP method, and parameter name
-
-#### Scenario: Lint fails on a missing operation-level example
-- **WHEN** a read API operation's parameters, request body, and primary 200 response together carry fewer than two named examples
-- **AND** the lint command is run
-- **THEN** the command exits with non-zero status
-- **AND** the output names the operation and indicates which slot (simple or complex) is missing
 
 #### Scenario: Lint scopes to read API only
 - **WHEN** an operation outside the read API path scope (e.g., the OTLP write endpoint at `POST /v1/logs`) lacks examples
 - **AND** the lint command is run
 - **THEN** the command does NOT report it as a violation
+
+#### Scenario: Lint exempts framework-injected parameters
+- **WHEN** a read API operation declares pagination via API Platform (auto-injecting `page` / `itemsPerPage`)
+- **AND** those auto-injected parameters lack examples
+- **THEN** the lint does NOT report a violation for them
