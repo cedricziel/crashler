@@ -19,9 +19,12 @@ api_platform:
             - '%kernel.project_dir%/src/Read/Resource'
     formats:
         jsonld: ['application/ld+json']
-        hal: ['application/hal+json']
         json: ['application/json']
         jsonapi: ['application/vnd.api+json']
+        # HAL (`application/hal+json`) — api-platform/hal package is
+        # installed but its serializer encoder isn't being picked up
+        # (returns 400 "Serialization for the format 'hal' is not
+        # supported"). Deferred to v1.1 pending investigation.
     docs_formats:
         jsonld: ['application/ld+json']
         jsonopenapi: ['application/vnd.openapi+json']

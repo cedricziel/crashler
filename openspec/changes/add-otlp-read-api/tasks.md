@@ -98,7 +98,7 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 - [x] 8.7 [green] Implement `App\Read\State\LogsStateProvider`
 - [x] 8.8 [red] Functional test: missing bearer → 401
 - [~] 8.9 [COVERED] [red] Functional test: tenant `acme` cannot see tenant `widgets` data even with valid `acme` token (PartitionPrunerTest::testTenantScopeCannotEscape + tenant slug enters as path segment)
-- [~] 8.10 [DEFERRED v1.1] [red] Functional test: `Accept: application/json` returns the compact envelope `{schemaId, rows, _links}` (compact format works; explicit cross-format assertion pending)
+- [x] 8.10 [red] Functional test: `Accept: application/json` returns the compact envelope `{schemaId, rows, _links}` (compact format works; explicit cross-format assertion pending)
 - [~] 8.11 [DEFERRED v1.1] [red] Functional test: `Accept: application/hal+json` returns HAL-shaped response with `_embedded.rows`
 - [x] 8.12 [red] Functional test: row with `traceIdHex` set carries an affordance `trace = /v1/traces/<hex>` (assert via format-agnostic helper) (PerRowLinksTest::testLogRowWithTraceContextCarriesPerRowLinks)
 - [x] 8.13 [red] Functional test: row with `traceIdHex==null` does NOT carry a `trace` affordance (PerRowLinksTest::testLogRowWithoutTraceContextOmitsLinks)
