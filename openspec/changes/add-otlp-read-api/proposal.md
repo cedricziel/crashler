@@ -15,7 +15,7 @@ Rather than hand-roll a fifth thin-controller stack, we adopt **API Platform** a
 - Compute via the streaming flow-php `ParquetScanner` (same library used on the write side). Predicates compile into a tier-ordered evaluator that fails-fast on cheap top-level columns before paying decode cost on JSON-string columns; row-group statistics push down where flow-php exposes them. No external binary, no PHP extension, no install step.
 - Result column names mirror the on-disk schema (`time_unix_nano`, `trace_id_hex`, `resource_service_name`, …) — emitted as **camelCase** in JSON for OTel parity (`timeUnixNano`, `traceIdHex`, `resourceServiceName`). The same casing applies to URL parameters declared by `#[ApiFilter]`s.
 - Every response carries the on-disk `_schema_id` value (e.g. `"logs/v1"`) so consumers can branch on schema version exactly the way the disk markers already do.
-- README documents the new read path; existing DuckDB recipes stay as operator/debug tooling, not a public interface. The OpenAPI spec at `/api/docs.json` (Swagger UI at `/api/docs`) is the canonical consumer contract.
+- README documents the new read path; existing DuckDB recipes stay as operator/debug tooling, not a public interface. The OpenAPI spec at `/docs.jsonopenapi` (Swagger UI at `/docs`) is the canonical consumer contract.
 
 Out of scope (deferred to follow-ups):
 

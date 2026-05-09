@@ -196,7 +196,7 @@ Each search endpoint SHALL expose a documented set of criteria as `#[ApiFilter]`
 - `limit` — page size
 - `cursor` — pagination token
 
-Per-signal criteria are declared in the per-signal specs. Unknown query parameters SHALL be rejected with HTTP 400 listing the supported ones for the endpoint. Filter values SHALL be type-checked: integer params reject non-integers, enum params (`severityText`, `kind`, `metricType`, `statusCode`) reject values outside the documented set. The full predicate compilation table is normative in design.md (D11).
+Per-signal criteria are declared in the per-signal specs. Unknown query parameters SHALL be rejected with HTTP 400 listing the supported ones for the endpoint. Filter values SHALL be type-checked: integer params reject non-integers, enum params (`severityText`, `kind`, `metricType`, `statusCode`, `aggregationTemporality`) reject values outside the documented set. Schema-level violations (enum, pattern) — surfaced by API Platform's parameter validator — return **HTTP 422 (Unprocessable Entity)**, AP's standard for such cases; state-provider-level violations (semantic constraints not expressible in JSON schema, e.g. wildcard not supported in v1 `metricName`) return **HTTP 400**. Both response bodies carry a JSON `message` field with operator-actionable detail. The full predicate compilation table is normative in design.md (D11).
 
 #### Scenario: Unknown parameter rejected
 - **WHEN** `GET /v1/logs?service=foo&banana=yes&since=1h`
@@ -272,7 +272,7 @@ Error bodies SHALL be valid JSON. Error bodies SHALL NOT leak internal stack tra
 
 ### Requirement: OpenAPI 3 specification
 
-The system SHALL expose an auto-generated OpenAPI 3 specification at `/api/docs.json` and a Swagger UI at `/api/docs`, both derived from the Resource declarations. The spec SHALL document:
+The system SHALL expose an auto-generated OpenAPI 3 specification at `/docs.jsonopenapi` and a Swagger UI at `/docs`, both derived from the Resource declarations. The spec SHALL document:
 
 - Every read path (`/v1/logs`, `/v1/traces`, `/v1/traces/{traceId}`, `/v1/spans/{spanId}`, `/v1/metrics`)
 - Every supported filter on every search endpoint, with name, type, and description
@@ -284,7 +284,7 @@ The system SHALL expose an auto-generated OpenAPI 3 specification at `/api/docs.
 The spec SHALL be valid against the OpenAPI 3.1 schema. CI SHALL verify the spec's correctness on every build.
 
 #### Scenario: OpenAPI spec is reachable
-- **WHEN** an unauthenticated client GETs `/api/docs.json`
+- **WHEN** an unauthenticated client GETs `/docs.jsonopenapi`
 - **THEN** the response status is 200
 - **AND** the body parses as a valid OpenAPI 3.1 document
 

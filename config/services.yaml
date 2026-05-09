@@ -114,6 +114,18 @@ services:
             $maxPageSize: '%crashler.read.max_page_size%'
             $cursorSecret: '%crashler.read.cursor_secret%'
 
+    App\Read\State\TracesStateProvider:
+        arguments:
+            $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
+            $maxPageSize: '%crashler.read.max_page_size%'
+            $cursorSecret: '%crashler.read.cursor_secret%'
+
+    App\Read\State\MetricsStateProvider:
+        arguments:
+            $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
+            $maxPageSize: '%crashler.read.max_page_size%'
+            $cursorSecret: '%crashler.read.cursor_secret%'
+
     # Default Parquet writer wires the configured compression codec at boot.
     # ParquetCompression::resolve fails fast if the codec's PHP extension is
     # missing, surfacing misconfiguration before traffic flows.

@@ -24,7 +24,7 @@ The runtime envelope is unchanged from the write side: mod_php on shared hosting
 - Bearer auth + tenant scope reuse the existing write-side machinery — same `IngestTokenAuthenticator`, same `Tenant` model. The state providers see the authenticated `IngestUser` and bound their file glob to its slug.
 - Cursor encodes the full original criteria (HMAC-signed) and integrates with API Platform's pagination contract so the framework's `next` link is sufficient for the client.
 - Compute via streaming `ParquetScanner`. Predicates compile into a tier-ordered evaluator (cheap top-level columns first, expensive JSON-string scans last) so wide queries fail-fast on the cheap predicates.
-- OpenAPI 3 spec auto-generated at `/api/docs.json`, Swagger UI at `/api/docs`. This is the canonical consumer contract.
+- OpenAPI 3 spec auto-generated at `/docs.jsonopenapi`, Swagger UI at `/docs`. This is the canonical consumer contract.
 
 **Non-Goals:**
 
@@ -125,7 +125,7 @@ API Platform 4's cursor pagination contract is implemented by a custom `App\Read
 
 **Decision.** Adopt `api-platform/symfony` ^4 for routing, content negotiation, filter parsing, OpenAPI generation, hypermedia rendering, and pagination wiring. Each signal is declared as a PHP-attribute `#[ApiResource]` on a plain DTO class (Log, Trace, Span, Metric). State providers (`StateProviderInterface` implementations) are the only logic layer we own — they translate Operation + filters + tenant into a `ParquetScanner` call.
 
-API Platform is configured under `routePrefix: /v1` so endpoints land at `/v1/logs`, `/v1/traces`, `/v1/traces/{traceId}`, `/v1/spans/{spanId}`, `/v1/metrics`. Documentation is exposed at `/api/docs.json` (OpenAPI 3) and `/api/docs` (Swagger UI).
+API Platform is configured under `routePrefix: /v1` so endpoints land at `/v1/logs`, `/v1/traces`, `/v1/traces/{traceId}`, `/v1/spans/{spanId}`, `/v1/metrics`. Documentation is exposed at `/docs.jsonopenapi` (OpenAPI 3) and `/docs` (Swagger UI).
 
 **Why.**
 
@@ -343,7 +343,7 @@ Inside Tier 2 and Tier 3, the order is also cheap-first: `ColumnEquals` before `
 
 ### D14. OpenAPI as the consumer-facing contract
 
-**Decision.** The auto-generated OpenAPI 3 spec at `/api/docs.json` (Swagger UI at `/api/docs`) is the canonical consumer documentation. Every Resource property, every `#[ApiFilter]`, every `Operation`, every output format, and the bearer-auth security scheme show up automatically. The README's "Reading data" section points consumers at the Swagger UI as the first stop.
+**Decision.** The auto-generated OpenAPI 3 spec at `/docs.jsonopenapi` (Swagger UI at `/docs`) is the canonical consumer documentation. Every Resource property, every `#[ApiFilter]`, every `Operation`, every output format, and the bearer-auth security scheme show up automatically. The README's "Reading data" section points consumers at the Swagger UI as the first stop.
 
 The OpenAPI spec is verified in CI: a test loads it and asserts (a) all expected paths are present, (b) all expected filters are present per resource, (c) the security scheme is bearer-token, (d) the spec is valid against OpenAPI 3.1 schema.
 
@@ -370,7 +370,7 @@ The OpenAPI spec is verified in CI: a test loads it and asserts (a) all expected
 ## Migration Plan
 
 - Additive: no migration. Existing `/v1/logs`, `/v1/traces`, `/v1/metrics` POST endpoints (write side) are untouched. The new GET verbs sit beside them under the same firewall.
-- API Platform installation: `composer require api-platform/symfony` runs the recipe; we override the route prefix (`api_platform.yaml` → `route_prefix: /v1`) and the format list. Recipe-installed routes at `/api` (Swagger UI) and `/api/docs.json` (OpenAPI) stay at their conventional paths.
+- API Platform installation: `composer require api-platform/symfony` runs the recipe; we override the route prefix (`api_platform.yaml` → `route_prefix: /v1`) and the format list. Recipe-installed routes at `/api` (Swagger UI) and `/docs.jsonopenapi` (OpenAPI) stay at their conventional paths.
 - Symfony cache:warmup runs as part of the deploy recipe (already configured); AP's compiled metadata + OpenAPI spec are part of the warmed-up cache.
 - Production deploy: `dep deploy stage=production` ships the new code; the GET endpoints come up immediately. Nothing to install on the host.
 - Rollback: redeploy the previous release tag. Read endpoints disappear; write side is unaffected.

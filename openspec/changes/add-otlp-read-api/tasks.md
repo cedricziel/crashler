@@ -7,12 +7,12 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 - [x] 1.1 `composer require api-platform/symfony` and confirm the recipe runs (creates `config/packages/api_platform.yaml`)
 - [x] 1.2 Override `api_platform.route_prefix` to `/v1` so resource routes land at `/v1/<plural>` instead of the default `/api/<plural>`
 - [x] 1.3 Configure the supported `formats` list: `jsonld` (default), `hal`, `json` (compact), `jsonapi`, plus `otlp+json` (registered for the Trace.Get operation only — see §10)
-- [x] 1.4 Configure the OpenAPI title, description, and bearer-token security scheme so it shows up at `/api/docs.json` and `/api/docs`
+- [x] 1.4 Configure the OpenAPI title, description, and bearer-token security scheme so it shows up at `/docs.jsonopenapi` and `/docs`
 - [x] 1.5 Add config keys to `CrashlerExtension`: `crashler.read.max_time_window_days` (30), `crashler.read.max_page_size` (1000), `crashler.read.cursor_secret` (sourced from `APP_SECRET`), `crashler.read.span_lookup_window_hours` (24), `crashler.read.execution_timeout_seconds` (10)
 - [x] 1.6 [red] Component test: kernel boot exposes the keys as DI parameters with documented defaults
 - [x] 1.7 [green] Wire the parameters
 - [x] 1.8 [red] Test: missing/empty `cursor_secret` fails boot with a clear message
-- [x] 1.9 [red] Component test: Swagger UI is reachable at `/api/docs` (200) and `/api/docs.json` returns valid OpenAPI 3.1 JSON
+- [x] 1.9 [red] Component test: Swagger UI is reachable at `/docs` (200) and `/docs.jsonopenapi` returns valid OpenAPI 3.1 JSON
 
 ## 2. Time window parsing + partition pruning (TDD)
 
@@ -66,9 +66,9 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 ## 6. AP State Providers + filter framework (TDD)
 
-- [ ] 6.1 [red] Unit test: `App\Read\State\BaseStateProvider` parses the AP `Operation` + filters context into a `(predicates, window, paginationCursor, tenantSlug)` tuple
+- [x] 6.1 [red] Unit test: `App\Read\State\BaseStateProvider` parses the AP `Operation` + filters context into a `(predicates, window, paginationCursor, tenantSlug)` tuple
 - [ ] 6.2 [red] Test: BaseStateProvider rejects an authenticated user whose tenant differs from the cursor's embedded tenant (returns 400)
-- [ ] 6.3 [green] Implement `BaseStateProvider`
+- [x] 6.3 [green] Implement `BaseStateProvider`
 - [ ] 6.4 [red] Test: AP's filter framework integration — `App\Read\Filter\TimeRangeFilter`, `ServiceFilter`, `EnvironmentFilter`, `HostFilter`, `LimitFilter`, `CursorFilter` declare their OpenAPI contributions correctly
 - [ ] 6.5 [green] Implement the common filter classes in `App\Read\Filter\*`
 - [ ] 6.6 [red] Test: unknown query parameter on a Resource → AP's filter framework returns 400 with the supported-list (default AP behavior; the test asserts our config doesn't disable it)
@@ -81,22 +81,22 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 - [ ] 7.2 [red] Test: When the scanner indicates more rows exist, the paginator emits a next-cursor; AP renders it as `hydra:next` (Hydra), `_links.next` (HAL/json), `links.next` (jsonapi)
 - [ ] 7.3 [red] Test: When the scanner exhausts results within `limit`, the paginator emits no next-cursor; the response carries no next affordance
 - [ ] 7.4 [green] Implement `CursorPaginator` and wire into the state providers
-- [ ] 7.5 [red] Functional test: page through 250 rows with `limit=100` → 3 pages, next-affordance chain, last page omits next
-- [ ] 7.6 [red] Functional test: next-affordance URL between pages re-uses the original `since`/`until` even if the original request used `since=1h` shorthand (cursor encodes resolved instants)
+- [x] 7.5 [red] Functional test: page through 250 rows with `limit=100` → 3 pages, next-affordance chain, last page omits next
+- [x] 7.6 [red] Functional test: next-affordance URL between pages re-uses the original `since`/`until` even if the original request used `since=1h` shorthand (cursor encodes resolved instants)
 - [ ] 7.7 [red] Functional test: tampered cursor → 400
 - [ ] 7.8 [red] Functional test: cursor minted for tenant `acme` rejected when presented by tenant `widgets`
 - [ ] 7.9 [red] Functional test: rotating `cursor_secret` invalidates outstanding cursors
 
 ## 8. Logs query (TDD)
 
-- [ ] 8.1 Declare `App\Read\Resource\Log` with `#[ApiResource(routePrefix: '/v1', operations: [GetCollection(provider: LogsStateProvider::class)])]`; list the documented camelCase properties
+- [x] 8.1 Declare `App\Read\Resource\Log` with `#[ApiResource(routePrefix: '/v1', operations: [GetCollection(provider: LogsStateProvider::class)])]`; list the documented camelCase properties
 - [ ] 8.2 [red] Unit test: each per-signal filter (`SeverityNumberFilter`, `SeverityNumberMinFilter`, `SeverityTextFilter`, `TraceIdFilter`, `SpanIdFilter`, `EventNameFilter`, `BodyContainsFilter`, `AttributeKeyFilter`) compiles a request to the documented predicate
 - [ ] 8.3 [red] Test: traceId of wrong length → 400 with `traceId` in the message
 - [ ] 8.4 [red] Test: two `attribute.*` filters in one request → 400 noting v1 limit
 - [ ] 8.5 [green] Implement the per-signal filter classes in `App\Read\Filter\Logs\*`
-- [ ] 8.6 [red] Functional test (`api-platform/core/test/ApiTestCase`): `GET /v1/logs?service=checkout&since=1h&limit=5` with valid bearer → 200, response in default Hydra format with `schemaId=logs/v1`, ≤5 entries in `hydra:member`
-- [ ] 8.7 [green] Implement `App\Read\State\LogsStateProvider`
-- [ ] 8.8 [red] Functional test: missing bearer → 401
+- [x] 8.6 [red] Functional test (`api-platform/core/test/ApiTestCase`): `GET /v1/logs?service=checkout&since=1h&limit=5` with valid bearer → 200, response in default Hydra format with `schemaId=logs/v1`, ≤5 entries in `hydra:member`
+- [x] 8.7 [green] Implement `App\Read\State\LogsStateProvider`
+- [x] 8.8 [red] Functional test: missing bearer → 401
 - [ ] 8.9 [red] Functional test: tenant `acme` cannot see tenant `widgets` data even with valid `acme` token
 - [ ] 8.10 [red] Functional test: `Accept: application/json` returns the compact envelope `{schemaId, rows, _links}`
 - [ ] 8.11 [red] Functional test: `Accept: application/hal+json` returns HAL-shaped response with `_embedded.rows`
@@ -108,13 +108,13 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 ## 9. Traces query (TDD)
 
-- [ ] 9.1 Declare `App\Read\Resource\Trace` with two operations (GetCollection at `/v1/traces`, Get at `/v1/traces/{traceId}`)
+- [x] 9.1 Declare `App\Read\Resource\Trace` with two operations (GetCollection at `/v1/traces`, Get at `/v1/traces/{traceId}`)
 - [ ] 9.2 [red] Unit test: per-signal filters (`OperationNameFilter` with prefix/suffix, `KindFilter`, `StatusCodeFilter`, `HttpStatusCodeMinFilter`, `TraceIdFilter`, `ParentSpanIdFilter`, `AttributeKeyFilter`) compile to the documented predicates
 - [ ] 9.3 [red] Test: `name=GET+/orders/*` parses with trailing wildcard → `ColumnLikePrefix`
 - [ ] 9.4 [red] Test: `kind=BANANA` rejected with supported values listed
 - [ ] 9.5 [green] Implement filters in `App\Read\Filter\Traces\*`
 - [ ] 9.6 [red] Functional test: `GET /v1/traces?service=checkout&kind=SERVER&since=1h` → matching rows; per-row `trace` affordance set
-- [ ] 9.7 [green] Implement `App\Read\State\TracesStateProvider` (collection)
+- [x] 9.7 [green] Implement `App\Read\State\TracesStateProvider` (collection)
 - [ ] 9.8 [red] Unit test: `TraceTreeAssembler::assemble(rows)` groups rows back into ResourceSpans → ScopeSpans → spans, preserving order
 - [ ] 9.9 [green] Implement `App\Read\Traces\TraceTreeAssembler`
 - [ ] 9.10 [red] Functional test: `GET /v1/traces/<hex>` with `Accept: application/otlp+json` returns `{resourceSpans: [...], _links: {...}}`; spans grouped under their resource/scope; OTLP-shape `traceId`/`spanId` are lowercase hex
@@ -139,13 +139,13 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 ## 11. Metrics query (TDD)
 
-- [ ] 11.1 Declare `App\Read\Resource\Metric` with `GetCollection` at `/v1/metrics`
+- [x] 11.1 Declare `App\Read\Resource\Metric` with `GetCollection` at `/v1/metrics`
 - [ ] 11.2 [red] Unit test: per-signal filters (`MetricNameFilter`, `MetricTypeFilter`, `AggregationTemporalityFilter`, `ExemplarTraceIdFilter`, `AttributeKeyFilter`) compile to documented predicates
 - [ ] 11.3 [red] Test: `metricType=BANANA` rejected
 - [ ] 11.4 [red] Test: wildcard in `metricName` rejected with v1-not-supported message
 - [ ] 11.5 [green] Implement filters in `App\Read\Filter\Metrics\*`
 - [ ] 11.6 [red] Functional test: `GET /v1/metrics?service=checkout&metricType=HISTOGRAM&since=1h` → matching rows with `metricType==HISTOGRAM`
-- [ ] 11.7 [green] Implement `App\Read\State\MetricsStateProvider`
+- [x] 11.7 [green] Implement `App\Read\State\MetricsStateProvider`
 - [ ] 11.8 [red] Functional test: row with non-empty `exemplarsJson` carrying a traceId → `exemplars` affordance points to `/v1/traces/<first-exemplar-hex>`
 - [ ] 11.9 [red] Functional test: row with `exemplarsJson==[]` does NOT carry an `exemplars` affordance
 - [ ] 11.10 [red] Functional test: `exemplarTraceId=<hex>` matches by decoded JSON walk (not substring) — assert by writing one metric whose exemplars carry that traceId structurally and one whose exemplarsJson contains the substring elsewhere; only the first is returned
@@ -177,12 +177,12 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 ## 15. OpenAPI spec verification
 
-- [ ] 15.1 [red] Functional test: `GET /api/docs.json` (unauthenticated) → 200 with valid OpenAPI 3.1 JSON
+- [ ] 15.1 [red] Functional test: `GET /docs.jsonopenapi` (unauthenticated) → 200 with valid OpenAPI 3.1 JSON
 - [ ] 15.2 [red] Functional test: `paths` object contains `/v1/logs`, `/v1/traces`, `/v1/traces/{traceId}`, `/v1/spans/{spanId}`, `/v1/metrics`
 - [ ] 15.3 [red] Functional test: `/v1/logs` GET operation lists every documented log filter under `parameters`
 - [ ] 15.4 [red] Functional test: `components.securitySchemes` declares a bearer-token scheme; every read operation references it
 - [ ] 15.5 [red] Functional test: spec validates against the OpenAPI 3.1 JSON schema (use `justinrainbow/json-schema` or equivalent)
-- [ ] 15.6 [red] Functional test: Swagger UI at `/api/docs` returns HTML 200
+- [ ] 15.6 [red] Functional test: Swagger UI at `/docs` returns HTML 200
 
 ## 16. Operator documentation
 
@@ -203,5 +203,5 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 - [ ] 18.2 `openspec validate add-otlp-read-api --strict` passes
 - [ ] 18.3 CI green on main
 - [ ] 18.4 `dep deploy stage=production` (additive, no env flag, no schema-breaking purge, no binary install). Smoke test all five endpoints + Swagger UI; confirm 200s, schemaId markers, content negotiation in three formats, and follow-the-link traversal works
-- [ ] 18.5 Optional: visit `https://crashler.cedric-ziel.com/api/docs` in a browser and confirm the Swagger UI renders all five endpoints with their filters
+- [ ] 18.5 Optional: visit `https://crashler.cedric-ziel.com/docs` in a browser and confirm the Swagger UI renders all five endpoints with their filters
 - [ ] 18.6 Optional: post sample data, fetch it back via `/v1/logs`, follow `trace` affordance, follow `metricsWithExemplars` affordance — full cross-signal navigation against the live network
