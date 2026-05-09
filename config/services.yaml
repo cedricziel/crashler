@@ -47,6 +47,10 @@ parameters:
     crashler.read.max_attribute_filters: '%env(default:crashler.read.max_attribute_filters_default:int:CRASHLER_READ_MAX_ATTRIBUTE_FILTERS)%'
     crashler.read.max_attribute_filters_default: 5
 
+    # Aggregation cardinality cap. Distinct group keys above this cap → 400.
+    crashler.read.aggregate.max_groups: '%env(default:crashler.read.aggregate.max_groups_default:int:CRASHLER_READ_AGGREGATE_MAX_GROUPS)%'
+    crashler.read.aggregate.max_groups_default: 200
+
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -181,6 +185,23 @@ services:
     App\Read\Http\ReadResponseConventionsListener:
         arguments:
             $maxAttributeFilters: '%crashler.read.max_attribute_filters%'
+
+    # Aggregation endpoints (count/sum/avg/min/max with single-column groupBy in v1).
+    App\Read\Compute\AggregatingScanner:
+        arguments:
+            $maxGroups: '%crashler.read.aggregate.max_groups%'
+
+    App\Read\Controller\AggregateLogsController:
+        arguments:
+            $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
+
+    App\Read\Controller\AggregateTracesController:
+        arguments:
+            $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
+
+    App\Read\Controller\AggregateMetricsController:
+        arguments:
+            $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
 
     # TraceTreeAssembler is a static helper, not a service.
 
