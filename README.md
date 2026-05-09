@@ -272,6 +272,88 @@ Limits:
 
 Cursor pagination on POST search: the response carries a top-level `cursor` field when more rows exist. Clients echo the value verbatim into the next request body's `cursor` field. Cursors are bound to both the HTTP method (POST) and the criteria tree they were minted with — mutating the criteria between pages or replaying a GET cursor against POST returns 400. The `since`/`until` window is captured in the cursor, so subsequent POSTs with the same cursor see the same absolute window.
 
+### Aggregations
+
+`GET /v1/<signal>/aggregate` rolls up matching rows into a function value (count, sum, avg, min, max), optionally grouped by a typed column. It reuses the same filter set as `GET /v1/<signal>` plus four aggregation-specific parameters:
+
+- `function` (required) — `count` | `sum` | `avg` | `min` | `max`. Percentile functions (`p50` / `p90` / `p95` / `p99`) are tracked under a follow-up.
+- `column` (required for non-`count`) — names the numeric column whose values feed the accumulator. Per-signal allow-lists:
+  - logs: `severityNumber`
+  - traces: `httpResponseStatusCode`, `durationNano`
+  - metrics: `valueDouble`, `valueInt`, `count`, `sum`
+- `groupBy` (optional) — single typed column from a per-signal allow-list:
+  - logs: `service`, `environment`, `host`, `severityText`, `severityNumber`, `eventName`
+  - traces: `service`, `environment`, `host`, `kind`, `statusCode`, `name`
+  - metrics: `service`, `environment`, `host`, `metricName`, `metricType`, `aggregationTemporality`
+- `interval` — DEFERRED in v1. Requests supplying `interval` return HTTP 501.
+
+Multi-column `groupBy` is not supported in v1; a request carrying a comma in `groupBy` returns 400.
+
+```bash
+TOKEN="<your-tenant-token>"
+
+# Total error count in the last hour for the checkout service
+curl -H "Authorization: Bearer $TOKEN" \
+     "https://crashler.example.com/v1/logs/aggregate?since=1h&service=checkout&function=count"
+
+# Error count grouped by service over the last 6 hours
+curl -H "Authorization: Bearer $TOKEN" \
+     "https://crashler.example.com/v1/logs/aggregate?since=6h&function=count&groupBy=service"
+
+# Sum of severityNumber per service (degenerate for logs but illustrates non-count usage)
+curl -H "Authorization: Bearer $TOKEN" \
+     "https://crashler.example.com/v1/logs/aggregate?since=1h&function=sum&column=severityNumber&groupBy=service"
+```
+
+The response is a flat JSON document:
+
+```json
+{
+  "function": "count",
+  "column": null,
+  "groupBy": "resource_service_name",
+  "window": {"since_unix_nano": "1730462400000000000", "until_unix_nano": "1730484000000000000"},
+  "rows": [
+    {"group": {"resource_service_name": "checkout"}, "function": "count", "value": 12, "sample_count": 12},
+    {"group": {"resource_service_name": "payments"}, "function": "count", "value": 7,  "sample_count": 7}
+  ]
+}
+```
+
+**Cardinality cap.** `crashler.read.aggregate.max_groups` (default 200, env `CRASHLER_READ_AGGREGATE_MAX_GROUPS`) bounds the distinct group keys per request. A request whose `groupBy` would produce more groups than the cap returns HTTP 400; the system never silently truncates. Operators with high-cardinality fleets (e.g. >200 services) raise the cap or tighten the filter.
+
+See `openspec/specs/read-aggregations/spec.md` for the normative contract.
+
+### Grafana compatibility
+
+The compat-shim layer at `/compat/<vendor>/` makes existing Grafana data sources (Tempo / Loki / Prometheus) talk to Crashler without rebuilding dashboards. Each shim sits behind a feature flag, defaults OFF, and ships only the connection-test endpoint in v1 — search and `query_range` are tracked as follow-ups.
+
+Per-shim feature flags (set at server boot):
+
+- `CRASHLER_COMPAT_TEMPO_ENABLED` (default `false`) — enables `/compat/tempo/api/echo`. Pinned to Tempo 2.x.
+- `CRASHLER_COMPAT_LOKI_ENABLED` (default `false`) — enables `/compat/loki/api/v1/labels`. Pinned to Loki 2.9.x.
+- `CRASHLER_COMPAT_PROMETHEUS_ENABLED` (default `false`) — enables `/compat/prom/api/v1/labels`. Pinned to Prometheus 2.x.
+
+When a flag is `false`, the route returns 404. When `true`, the route returns a Tempo/Loki/Prometheus-shaped response sufficient to satisfy a Grafana data source's "Test connection" probe and to populate label-browser dropdowns. All shim endpoints share the bearer-token auth and tenant scoping of the canonical `/v1/` endpoints.
+
+Provisioning snippet for Grafana data sources lives at [`docs/grafana-datasources.example.yaml`](docs/grafana-datasources.example.yaml). Substitute your tenant's bearer token and your Crashler base URL.
+
+What v1 explicitly does NOT do, per shim spec:
+
+- Tempo: no TraceQL (`q=`), no streaming, no `X-Scope-OrgID`. Search and trace-by-ID are deferred.
+- Loki: no regex selectors (`=~`), no LogQL aggregations, no range vectors. `query_range` and `/label/{name}/values` are deferred.
+- Prometheus: no PromQL functions outside `count_over_time` and `sum by` (and those are deferred too in v1; only `/labels` is shipped). No comparison operators, no recording rules.
+
+See `openspec/specs/compat-shims/spec.md` plus the per-vendor `compat-tempo`, `compat-loki`, `compat-prometheus` capabilities for the normative contracts.
+
+### Examples on the spec
+
+Every read-API query parameter declares an OpenAPI `example` so the Swagger UI at `/docs` auto-fills its "Try it" form with realistic values. `since` becomes `1h`, `traceId` becomes a real-shape 32-hex-char string, `severityNumber` becomes `17`, and so on. Generated clients (openapi-generator and friends) pick up the same examples as fixture defaults.
+
+The raw OpenAPI 3.1 document at `/docs.jsonopenapi` is the canonical consumer contract.
+
+For contributors: every new read-API query parameter declared via API Platform must carry an `openApi: new OpenApiParameter(...)` block with a realistic `example` value. The lint command `bin/console app:openapi:lint-examples` enforces the rule and runs as part of the test suite. See `openspec/specs/read-api/spec.md` (sections starting "OpenAPI document carries examples ...") for the normative requirement.
+
 ### Operator/debug recipes — DuckDB on the file tree
 
 The HTTP read API is the contract. The DuckDB recipes below are operator/debug tooling for ad-hoc deep dives directly on the Parquet files (typically over SSH on the host). They are NOT a stable interface — schema renames between versions can break them.

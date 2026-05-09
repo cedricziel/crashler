@@ -46,11 +46,11 @@
 
 ## 5. Theme: add-read-docs-roundup
 
-- [ ] 5.1 README "Aggregations" subsection with worked examples (count/sum/p99/groupBy/interval) and operator advice on caps. Reference: `add-read-aggregations` 7.1, 7.2
-- [ ] 5.2 README "Grafana compatibility" subsection: per-shim flags, supported endpoints, explicit non-preservations, version pins. Reference: `add-read-compat-shims` 8.1, 8.3
-- [ ] 5.3 `docs/grafana-datasources.example.yaml` — provisioning snippet pointing Grafana data sources at the shim paths. Reference: `add-read-compat-shims` 8.2
-- [ ] 5.4 README "Examples on the spec" subsection pointing at `/docs` Swagger UI's example dropdown. Reference: `add-read-api-spec-examples` 5.1
-- [ ] 5.5 CONTRIBUTING.md note: every new read-API endpoint must declare parameter examples and pass `app:openapi:lint-examples`. Reference: `add-read-api-spec-examples` 5.2
+- [x] 5.1 [PROMOTED to add-read-docs-roundup §1] README "Aggregations" subsection
+- [x] 5.2 [PROMOTED to add-read-docs-roundup §2] README "Grafana compatibility" subsection
+- [x] 5.3 [PROMOTED to add-read-docs-roundup §4] `docs/grafana-datasources.example.yaml`
+- [x] 5.4 [PROMOTED to add-read-docs-roundup §3] README "Examples on the spec" subsection
+- [x] 5.5 [PROMOTED to add-read-docs-roundup §5] CONTRIBUTING.md OpenAPI examples rule
 
 ## 6. Promotion
 

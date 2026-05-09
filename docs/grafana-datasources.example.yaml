@@ -1,0 +1,55 @@
+# Grafana datasource provisioning — Crashler compat shims
+#
+# Drops these entries into Grafana's `datasources/` provisioning directory
+# (see https://grafana.com/docs/grafana/latest/administration/provisioning/#data-sources)
+# wires up Grafana's built-in Tempo / Loki / Prometheus data sources to point
+# at the Crashler compat-shim paths.
+#
+# Server-side prerequisites:
+#   1. Each shim is OFF by default. Enable the ones you want via env vars
+#      on the Crashler PHP process:
+#
+#        CRASHLER_COMPAT_TEMPO_ENABLED=true
+#        CRASHLER_COMPAT_LOKI_ENABLED=true
+#        CRASHLER_COMPAT_PROMETHEUS_ENABLED=true
+#
+#   2. Bearer auth is shared with /v1/ — supply your tenant's token below.
+#
+#   3. The v1 surface is the connection-test endpoints + label browsers
+#      only. Real search and query_range are tracked as follow-up work.
+#
+# Substitute the placeholders before applying:
+#   - `https://crashler.example.com` → your Crashler base URL
+#   - `<your-tenant-token>` → the bearer token issued for your tenant
+---
+apiVersion: 1
+datasources:
+  - name: Crashler Tempo
+    type: tempo
+    access: proxy
+    url: https://crashler.example.com/compat/tempo
+    jsonData:
+      httpHeaderName1: 'Authorization'
+    secureJsonData:
+      httpHeaderValue1: 'Bearer <your-tenant-token>'
+    editable: false
+
+  - name: Crashler Loki
+    type: loki
+    access: proxy
+    url: https://crashler.example.com/compat/loki
+    jsonData:
+      httpHeaderName1: 'Authorization'
+    secureJsonData:
+      httpHeaderValue1: 'Bearer <your-tenant-token>'
+    editable: false
+
+  - name: Crashler Prometheus
+    type: prometheus
+    access: proxy
+    url: https://crashler.example.com/compat/prom
+    jsonData:
+      httpHeaderName1: 'Authorization'
+    secureJsonData:
+      httpHeaderValue1: 'Bearer <your-tenant-token>'
+    editable: false
