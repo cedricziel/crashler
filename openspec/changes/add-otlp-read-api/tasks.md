@@ -30,15 +30,15 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 ## 3. Predicate primitives (TDD)
 
-- [ ] 3.1 [red] Unit test: `ColumnEquals('name', 'foo')` matches a row map where `row['name'] === 'foo'`, fails otherwise; null-safe
-- [ ] 3.2 [red] Unit test: `ColumnGreaterEqual('severity_number', 17)` matches rows with severity ≥ 17; rejects rows with null severity
-- [ ] 3.3 [red] Unit test: `ColumnInRange('time_unix_nano', $low, $high)` matches inclusive of both bounds
-- [ ] 3.4 [red] Unit test: `ColumnLikePrefix('name', 'GET ')` and `ColumnLikeSuffix('name', '.duration')`
-- [ ] 3.5 [red] Unit test: `JsonStringContains('body_json', 'connection refused')` does a `strpos`
-- [ ] 3.6 [red] Unit test: `JsonAttributeEquals('attributes_json', 'exception.type', 'RuntimeException')` decodes the JSON and walks the array; matches only the structurally correct entry; defends against substring false-positives (e.g., a value of `"foo exception.type"` does NOT match)
-- [ ] 3.7 [red] Unit test: `JsonAttributeEquals` on a row whose JSON column is `[]` returns false
-- [ ] 3.8 [red] Unit test: `JsonAttributeEquals` on malformed JSON returns false (defensive — corrupt rows skip silently rather than throwing)
-- [ ] 3.9 [green] Implement all primitives in `App\Read\Compute\Predicates\*`
+- [x] 3.1 [red] Unit test: `ColumnEquals('name', 'foo')` matches a row map where `row['name'] === 'foo'`, fails otherwise; null-safe
+- [x] 3.2 [red] Unit test: `ColumnGreaterEqual('severity_number', 17)` matches rows with severity ≥ 17; rejects rows with null severity
+- [x] 3.3 [red] Unit test: `ColumnInRange('time_unix_nano', $low, $high)` matches inclusive of both bounds
+- [x] 3.4 [red] Unit test: `ColumnLikePrefix('name', 'GET ')` and `ColumnLikeSuffix('name', '.duration')`
+- [x] 3.5 [red] Unit test: `JsonStringContains('body_json', 'connection refused')` does a `strpos`
+- [x] 3.6 [red] Unit test: `JsonAttributeEquals('attributes_json', 'exception.type', 'RuntimeException')` decodes the JSON and walks the array; matches only the structurally correct entry; defends against substring false-positives (e.g., a value of `"foo exception.type"` does NOT match)
+- [x] 3.7 [red] Unit test: `JsonAttributeEquals` on a row whose JSON column is `[]` returns false
+- [x] 3.8 [red] Unit test: `JsonAttributeEquals` on malformed JSON returns false (defensive — corrupt rows skip silently rather than throwing)
+- [x] 3.9 [green] Implement all primitives in `App\Read\Compute\Predicates\*`
 
 ## 4. Cursor (encode + sign + decode + verify) (TDD)
 
