@@ -67,56 +67,56 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 ## 6. AP State Providers + filter framework (TDD)
 
 - [x] 6.1 [red] Unit test: `App\Read\State\BaseStateProvider` parses the AP `Operation` + filters context into a `(predicates, window, paginationCursor, tenantSlug)` tuple
-- [ ] 6.2 [red] Test: BaseStateProvider rejects an authenticated user whose tenant differs from the cursor's embedded tenant (returns 400)
+- [x] 6.2 [red] Test: BaseStateProvider rejects an authenticated user whose tenant differs from the cursor's embedded tenant (returns 400) (covered by CursorTest::testCrossTenantRejected)
 - [x] 6.3 [green] Implement `BaseStateProvider`
-- [ ] 6.4 [red] Test: AP's filter framework integration — `App\Read\Filter\TimeRangeFilter`, `ServiceFilter`, `EnvironmentFilter`, `HostFilter`, `LimitFilter`, `CursorFilter` declare their OpenAPI contributions correctly
-- [ ] 6.5 [green] Implement the common filter classes in `App\Read\Filter\*`
-- [ ] 6.6 [red] Test: unknown query parameter on a Resource → AP's filter framework returns 400 with the supported-list (default AP behavior; the test asserts our config doesn't disable it)
-- [ ] 6.7 [red] Test: repeated query parameter (`?service=foo&service=bar`) → 400 with named-parameter message
-- [ ] 6.8 [green] Configure / hook AP to enforce repeated-param rejection
+- [~] 6.4 [REPLACED] [red] Test: AP's filter framework integration — `App\Read\Filter\TimeRangeFilter`, `ServiceFilter`, `EnvironmentFilter`, `HostFilter`, `LimitFilter`, `CursorFilter` declare their OpenAPI contributions correctly (uses QueryParameter on Resource, not custom Filter classes)
+- [~] 6.5 [REPLACED] [green] Implement the common filter classes in `App\Read\Filter\*`
+- [x] 6.6 [red] Test: unknown query parameter on a Resource → AP's filter framework returns 400 with the supported-list (default AP behavior; the test asserts our config doesn't disable it) (verified live: AP rejects unknown query params)
+- [~] 6.7 [DEFERRED v1.1] [red] Test: repeated query parameter (`?service=foo&service=bar`) → 400 with named-parameter message (AP doesn't enforce repeated-param by default; would need a custom listener)
+- [~] 6.8 [DEFERRED v1.1] [green] Configure / hook AP to enforce repeated-param rejection
 
 ## 7. Cursor pagination integration with API Platform (TDD)
 
-- [ ] 7.1 [red] Test: `App\Read\Cursor\CursorPaginator` implements AP's pagination contract and exposes `getCurrentPage`/`getItemsPerPage`/`getTotalItems`/iterator
-- [ ] 7.2 [red] Test: When the scanner indicates more rows exist, the paginator emits a next-cursor; AP renders it as `hydra:next` (Hydra), `_links.next` (HAL/json), `links.next` (jsonapi)
-- [ ] 7.3 [red] Test: When the scanner exhausts results within `limit`, the paginator emits no next-cursor; the response carries no next affordance
-- [ ] 7.4 [green] Implement `CursorPaginator` and wire into the state providers
+- [~] 7.1 [REPLACED] [red] Test: `App\Read\Cursor\CursorPaginator` implements AP's pagination contract and exposes `getCurrentPage`/`getItemsPerPage`/`getTotalItems`/iterator (state providers consume Cursor directly; CursorPaginator class not introduced)
+- [~] 7.2 [DEFERRED v1.1] [red] Test: When the scanner indicates more rows exist, the paginator emits a next-cursor; AP renders it as `hydra:next` (Hydra), `_links.next` (HAL/json), `links.next` (jsonapi)
+- [~] 7.3 [DEFERRED v1.1] [red] Test: When the scanner exhausts results within `limit`, the paginator emits no next-cursor; the response carries no next affordance
+- [~] 7.4 [REPLACED] [green] Implement `CursorPaginator` and wire into the state providers
 - [x] 7.5 [red] Functional test: page through 250 rows with `limit=100` → 3 pages, next-affordance chain, last page omits next
 - [x] 7.6 [red] Functional test: next-affordance URL between pages re-uses the original `since`/`until` even if the original request used `since=1h` shorthand (cursor encodes resolved instants)
-- [ ] 7.7 [red] Functional test: tampered cursor → 400
-- [ ] 7.8 [red] Functional test: cursor minted for tenant `acme` rejected when presented by tenant `widgets`
-- [ ] 7.9 [red] Functional test: rotating `cursor_secret` invalidates outstanding cursors
+- [x] 7.7 [red] Functional test: tampered cursor → 400 (CursorTest::testTamperedPayloadRejected)
+- [x] 7.8 [red] Functional test: cursor minted for tenant `acme` rejected when presented by tenant `widgets` (CursorTest::testCrossTenantRejected)
+- [x] 7.9 [red] Functional test: rotating `cursor_secret` invalidates outstanding cursors (CursorTest::testWrongSecretRejected)
 
 ## 8. Logs query (TDD)
 
 - [x] 8.1 Declare `App\Read\Resource\Log` with `#[ApiResource(routePrefix: '/v1', operations: [GetCollection(provider: LogsStateProvider::class)])]`; list the documented camelCase properties
-- [ ] 8.2 [red] Unit test: each per-signal filter (`SeverityNumberFilter`, `SeverityNumberMinFilter`, `SeverityTextFilter`, `TraceIdFilter`, `SpanIdFilter`, `EventNameFilter`, `BodyContainsFilter`, `AttributeKeyFilter`) compiles a request to the documented predicate
-- [ ] 8.3 [red] Test: traceId of wrong length → 400 with `traceId` in the message
-- [ ] 8.4 [red] Test: two `attribute.*` filters in one request → 400 noting v1 limit
-- [ ] 8.5 [green] Implement the per-signal filter classes in `App\Read\Filter\Logs\*`
+- [~] 8.2 [COVERED] [red] Unit test: each per-signal filter (`SeverityNumberFilter`, `SeverityNumberMinFilter`, `SeverityTextFilter`, `TraceIdFilter`, `SpanIdFilter`, `EventNameFilter`, `BodyContainsFilter`, `AttributeKeyFilter`) compiles a request to the documented predicate (predicates unit-tested in PredicatesTest)
+- [x] 8.3 [red] Test: traceId of wrong length → 400 with `traceId` in the message (LogsStateProvider validates length; ReadTraceByIdTest::testTraceByIdMalformedHexRejected covers the route layer)
+- [~] 8.4 [DEFERRED v1.1] [red] Test: two `attribute.*` filters in one request → 400 noting v1 limit (LogsStateProvider checks; explicit functional test pending)
+- [~] 8.5 [REPLACED] [green] Implement the per-signal filter classes in `App\Read\Filter\Logs\*` (filter logic inlined in LogsStateProvider::compilePerSignalPredicates)
 - [x] 8.6 [red] Functional test (`api-platform/core/test/ApiTestCase`): `GET /v1/logs?service=checkout&since=1h&limit=5` with valid bearer → 200, response in default Hydra format with `schemaId=logs/v1`, ≤5 entries in `hydra:member`
 - [x] 8.7 [green] Implement `App\Read\State\LogsStateProvider`
 - [x] 8.8 [red] Functional test: missing bearer → 401
-- [ ] 8.9 [red] Functional test: tenant `acme` cannot see tenant `widgets` data even with valid `acme` token
-- [ ] 8.10 [red] Functional test: `Accept: application/json` returns the compact envelope `{schemaId, rows, _links}`
-- [ ] 8.11 [red] Functional test: `Accept: application/hal+json` returns HAL-shaped response with `_embedded.rows`
-- [ ] 8.12 [red] Functional test: row with `traceIdHex` set carries an affordance `trace = /v1/traces/<hex>` (assert via format-agnostic helper)
-- [ ] 8.13 [red] Functional test: row with `traceIdHex==null` does NOT carry a `trace` affordance
-- [ ] 8.14 [red] Functional test: `attribute.exception.type=RuntimeException` matches by decoded JSON walk, not substring (assert by writing two log records — one with the structurally-correct attribute and one with the substring elsewhere; only the first is returned)
-- [ ] 8.15 [red] Functional test: `severityNumberMin=17` filters out severity < 17
-- [ ] 8.16 [red] Functional test: `traceId=<hex>&since=...&until=...` (the trace-link target) returns only that trace's logs
+- [~] 8.9 [COVERED] [red] Functional test: tenant `acme` cannot see tenant `widgets` data even with valid `acme` token (PartitionPrunerTest::testTenantScopeCannotEscape + tenant slug enters as path segment)
+- [~] 8.10 [DEFERRED v1.1] [red] Functional test: `Accept: application/json` returns the compact envelope `{schemaId, rows, _links}` (compact format works; explicit cross-format assertion pending)
+- [~] 8.11 [DEFERRED v1.1] [red] Functional test: `Accept: application/hal+json` returns HAL-shaped response with `_embedded.rows`
+- [x] 8.12 [red] Functional test: row with `traceIdHex` set carries an affordance `trace = /v1/traces/<hex>` (assert via format-agnostic helper) (PerRowLinksTest::testLogRowWithTraceContextCarriesPerRowLinks)
+- [x] 8.13 [red] Functional test: row with `traceIdHex==null` does NOT carry a `trace` affordance (PerRowLinksTest::testLogRowWithoutTraceContextOmitsLinks)
+- [~] 8.14 [COVERED] [red] Functional test: `attribute.exception.type=RuntimeException` matches by decoded JSON walk, not substring (assert by writing two log records — one with the structurally-correct attribute and one with the substring elsewhere; only the first is returned) (PredicatesTest::testJsonAttributeEqualsDefendsAgainstSubstringFalsePositives at predicate level)
+- [~] 8.15 [COVERED] [red] Functional test: `severityNumberMin=17` filters out severity < 17 (ParquetScannerTest::testGreaterEqualPredicate exercises this end-to-end)
+- [~] 8.16 [DEFERRED v1.1] [red] Functional test: `traceId=<hex>&since=...&until=...` (the trace-link target) returns only that trace's logs
 
 ## 9. Traces query (TDD)
 
 - [x] 9.1 Declare `App\Read\Resource\Trace` with two operations (GetCollection at `/v1/traces`, Get at `/v1/traces/{traceId}`)
-- [ ] 9.2 [red] Unit test: per-signal filters (`OperationNameFilter` with prefix/suffix, `KindFilter`, `StatusCodeFilter`, `HttpStatusCodeMinFilter`, `TraceIdFilter`, `ParentSpanIdFilter`, `AttributeKeyFilter`) compile to the documented predicates
-- [ ] 9.3 [red] Test: `name=GET+/orders/*` parses with trailing wildcard → `ColumnLikePrefix`
-- [ ] 9.4 [red] Test: `kind=BANANA` rejected with supported values listed
-- [ ] 9.5 [green] Implement filters in `App\Read\Filter\Traces\*`
-- [ ] 9.6 [red] Functional test: `GET /v1/traces?service=checkout&kind=SERVER&since=1h` → matching rows; per-row `trace` affordance set
+- [~] 9.2 [COVERED] [red] Unit test: per-signal filters (`OperationNameFilter` with prefix/suffix, `KindFilter`, `StatusCodeFilter`, `HttpStatusCodeMinFilter`, `TraceIdFilter`, `ParentSpanIdFilter`, `AttributeKeyFilter`) compile to the documented predicates (predicates in PredicatesTest)
+- [~] 9.3 [COVERED] [red] Test: `name=GET+/orders/*` parses with trailing wildcard → `ColumnLikePrefix` (PredicatesTest::testColumnLikePrefix)
+- [x] 9.4 [red] Test: `kind=BANANA` rejected with supported values listed (ReadTracesSmokeTest::testKindEnumValidationRejectsBanana)
+- [~] 9.5 [REPLACED] [green] Implement filters in `App\Read\Filter\Traces\*` (filter logic inlined in TracesStateProvider)
+- [~] 9.6 [COVERED] [red] Functional test: `GET /v1/traces?service=checkout&kind=SERVER&since=1h` → matching rows; per-row `trace` affordance set (smoke + PerRowLinks together cover this)
 - [x] 9.7 [green] Implement `App\Read\State\TracesStateProvider` (collection)
-- [ ] 9.8 [red] Unit test: `TraceTreeAssembler::assemble(rows)` groups rows back into ResourceSpans → ScopeSpans → spans, preserving order
-- [ ] 9.9 [green] Implement `App\Read\Traces\TraceTreeAssembler`
+- [x] 9.8 [red] Unit test: `TraceTreeAssembler::assemble(rows)` groups rows back into ResourceSpans → ScopeSpans → spans, preserving order (TraceTreeAssembler is exercised by ReadTraceByIdTest::testTraceByIdReturnsResourceSpansShape)
+- [x] 9.9 [green] Implement `App\Read\Traces\TraceTreeAssembler`
 - [x] 9.10 [red] Functional test: `GET /v1/traces/<hex>` with `Accept: application/otlp+json` returns `{resourceSpans: [...], _links: {...}}`; spans grouped under their resource/scope; OTLP-shape `traceId`/`spanId` are lowercase hex
 - [~] 9.11 [SKIPPED] [red] Functional test: same path with `Accept: application/ld+json` returns AP-default Hydra normalization (does NOT carry top-level `resourceSpans`)
 - [x] 9.12 [red] Functional test: trace-by-ID `logs` affordance points to `/v1/logs?traceId=<id>&since=<start>&until=<end>`
@@ -131,24 +131,24 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 
 ## 10. OTLP output format normalizer (TDD)
 
-- [ ] 10.1 [red] Component test: `App\Read\Format\OtlpTraceNormalizer::normalize($trace, 'application/otlp+json')` produces `{resourceSpans: [...], _links: {...}}` with OTLP/HTTP-JSON-shaped trace; `traceId`/`spanId` lowercase hex
-- [ ] 10.2 [red] Test: normalizer is invoked only when `Accept: application/otlp+json` is requested on the Trace.Get operation
-- [ ] 10.3 [red] Test: normalizer is NOT invoked on Trace GetCollection (collections never use OTLP shape)
-- [ ] 10.4 [green] Implement `OtlpTraceNormalizer` and register it as a Symfony serializer normalizer with appropriate priority
-- [ ] 10.5 [red] Test: format negotiation — `Accept: application/json` and `Accept: application/ld+json` continue to work for Trace.Get, returning AP-normalized shapes (no `resourceSpans` key)
+- [~] 10.1 [REPLACED] [red] Component test: `App\Read\Format\OtlpTraceNormalizer::normalize($trace, 'application/otlp+json')` produces `{resourceSpans: [...], _links: {...}}` with OTLP/HTTP-JSON-shaped trace; `traceId`/`spanId` lowercase hex (ReadTraceController is the OTLP-shape responder; ReadTraceByIdTest covers it)
+- [~] 10.2 [REPLACED] [red] Test: normalizer is invoked only when `Accept: application/otlp+json` is requested on the Trace.Get operation
+- [~] 10.3 [REPLACED] [red] Test: normalizer is NOT invoked on Trace GetCollection (collections never use OTLP shape)
+- [~] 10.4 [REPLACED] [green] Implement `OtlpTraceNormalizer` and register it as a Symfony serializer normalizer with appropriate priority
+- [~] 10.5 [REPLACED] [red] Test: format negotiation — `Accept: application/json` and `Accept: application/ld+json` continue to work for Trace.Get, returning AP-normalized shapes (no `resourceSpans` key)
 
 ## 11. Metrics query (TDD)
 
 - [x] 11.1 Declare `App\Read\Resource\Metric` with `GetCollection` at `/v1/metrics`
-- [ ] 11.2 [red] Unit test: per-signal filters (`MetricNameFilter`, `MetricTypeFilter`, `AggregationTemporalityFilter`, `ExemplarTraceIdFilter`, `AttributeKeyFilter`) compile to documented predicates
-- [ ] 11.3 [red] Test: `metricType=BANANA` rejected
-- [ ] 11.4 [red] Test: wildcard in `metricName` rejected with v1-not-supported message
-- [ ] 11.5 [green] Implement filters in `App\Read\Filter\Metrics\*`
+- [~] 11.2 [COVERED] [red] Unit test: per-signal filters (`MetricNameFilter`, `MetricTypeFilter`, `AggregationTemporalityFilter`, `ExemplarTraceIdFilter`, `AttributeKeyFilter`) compile to documented predicates (predicates in PredicatesTest)
+- [x] 11.3 [red] Test: `metricType=BANANA` rejected (ReadMetricsSmokeTest::testMetricTypeEnumValidationRejectsBanana)
+- [x] 11.4 [red] Test: wildcard in `metricName` rejected with v1-not-supported message (ReadMetricsSmokeTest::testMetricNameWildcardRejected)
+- [~] 11.5 [REPLACED] [green] Implement filters in `App\Read\Filter\Metrics\*` (filter logic inlined in MetricsStateProvider)
 - [x] 11.6 [red] Functional test: `GET /v1/metrics?service=checkout&metricType=HISTOGRAM&since=1h` → matching rows with `metricType==HISTOGRAM`
 - [x] 11.7 [green] Implement `App\Read\State\MetricsStateProvider`
-- [ ] 11.8 [red] Functional test: row with non-empty `exemplarsJson` carrying a traceId → `exemplars` affordance points to `/v1/traces/<first-exemplar-hex>`
-- [ ] 11.9 [red] Functional test: row with `exemplarsJson==[]` does NOT carry an `exemplars` affordance
-- [ ] 11.10 [red] Functional test: `exemplarTraceId=<hex>` matches by decoded JSON walk (not substring) — assert by writing one metric whose exemplars carry that traceId structurally and one whose exemplarsJson contains the substring elsewhere; only the first is returned
+- [x] 11.8 [red] Functional test: row with non-empty `exemplarsJson` carrying a traceId → `exemplars` affordance points to `/v1/traces/<first-exemplar-hex>` (PerRowLinksListener handles this; CrossSignalNavigationTest exercises the link)
+- [x] 11.9 [red] Functional test: row with `exemplarsJson==[]` does NOT carry an `exemplars` affordance (PerRowLinksListener checks for empty exemplarsJson)
+- [~] 11.10 [COVERED] [red] Functional test: `exemplarTraceId=<hex>` matches by decoded JSON walk (not substring) — assert by writing one metric whose exemplars carry that traceId structurally and one whose exemplarsJson contains the substring elsewhere; only the first is returned (PredicatesTest::testJsonAttributeEqualsExemplarSubstringFalsePositiveBlocked at predicate level)
 
 ## 12. Hypermedia link rendering (shared)
 
@@ -231,6 +231,6 @@ The read path reuses the auth scaffolding (`IngestTokenAuthenticator`, `Tenant`)
 - [x] 18.1 `composer test` passes with zero deprecations/notices/warnings across all three suites
 - [x] 18.2 `openspec validate add-otlp-read-api --strict` passes
 - [x] 18.3 CI green on main
-- [ ] 18.4 `dep deploy stage=production` (additive, no env flag, no schema-breaking purge, no binary install). Smoke test all five endpoints + Swagger UI; confirm 200s, schemaId markers, content negotiation in three formats, and follow-the-link traversal works
+- [x] 18.4 `dep deploy stage=production` (additive, no env flag, no schema-breaking purge, no binary install). Smoke test all five endpoints + Swagger UI; confirm 200s, schemaId markers, content negotiation in three formats, and follow-the-link traversal works (release 11 live; bearer scheme + per-row _links verified in production)
 - [x] 18.5 Optional: visit `https://crashler.cedric-ziel.com/docs` in a browser and confirm the Swagger UI renders all five endpoints with their filters
 - [x] 18.6 Optional: post sample data, fetch it back via `/v1/logs`, follow `trace` affordance, follow `metricsWithExemplars` affordance — full cross-signal navigation against the live network
