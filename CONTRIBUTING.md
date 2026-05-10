@@ -71,9 +71,35 @@ When adding new behaviour:
 - Component tests when a feature exercises real Parquet I/O via flow-php (typically writing a small fixture and reading it back).
 - Functional tests when the change affects HTTP behaviour (use `KernelTestCase` + `zenstruck/browser` like the existing `tests/Functional/Read/*Test.php`).
 
+## Quality stack
+
+The repo runs PHPStan, PHP-CS-Fixer, and Rector via the isolated `tools/<tool>/` pattern. Each tool has its own `composer.json` and `composer.lock`; the main `composer.json` never carries them. See README → "Quality stack" for the full reference.
+
+Day-to-day:
+
+```bash
+composer quality            # the gate the pre-commit hook + CI run
+composer cs:fix             # auto-fix style
+composer phpstan            # static analysis only
+```
+
+Before committing, run `composer quality`. Either pass it or activate the pre-commit hook (`git config core.hooksPath .githooks`) so the gate runs automatically on every commit. CI runs the same `composer quality` step on every PR — if it's red, the build is red.
+
+### Adding a new quality tool
+
+1. Drop a new directory under `tools/<name>/` with its own `composer.json`. Match the shape of the existing three (require the tool, `config.sort-packages: true`, no autoload block).
+2. Run `composer install -d tools/<name>` to generate `tools/<name>/composer.lock`. Stage both files.
+3. Add a Dependabot entry to `.github/dependabot.yml` pointing at `/tools/<name>` — without this, the tool's version silently drifts.
+4. Add convenience composer scripts to the main `composer.json` (`<tool>`, plus update `tools:install` / `tools:update`).
+5. Mention the new tool in README → "Quality stack".
+
+The Dependabot wiring is mandatory; a PR that adds a tools/ directory without the matching `.github/dependabot.yml` block is incomplete.
+
 ## Conventions
 
 **Dependencies.** Use `composer require <package>` rather than editing `composer.json` directly — Symfony Flex recipes (auto-generated config files, environment variable additions) only run when Composer's command is invoked. Manual edits skip the recipe step and leave the configuration in an inconsistent state.
+
+**Quality gate before commit.** Run `composer quality` before pushing, or activate the pre-commit hook (`git config core.hooksPath .githooks`). CI fails the build if the gate is red — the local hook is a fast feedback loop, not a substitute for the CI gate.
 
 **Database migrations: dual-platform.** Crashler runs **Postgres in dev/test** and **MariaDB in (some) production deployments**. Every migration MUST carry SQL for both platforms — there is no single dialect that works on both. Use the platform-branching pattern:
 

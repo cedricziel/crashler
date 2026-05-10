@@ -14,6 +14,41 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  quality:
+    name: Quality (PHP-CS-Fixer + PHPStan)
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: ctype, iconv, intl, zip, dom, mbstring, zlib
+          tools: composer:v2
+          ini-values: |
+            memory_limit=1G
+            error_reporting=-1
+            display_errors=On
+
+      - name: Cache Composer dependencies (root)
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/composer
+          key: composer-quality-${{ hashFiles('composer.lock') }}-${{ hashFiles('tools/*/composer.lock') }}
+          restore-keys: composer-quality-
+
+      - name: Install root dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Install quality tool dependencies
+        run: composer tools:install
+
+      - name: Run quality gate (cs:check + phpstan)
+        run: composer quality
+
   test:
     name: PHPUnit (PHP ${{ matrix.php }})
     runs-on: ubuntu-24.04

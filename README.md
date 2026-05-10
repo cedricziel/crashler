@@ -19,6 +19,39 @@ In active development. The first feature — OTLP/HTTP-JSON log ingest with mult
 - `ext-brotli`, `ext-lz4` — required for the corresponding compression codecs
 - `pcov` (or `xdebug`) — required for `composer test:coverage`. PCOV is the recommended choice for speed.
 
+## Quality stack
+
+Three quality tools live under `tools/<tool>/` with their own isolated `composer.json` and `composer.lock` so their dependencies never collide with the main app's. The main `composer.json` does not carry them as require-dev — production installs (`composer install --no-dev`) skip them entirely.
+
+| Tool          | Path                | Purpose                          |
+|---------------|---------------------|----------------------------------|
+| PHPStan       | `tools/phpstan/`    | Static analysis at level 6       |
+| PHP-CS-Fixer  | `tools/php-cs-fixer/` | Code-style enforcement (Symfony preset) |
+| Rector       | `tools/rector/`     | On-demand automated refactors    |
+
+### One-time setup
+
+```bash
+composer tools:install                     # populate tools/<tool>/vendor/
+git config core.hooksPath .githooks        # opt in to the pre-commit hook
+```
+
+The pre-commit hook runs PHP-CS-Fixer on staged `.php` files (auto-fix + re-stage) then PHPStan against the whole project. Aborts the commit on PHPStan failures. Bypass once with `git commit --no-verify` if you really need to land something despite findings — CI runs the same checks via `composer quality` and won't merge if they fail.
+
+### Day-to-day commands
+
+```bash
+composer quality            # cs:check + phpstan, exits non-zero on any finding
+composer cs:check           # what php-cs-fixer would change (no-op)
+composer cs:fix             # actually apply the changes
+composer phpstan            # static analysis
+composer rector:dry         # preview Rector's suggestions
+composer rector             # apply Rector (don't do this casually)
+composer tools:update       # bump tool versions and refresh per-tool lockfiles
+```
+
+The PHPStan baseline at `phpstan-baseline.neon` captures pre-existing findings while the codebase catches up. New code should not add to it; the baseline file is regenerated with `composer phpstan -- --generate-baseline` and entries are removed as code is fixed.
+
 ## Configuration
 
 ### Tenants and ingest tokens

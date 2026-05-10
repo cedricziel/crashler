@@ -25,6 +25,56 @@ updates:
         patterns:
           - "zenstruck/*"
 
+  # Quality tools live under tools/<tool>/ with isolated composer.json /
+  # composer.lock files. Dependabot's composer ecosystem only scans the
+  # directory it's pointed at — without per-tool entries, PHPStan /
+  # PHP-CS-Fixer / Rector versions silently drift. Each entry below maps
+  # to a tools/<tool>/ directory; adding a new quality tool requires
+  # adding the corresponding entry here in the same change.
+  # See openspec/specs/developer-tooling/spec.md.
+  - package-ecosystem: composer
+    directory: /tools/phpstan
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - php
+      - tools
+    groups:
+      phpstan:
+        patterns:
+          - "phpstan/*"
+
+  - package-ecosystem: composer
+    directory: /tools/php-cs-fixer
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - php
+      - tools
+
+  - package-ecosystem: composer
+    directory: /tools/rector
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - php
+      - tools
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
