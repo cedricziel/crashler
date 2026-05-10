@@ -6,6 +6,7 @@ namespace App\Twig\Components\Waterfall;
 
 use App\Explorer\TraceWaterfallResolver;
 use App\Read\Criteria\TimeWindow;
+use Psr\Clock\ClockInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveArg;
@@ -42,6 +43,7 @@ final class Sidebar
 
     public function __construct(
         private readonly TraceWaterfallResolver $resolver,
+        private readonly ClockInterface $clock,
     ) {
     }
 
@@ -55,7 +57,7 @@ final class Sidebar
         }
         $window = TimeWindow::parse(
             ['since' => $this->resolver->spanLookupWindowHours().'h'],
-            new \Symfony\Component\Clock\Clock(),
+            $this->clock,
             30,
         );
 

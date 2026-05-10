@@ -28,12 +28,19 @@ use Symfony\Component\Clock\MockClock;
 trait SeedsParquetTraces
 {
     /**
+     * Default seed time = "30 minutes ago" so the seeded data lives
+     * comfortably inside any default lookup window (the 24h
+     * span_lookup_window_hours, the 1h explorer window, etc.) regardless
+     * of the wall-clock time the test runs.
+     *
      * @param list<array{spanIdHex: string, parentSpanIdHex?: ?string, name: string, durationNs?: int, statusCode?: int}> $spans
      *
      * @return array{since_ns: int, until_ns: int}
      */
-    protected function seedTrace(string $tenantSlug, string $traceIdHex, array $spans, string $service = 'checkout', string $atIso = '2026-05-09 14:30:00 UTC'): array
+    protected function seedTrace(string $tenantSlug, string $traceIdHex, array $spans, string $service = 'checkout', ?string $atIso = null): array
     {
+        $atIso ??= (new \DateTimeImmutable('-30 minutes'))->format('Y-m-d H:i:s \U\T\C');
+
         $catalog = SchemaCatalog::fromDirectory(\dirname(__DIR__, 2).'/config/schemas');
         $schema = $catalog->latestFor('traces');
         $clock = new MockClock($atIso);
