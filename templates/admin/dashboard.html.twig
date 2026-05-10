@@ -1,0 +1,24 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}Crashler admin{% endblock %}
+
+{% block main %}
+<div class="content-panel">
+    <div class="content-panel-body">
+        <h2>Welcome, {{ app.user.userIdentifier }}.</h2>
+        <p>This is the operator dashboard. Use the sidebar to manage users, organisations, tenants, tokens, and memberships.</p>
+        <h3 style="margin-top: 2rem;">Quickstart</h3>
+        <ol>
+            <li>Create an <a href="{{ ea_url().setController('App\\Controller\\Admin\\OrgCrudController').setAction('new') }}">Org</a>.</li>
+            <li>Inside that org, create a <a href="{{ ea_url().setController('App\\Controller\\Admin\\TenantCrudController').setAction('new') }}">Tenant</a>. The slug is immutable after creation — it's the on-disk path component.</li>
+            <li>Issue a <a href="{{ ea_url().setController('App\\Controller\\Admin\\TenantTokenCrudController').setAction('new') }}">Token</a> for that tenant. The plaintext is shown exactly once on the success page; copy it immediately.</li>
+        </ol>
+        <h3 style="margin-top: 2rem;">Notes</h3>
+        <ul>
+            <li>YAML-configured tenants in <code>config/packages/crashler.yaml</code> still authenticate via the hybrid registry. DB-stored tenants take precedence on hash collision.</li>
+            <li>Deleting a tenant is blocked while data exists under <code>var/share/&lt;signal&gt;/&lt;slug&gt;/</code>.</li>
+            <li>Slugs (org and tenant) are immutable after creation.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

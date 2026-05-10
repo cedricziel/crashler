@@ -30,6 +30,7 @@ security:
             pattern: ^/admin
             lazy: true
             provider: app_user_provider
+            context: app
             form_login:
                 login_path: app_login
                 check_path: app_login
@@ -43,12 +44,14 @@ security:
         main:
             lazy: true
             provider: app_user_provider
+            context: app
             form_login:
                 login_path: app_login
                 check_path: app_login
                 username_parameter: _username
                 password_parameter: _password
                 enable_csrf: true
+                default_target_path: /admin
             logout:
                 path: app_logout
                 target: /login

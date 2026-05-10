@@ -1,0 +1,43 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}Token issued{% endblock %}
+
+{% block main %}
+<div class="content-panel">
+    <div class="content-panel-body">
+        <div role="alert" style="padding: 1rem; margin-bottom: 1.5rem; background: #fff8e1; border: 1px solid #f0c36d; color: #5a4400;">
+            <strong>Copy this token now.</strong> This is the only time it will be shown — only the SHA-256 hash is stored. If you lose it, you will need to issue a new one.
+        </div>
+
+        <p>Token for tenant <strong>{{ token.tenant.slug }}</strong>{% if token.name %} (<em>{{ token.name }}</em>){% endif %}:</p>
+
+        <div style="display: flex; gap: 0.5rem; align-items: stretch; margin: 1rem 0;">
+            <input
+                type="text"
+                id="plaintext-token"
+                value="{{ plaintext }}"
+                readonly
+                onclick="this.select()"
+                style="flex: 1; padding: 0.6rem 0.8rem; font-family: ui-monospace, SF Mono, Menlo, monospace; font-size: 0.95rem; border: 1px solid #999;"
+            >
+            <button
+                type="button"
+                onclick="(function(b){var i=document.getElementById('plaintext-token');navigator.clipboard.writeText(i.value).then(function(){var t=b.textContent;b.textContent='Copied';setTimeout(function(){b.textContent=t;},1500);});})(this)"
+                style="padding: 0.6rem 1rem; background: #222; color: #fff; border: none; cursor: pointer;"
+            >
+                Copy
+            </button>
+        </div>
+
+        <h3 style="margin-top: 2rem;">Use it</h3>
+        <pre style="padding: 0.8rem 1rem; background: #f5f5f5; border: 1px solid #ddd; overflow-x: auto;"><code>curl -H "Authorization: Bearer {{ plaintext }}" \
+     -H "Content-Type: application/json" \
+     --data @logs.json \
+     https://your-host/v1/logs</code></pre>
+
+        <p style="margin-top: 2rem;">
+            <a href="{{ ea_url().setController('App\\Controller\\Admin\\TenantTokenCrudController').setAction('index').generateUrl() }}">← Back to tokens</a>
+        </p>
+    </div>
+</div>
+{% endblock %}
