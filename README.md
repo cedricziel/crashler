@@ -23,9 +23,27 @@ In active development. The first feature — OTLP/HTTP-JSON log ingest with mult
 
 ### Tenants and ingest tokens
 
-Tenants are configured statically in `config/packages/crashler.yaml`. Each tenant has a slug (used as a filesystem path component), a display name, and a list of SHA-256 hashes of valid bearer tokens. Plaintext tokens are never stored.
+Tenants and ingest tokens load from **two sources** at request time and are merged into a single in-memory registry:
 
-To generate a token, pick any random string and record its SHA-256 hex:
+1. **Database** (recommended) — `tenant` and `tenant_token` rows managed via the admin UI at `/admin`. Issuing a token here generates the plaintext server-side, shows it once, and stores only its SHA-256 hash with audit metadata (creator, created-at, last-used-at, optional expiry).
+2. **YAML configuration** (fallback) — `crashler.tenants` in `config/packages/crashler.yaml`. Operators add a tenant by editing the file and redeploying. Plaintext tokens are never stored; only their SHA-256 hex hashes.
+
+On hash collision between the two sources, **the database entry wins** and a warning is logged. Within a single source, duplicate hashes hard-fail at boot. Plaintext tokens are never persisted in either source. Recommend the DB path for new installs; YAML is retained for one transition release.
+
+#### Issuing tokens via the admin UI
+
+After bootstrapping an admin (see "Admin UI" below):
+
+1. Sign in at `/login`.
+2. Navigate to **Tokens → Add new** under `/admin`.
+3. Pick the parent tenant, give the token a label, and (optionally) set an expiry.
+4. The next page renders the plaintext exactly once with a copy-to-clipboard affordance. **Copy it now** — only the SHA-256 hash is stored, so a lost plaintext means re-issuing.
+
+Revoke a token by deleting the row in the admin UI. The change takes effect on the next request without a redeploy.
+
+#### Issuing tokens via YAML (legacy / emergency)
+
+Useful as a continuity fallback when the database is unavailable: keep at least one YAML token per tenant for emergency operator access.
 
 ```bash
 TOKEN="cw_$(openssl rand -hex 16)"
@@ -34,6 +52,36 @@ echo "Hash (put in crashler.yaml): $(printf '%s' "$TOKEN" | shasum -a 256 | cut 
 ```
 
 Add the hash under the appropriate tenant in `config/packages/crashler.yaml`, then redeploy. Tokens are revoked by removing their hash from the config and redeploying.
+
+### Admin UI
+
+`/admin` is the operator dashboard, gated by `ROLE_ADMIN` and powered by EasyAdmin. From here you can manage Users, Organisations, Tenants, Tokens, and per-org / per-tenant memberships.
+
+#### Bootstrapping the first admin
+
+On a fresh install, run:
+
+```bash
+bin/console crashler:user:create --email=admin@example.com --admin
+```
+
+The command prompts for a password (hidden) when stdin is a TTY; pass `--password=...` for non-interactive setups. Email collisions are an error, never an upsert. Subsequent users can be created the same way (with or without `--admin`).
+
+#### Roles and tenancy model
+
+- `User` — has an email (case-insensitively unique) and a hashed password.
+- `Org` — a grouping unit; one org owns one or more tenants.
+- `Tenant` — has a slug (globally unique, immutable, used as the on-disk path component under `var/share/<signal>/<slug>/`) and belongs to exactly one org.
+- `OrgMembership` — links a user to an org with a role (`owner | admin | member`).
+- `TenantMembership` — links a user directly to a tenant (e.g. an "invited collaborator" who is not in the parent org).
+
+Effective tenant access for a user is the **union** of org-level and tenant-level memberships, and the effective role is the highest by precedence (`owner > admin > member`). The user-facing self-service UI (signup, dashboard, invitations) is a follow-up change; for now everything is operator-only via `/admin`.
+
+#### Deletion guards
+
+- A tenant cannot be deleted while data exists at `var/share/<signal>/<slug>/` for any signal — this protects against accidental data loss.
+- An org cannot be deleted while it owns tenants or has memberships.
+- The slug of an existing org or tenant is immutable; renaming requires a future "tenant rename" feature.
 
 ### Storage root
 
