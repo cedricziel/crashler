@@ -183,7 +183,7 @@ final class AdminCrudIndexTest extends DatabaseTestCase
         self::assertResponseIsSuccessful();
     }
 
-    private function loginAdmin(): \App\Entity\User
+    private function loginAdmin(): User
     {
         $admin = $this->createUser('admin@example.com', 'pw-12345', admin: true);
         $this->client->loginUser($admin, 'app');

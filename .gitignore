@@ -39,3 +39,6 @@
 
 # Infection mutation-testing cache.
 /.infection.cache/
+
+# Claude Code session state (ScheduleWakeup lock, etc.).
+/.claude/
