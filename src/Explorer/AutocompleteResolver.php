@@ -26,6 +26,7 @@ final readonly class AutocompleteResolver
     public function __construct(
         private AggregatingScanner $scanner,
         private PartitionPruner $pruner,
+        private WindowBucket $bucket,
         private CacheInterface $cache,
         private int $maxValues = 50,
         private int $cacheTtlSeconds = 60,
@@ -37,17 +38,16 @@ final readonly class AutocompleteResolver
      */
     public function topValues(string $tenantSlug, string $signal, string $parquetColumn, TimeWindow $window): array
     {
+        $window = $this->bucket->snap($window);
         $globs = $this->pruner->globsFor($tenantSlug, $signal, $window);
-        $fingerprint = PartitionFingerprint::of($globs);
 
         $cacheKey = \sprintf(
-            'explorer.ac.%s.%s.%s.%d.%d.%s',
+            'explorer.ac.%s.%s.%s.%d.%d',
             $tenantSlug,
             $signal,
             $parquetColumn,
             $window->sinceUnixNano,
             $window->untilUnixNano,
-            $fingerprint,
         );
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($globs, $signal, $parquetColumn, $window): array {

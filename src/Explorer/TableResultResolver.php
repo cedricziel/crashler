@@ -25,6 +25,7 @@ final readonly class TableResultResolver
     public function __construct(
         private ParquetScanner $scanner,
         private PartitionPruner $pruner,
+        private WindowBucket $bucket,
         private CacheInterface $cache,
         private int $defaultPageSize = 50,
         private int $cacheTtlSeconds = 60,
@@ -36,16 +37,15 @@ final readonly class TableResultResolver
      */
     public function firstPage(string $tenantSlug, string $signal, TimeWindow $window): array
     {
+        $window = $this->bucket->snap($window);
         $globs = $this->pruner->globsFor($tenantSlug, $signal, $window);
-        $fingerprint = PartitionFingerprint::of($globs);
 
         $cacheKey = \sprintf(
-            'explorer.table.%s.%s.%d.%d.%s',
+            'explorer.table.%s.%s.%d.%d',
             $tenantSlug,
             $signal,
             $window->sinceUnixNano,
             $window->untilUnixNano,
-            $fingerprint,
         );
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($globs, $signal, $window): array {

@@ -35,6 +35,7 @@ final readonly class KpiBundleResolver
         private ParquetScanner $scanner,
         private PartitionPruner $pruner,
         private PriorWindowCalculator $priorCalc,
+        private WindowBucket $bucket,
         private CacheInterface $cache,
         private int $cacheTtlSeconds = 60,
     ) {
@@ -47,6 +48,9 @@ final readonly class KpiBundleResolver
      */
     public function resolve(string $tenantSlug, string $signal, array $specs, TimeWindow $current): array
     {
+        // Snap to the bucket grid so adjacent page loads (with `now()`
+        // moving per-request) share a stable cache key.
+        $current = $this->bucket->snap($current);
         $prior = $this->priorCalc->priorOf($current);
 
         $currentValues = $this->scanWindow($tenantSlug, $signal, $specs, $current);
@@ -73,19 +77,18 @@ final readonly class KpiBundleResolver
     private function scanWindow(string $tenantSlug, string $signal, array $specs, TimeWindow $window): array
     {
         $globs = $this->pruner->globsFor($tenantSlug, $signal, $window);
-        $fingerprint = PartitionFingerprint::of($globs);
 
         $cacheKey = \sprintf(
-            'explorer.kpi.%s.%s.%d.%d.%s',
+            'explorer.kpi.%s.%s.%d.%d',
             $tenantSlug,
             $signal,
             $window->sinceUnixNano,
             $window->untilUnixNano,
-            $fingerprint,
         );
-        // Cache key is signal-agnostic in shape; behaviour is identical for
-        // logs/traces/metrics. Fingerprint embeds file count + max(mtime)
-        // so a fresh ingest auto-invalidates the entry.
+        // Window is already bucket-snapped in resolve(); the cache key
+        // therefore only changes once per bucket interval. New files
+        // arriving mid-bucket are picked up after the cache TTL expires
+        // (≤60s staleness), not on every individual file landing.
 
         return $this->cache->get($cacheKey, function (ItemInterface $item) use ($globs, $signal, $specs, $window): array {
             $item->expiresAfter($this->cacheTtlSeconds);
