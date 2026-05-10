@@ -27,7 +27,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 final class DashboardController extends AbstractController
 {
-    #[Route(path: '/', name: 'app_root', methods: ['GET'])]
+    // priority > 0 wins against api_platform's entrypoint route, which also
+    // matches `/` (as `/{index}.{_format}`) when no Accept negotiation is in play.
+    #[Route(path: '/', name: 'app_root', methods: ['GET'], priority: 100)]
     public function root(): Response
     {
         return $this->getUser()

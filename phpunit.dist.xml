@@ -21,6 +21,12 @@
         <server name="APP_ENV" value="test" force="true" />
         <server name="SHELL_VERBOSITY" value="-1" />
         <server name="BROWSER_ALWAYS_START_WEBSERVER" value="1"/>
+        <!-- Required by InvitationMailer when invitation tests dispatch
+             a real (in-memory) email; an unset from-address makes the
+             mailer throw with a clear bootstrap error. Setting it here
+             is harmless for other tests because the mailer is only
+             reached when InvitationController::create() runs. -->
+        <server name="CRASHLER_INVITATIONS_FROM_ADDRESS" value="noreply@crashler.test"/>
     </php>
 
     <testsuites>
