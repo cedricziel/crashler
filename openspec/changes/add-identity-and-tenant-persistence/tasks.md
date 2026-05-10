@@ -54,17 +54,17 @@
 
 ## 7. EasyAdmin dashboard
 
-- [ ] 7.1 Replace the Flex-generated `DashboardController` with one extending `EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController`, gated by `#[IsGranted('ROLE_ADMIN')]`
-- [ ] 7.2 Register CRUD controllers for: User, Org, OrgMembership, Tenant, TenantMembership, TenantToken
-- [ ] 7.3 Configure User CRUD: list (email, roles, createdAt), edit (email, roles, password — using `TextField::new('password')->setFormType(PasswordType::class)` with the auto-hasher); deletion blocked if user has memberships (preferred: cascade-confirm dialog later)
-- [ ] 7.4 Configure Org CRUD: slug **immutable on edit**, name editable; show member count; show tenant count; deletion blocked if either count > 0
-- [ ] 7.5 Configure Tenant CRUD: slug **immutable on edit**, name editable; show parent Org; deletion blocked if `var/share/<signal>/<slug>/` exists for any signal (a `TenantDeletionGuard` service injected via the EasyAdmin lifecycle hook)
-- [ ] 7.6 Configure TenantToken CRUD:
+- [x] 7.1 Replace the Flex-generated `DashboardController` with one extending `EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractDashboardController`, gated by `#[IsGranted('ROLE_ADMIN')]`
+- [x] 7.2 Register CRUD controllers for: User, Org, OrgMembership, Tenant, TenantMembership, TenantToken
+- [x] 7.3 Configure User CRUD: list (email, roles, createdAt), edit (email, roles, password — using `TextField::new('password')->setFormType(PasswordType::class)` with the auto-hasher); deletion blocked if user has memberships (preferred: cascade-confirm dialog later)
+- [x] 7.4 Configure Org CRUD: slug **immutable on edit**, name editable; show member count; show tenant count; deletion blocked if either count > 0
+- [x] 7.5 Configure Tenant CRUD: slug **immutable on edit**, name editable; show parent Org; deletion blocked if `var/share/<signal>/<slug>/` exists for any signal (a `TenantDeletionGuard` service injected via the EasyAdmin lifecycle hook)
+- [x] 7.6 Configure TenantToken CRUD:
   - List: tenant, name, createdAt, lastUsedAt, expiresAt, createdBy (no plaintext, no hash)
   - Create: pick tenant + name + optional expiry; on save, the form action calls `TokenIssuer::issue(...)` and redirects to a "show plaintext once" page with the plaintext rendered into the response body (NOT into a flash message; NOT into a URL parameter)
   - Edit: only `name` and `expiresAt` are mutable; `hash` is read-only
-- [ ] 7.7 Configure OrgMembership and TenantMembership CRUD: pick user + parent + role; composite unique enforced both at form-validation and DB level
-- [ ] 7.8 Add a top-nav menu item per entity in the dashboard
+- [x] 7.7 Configure OrgMembership and TenantMembership CRUD: pick user + parent + role; composite unique enforced both at form-validation and DB level
+- [x] 7.8 Add a top-nav menu item per entity in the dashboard
 
 ## 8. Firewall configuration
 
@@ -96,21 +96,21 @@
 
 ## 11. Tests
 
-- [ ] 11.1 Functional test: anonymous GET `/admin/` → 302 to `/login`
-- [ ] 11.2 Functional test: GET `/login` → 200, form renders
-- [ ] 11.3 Functional test: POST `/login` with valid email + password → 302 to `/admin/` (or configured target)
-- [ ] 11.4 Functional test: POST `/login` with bad password → 422 with form errors (or 302 back to login per Symfony default — match whichever is generated)
-- [ ] 11.5 Functional test: GET `/admin/` with non-admin user → 403
+- [x] 11.1 Functional test: anonymous GET `/admin/` → 302 to `/login`
+- [x] 11.2 Functional test: GET `/login` → 200, form renders
+- [x] 11.3 Functional test: POST `/login` with valid email + password → 302 to `/admin/` (or configured target)
+- [x] 11.4 Functional test: POST `/login` with bad password → 422 with form errors (or 302 back to login per Symfony default — match whichever is generated)
+- [x] 11.5 Functional test: GET `/admin/` with non-admin user → 403
 - [ ] 11.6 Functional test: token issuance flow — create User+Org+Tenant via fixtures, log in as admin, POST EasyAdmin's create-token form, assert the plaintext appears once in the response, assert the hash is in the DB, assert the plaintext is NOT in the URL of the redirected page
-- [ ] 11.7 Functional test: a token created in DB authenticates `POST /v1/logs` end-to-end; YAML tokens still authenticate; both work in the same request lifecycle
+- [x] 11.7 Functional test: a token created in DB authenticates `POST /v1/logs` end-to-end; YAML tokens still authenticate; both work in the same request lifecycle
 - [ ] 11.8 Unit test: cross-source hash collision (DB + YAML same hash) — DB wins, WARNING logged
 - [ ] 11.9 Unit test: intra-source duplicate (two TenantTokens with same hash) — schema unique constraint catches at insert; service exception is informative
-- [ ] 11.10 Unit test: `TokenIssuer::issue()` returns plaintext + persisted entity; plaintext format `cw_<32 hex>`; hash matches `sha256(plaintext)`
+- [x] 11.10 Unit test: `TokenIssuer::issue()` returns plaintext + persisted entity; plaintext format `cw_<32 hex>`; hash matches `sha256(plaintext)`
 - [ ] 11.11 Unit test: `TenantAccessChecker` returns the highest role from union of OrgMembership ∪ TenantMembership; missing user → no access; member-only → `member`; org-owner + tenant-admin → `owner`
 - [ ] 11.12 Unit test: `LastUsedRecorder` updates the row on `kernel.terminate`; DB error logs at WARNING and does not throw
-- [ ] 11.13 Unit test: `CreateUserCommand` happy path + collision + non-TTY-without-password failure
-- [ ] 11.14 Existing ingest functional tests: every test that asserted YAML-tenant behaviour still passes unchanged
-- [ ] 11.15 `composer test` and `make lint` / `make format` clean
+- [x] 11.13 Unit test: `CreateUserCommand` happy path + collision + non-TTY-without-password failure
+- [x] 11.14 Existing ingest functional tests: every test that asserted YAML-tenant behaviour still passes unchanged
+- [x] 11.15 `composer test` and `make lint` / `make format` clean
 
 ## 12. Documentation
 
