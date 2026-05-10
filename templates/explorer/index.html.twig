@@ -151,9 +151,14 @@
                                     {% set raw = row[col.key] ?? null %}
                                     <td class="{% if col.monospace %}mono{% endif %}">
                                         {% if col.key == 'time' or col.key ends with 'time_unix_nano' %}
-                                            {# normalise nanosecond timestamps to a human-readable HH:MM:SS.mmm #}
+                                            {# normalise nanosecond timestamps to HH:MM:SS.mmm without
+                                               handing twig's |date a float (it can't parse those). #}
                                             {% set ns = row.time_unix_nano|default(row.start_time_unix_nano|default(null)) %}
-                                            {% if ns %}{{ ((ns // 1000000) / 1000)|date('H:i:s.v') }}{% else %}—{% endif %}
+                                            {% if ns %}
+                                                {%- set s = (ns // 1000000000) -%}
+                                                {%- set ms = ((ns // 1000000) % 1000) -%}
+                                                {{- s|date('H:i:s') -}}.{{- '%03d'|format(ms) -}}
+                                            {% else %}—{% endif %}
                                         {% elseif raw is null %}
                                             <span style="color: #bbb;">—</span>
                                         {% elseif raw is iterable %}
