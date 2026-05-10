@@ -5,7 +5,12 @@ security:
 
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        users_in_memory: { memory: null }
+        # Persisted operator/user accounts. Used by both the admin and main
+        # firewalls (form login).
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
         # The IngestTokenAuthenticator self-loads the user via UserBadge; this
         # provider is wired only because Symfony's firewall config requires one.
         ingest_provider: { id: App\Security\IngestUserProvider }
@@ -21,14 +26,40 @@ security:
             provider: ingest_provider
             custom_authenticators:
                 - App\Security\IngestTokenAuthenticator
+        admin:
+            pattern: ^/admin
+            lazy: true
+            provider: app_user_provider
+            form_login:
+                login_path: app_login
+                check_path: app_login
+                username_parameter: _username
+                password_parameter: _password
+                enable_csrf: true
+                default_target_path: /admin
+            logout:
+                path: app_logout
+                target: /login
         main:
             lazy: true
-            provider: users_in_memory
+            provider: app_user_provider
+            form_login:
+                login_path: app_login
+                check_path: app_login
+                username_parameter: _username
+                password_parameter: _password
+                enable_csrf: true
+            logout:
+                path: app_logout
+                target: /login
 
     # Note: Only the *first* matching rule is applied
     access_control:
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/logout, roles: PUBLIC_ACCESS }
         - { path: ^/v1/, roles: ROLE_INGEST }
         - { path: ^/compat/, roles: ROLE_INGEST }
+        - { path: ^/admin, roles: ROLE_ADMIN }
 
 when@test:
     security:
