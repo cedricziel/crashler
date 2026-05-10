@@ -210,6 +210,17 @@ task('crashler:assets_install', function () {
 });
 after('deploy:vendors', 'crashler:assets_install');
 
+// Run Doctrine migrations after vendors are installed and shared resources
+// are linked, but before deploy:symlink swaps the current/ symlink. The
+// Symfony recipe ships `database:migrate` but does not hook it into the
+// flow; we wire it explicitly so a fresh release that introduces a new
+// migration is applied automatically. `--allow-no-migration` keeps deploys
+// idempotent when there is nothing to apply.
+task('crashler:migrate', function () {
+    run('cd {{release_path}} && {{bin/php}} bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=prod --no-debug');
+});
+after('deploy:vendors', 'crashler:migrate');
+
 // Bootstrap the shared tenants YAML so the kernel can boot before any
 // tenant has been registered. Symfony's config loader fails on an empty
 // file; this idempotently writes a valid 'tenants: {}' if the file is
