@@ -1,20 +1,41 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+# Project-wide context shown to the AI when authoring any artifact.
+context: |
+  Tech stack: PHP 8.5, Symfony 8, Doctrine ORM, EasyAdmin, API Platform 4,
+  Postgres in prod, SQLite in some test paths. Tests run on PHPUnit 13 with
+  xdebug/pcov for coverage. CI is GitHub Actions; the `coverage:gate` job
+  enforces the threshold below.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Quality bar (mandatory):
+    - Line coverage MUST stay at or above 80%. The CI gate runs
+      `composer coverage:gate`, which executes the full suite and then
+      `bin/coverage-threshold --min=80`. A change that lands below 80%
+      is a regression, not a feature — fix it before merging.
+    - Use Test-Driven Development. For every behavioral change, write
+      (or extend) a failing test first that pins the new requirement,
+      then make it pass. The test should describe the contract the
+      production code is meant to satisfy, not retrofit assertions
+      around what the implementation already does.
+    - Don't lower the coverage threshold or add `#[CoversNothing]` /
+      narrow `#[CoversClass]` to dodge the gate; if a test genuinely
+      can't be written, document why in the relevant spec/proposal.
+
+# Per-artifact rules.
+rules:
+  proposal:
+    - State the test strategy explicitly: which test types (unit,
+      component, functional) will pin the new behavior, and what
+      coverage delta the change is expected to produce.
+    - If the change touches a code path currently below 80% coverage,
+      call out that the change must also raise that path to >=80% as
+      part of the same proposal.
+
+  tasks:
+    - Order tasks TDD-style — write/extend the test before the
+      implementation task it pins. The test task should fail when
+      checked off; the implementation task should make it pass.
+    - The final task in every change MUST be "verify coverage gate
+      passes" — run `composer coverage:gate` and confirm the line
+      threshold is still >=80%. Do not mark a change complete (or
+      archive it) while coverage is below threshold.
