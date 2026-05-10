@@ -71,50 +71,17 @@
             </div>
         </section>
 
-        {# Criteria & aggregation row — passive form. Filter chip datalists
-           are populated by the deferred FilterDatalists component below. #}
+        {# Criteria & aggregation row — deferred Live Component. Initial
+           paint shows a one-line "Loading filters…" placeholder; hydration
+           resolves the SignalProfile and renders the form. The form's
+           filter chips link to <datalist>s rendered by the deferred
+           FilterDatalists component below. #}
         <section class="explorer__row" aria-label="Criteria">
             <div class="explorer__row-label">Criteria &amp; aggregation</div>
-            <form class="form-row" method="get" action="{{ path('app_explorer_index', {slug: tenant.slug, signal: signal}) }}">
-                <div class="form-row__group">
-                    <span class="form-row__label">Filters</span>
-                    {% for filter in profile.filters %}
-                        {% set listId = 'filter-options-' ~ filter.key %}
-                        <label class="form-row__chip">
-                            {{ filter.label }}:
-                            <input type="text" name="{{ filter.key }}"
-                                   value="{{ app.request.query.get(filter.key, '') }}"
-                                   list="{{ listId }}"
-                                   style="border: none; background: transparent; outline: none; font: inherit; width: 12ch;">
-                        </label>
-                    {% endfor %}
-                </div>
-                <div class="form-row__group">
-                    <span class="form-row__label">Time</span>
-                    <label>since <input type="text" name="since" value="{{ app.request.query.get('since', '1h') }}" placeholder="1h or RFC3339" style="font: inherit; padding: 0.2rem 0.4rem;"></label>
-                    <label>until <input type="text" name="until" value="{{ app.request.query.get('until', '') }}" placeholder="(now)" style="font: inherit; padding: 0.2rem 0.4rem;"></label>
-                </div>
-                <div class="form-row__group">
-                    <span class="form-row__label">Aggregation</span>
-                    <label>fn
-                        <select name="function" style="font: inherit; padding: 0.2rem 0.4rem;">
-                            {% for fn in ['count', 'sum', 'avg', 'min', 'max'] %}
-                                <option value="{{ fn }}" {% if fn == app.request.query.get('function', 'count') %}selected{% endif %}>{{ fn }}</option>
-                            {% endfor %}
-                        </select>
-                    </label>
-                    <label>column
-                        <input type="text" name="column" value="{{ app.request.query.get('column', profile.defaultColumn ?? '') }}" placeholder="—" style="font: inherit; padding: 0.2rem 0.4rem; width: 14ch;">
-                    </label>
-                    <label>groupBy
-                        <input type="text" name="groupBy" value="{{ app.request.query.get('groupBy', profile.defaultGroupBy) }}" style="font: inherit; padding: 0.2rem 0.4rem; width: 14ch;">
-                    </label>
-                    <label>interval
-                        <input type="text" name="interval" value="{{ app.request.query.get('interval', '1m') }}" style="font: inherit; padding: 0.2rem 0.4rem; width: 6ch;">
-                    </label>
-                    <button type="submit" class="form-row__action">Run</button>
-                </div>
-            </form>
+            <twig:Explorer:QueryForm
+                tenantSlug="{{ tenant.slug }}"
+                signal="{{ signal }}"
+                defer/>
         </section>
 
         {# Results table row — deferred Live Component. #}

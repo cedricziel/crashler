@@ -8,6 +8,8 @@ use App\Read\Compute\AggregatingScanner;
 use App\Read\Compute\PartitionPruner;
 use App\Read\Compute\Predicates\ColumnInRange;
 use App\Read\Criteria\TimeWindow;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 /**
  * Resolves the five KPI tiles for an explorer page in one pass.
@@ -27,6 +29,8 @@ final readonly class KpiBundleResolver
         private AggregatingScanner $scanner,
         private PartitionPruner $pruner,
         private PriorWindowCalculator $priorCalc,
+        private CacheInterface $cache,
+        private int $cacheTtlSeconds = 60,
     ) {
     }
 
@@ -63,28 +67,44 @@ final readonly class KpiBundleResolver
     private function scanWindow(string $tenantSlug, string $signal, array $specs, TimeWindow $window): array
     {
         $globs = $this->pruner->globsFor($tenantSlug, $signal, $window);
-        $timeColumn = 'traces' === $signal ? 'start_time_unix_nano' : 'time_unix_nano';
-        $predicates = [new ColumnInRange($timeColumn, $window->sinceUnixNano, $window->untilUnixNano)];
+        $fingerprint = PartitionFingerprint::of($globs);
 
-        /** @var array<string, KpiSpec> $byKey */
-        $byKey = [];
-        foreach ($specs as $spec) {
-            $byKey[$spec->groupKey()] = $spec;
-        }
+        $cacheKey = \sprintf(
+            'explorer.kpi.%s.%s.%d.%d.%s',
+            $tenantSlug,
+            $signal,
+            $window->sinceUnixNano,
+            $window->untilUnixNano,
+            $fingerprint,
+        );
+        // Cache key is signal-agnostic in shape; behaviour is identical for
+        // logs/traces/metrics. Fingerprint embeds file count + max(mtime)
+        // so a fresh ingest auto-invalidates the entry.
 
-        $values = [];
-        foreach ($byKey as $key => $spec) {
-            try {
-                $result = $this->scanner->aggregate($globs, $predicates, $spec->function, $spec->column, null);
-                $values[$key] = self::firstRowValue($result->rows);
-            } catch (\Throwable) {
-                // Per-KPI failures degrade gracefully; resolver MUST NOT
-                // poison the rest of the strip.
-                $values[$key] = null;
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($globs, $signal, $specs, $window): array {
+            $item->expiresAfter($this->cacheTtlSeconds);
+
+            $timeColumn = 'traces' === $signal ? 'start_time_unix_nano' : 'time_unix_nano';
+            $predicates = [new ColumnInRange($timeColumn, $window->sinceUnixNano, $window->untilUnixNano)];
+
+            /** @var array<string, KpiSpec> $byKey */
+            $byKey = [];
+            foreach ($specs as $spec) {
+                $byKey[$spec->groupKey()] = $spec;
             }
-        }
 
-        return $values;
+            $values = [];
+            foreach ($byKey as $key => $spec) {
+                try {
+                    $result = $this->scanner->aggregate($globs, $predicates, $spec->function, $spec->column, null);
+                    $values[$key] = self::firstRowValue($result->rows);
+                } catch (\Throwable) {
+                    $values[$key] = null;
+                }
+            }
+
+            return $values;
+        });
     }
 
     /**

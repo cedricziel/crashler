@@ -8,6 +8,8 @@ use App\Read\Compute\ParquetScanner;
 use App\Read\Compute\PartitionPruner;
 use App\Read\Compute\Predicates\ColumnInRange;
 use App\Read\Criteria\TimeWindow;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 
 /**
  * Resolves the first page of rows for the explorer's results table.
@@ -23,7 +25,9 @@ final readonly class TableResultResolver
     public function __construct(
         private ParquetScanner $scanner,
         private PartitionPruner $pruner,
+        private CacheInterface $cache,
         private int $defaultPageSize = 50,
+        private int $cacheTtlSeconds = 60,
     ) {
     }
 
@@ -33,15 +37,30 @@ final readonly class TableResultResolver
     public function firstPage(string $tenantSlug, string $signal, TimeWindow $window): array
     {
         $globs = $this->pruner->globsFor($tenantSlug, $signal, $window);
-        $timeColumn = 'traces' === $signal ? 'start_time_unix_nano' : 'time_unix_nano';
-        $predicates = [new ColumnInRange($timeColumn, $window->sinceUnixNano, $window->untilUnixNano)];
+        $fingerprint = PartitionFingerprint::of($globs);
 
-        try {
-            $result = $this->scanner->scan($globs, $predicates, $this->defaultPageSize);
-        } catch (\Throwable) {
-            return [];
-        }
+        $cacheKey = \sprintf(
+            'explorer.table.%s.%s.%d.%d.%s',
+            $tenantSlug,
+            $signal,
+            $window->sinceUnixNano,
+            $window->untilUnixNano,
+            $fingerprint,
+        );
 
-        return $result->rows;
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($globs, $signal, $window): array {
+            $item->expiresAfter($this->cacheTtlSeconds);
+
+            $timeColumn = 'traces' === $signal ? 'start_time_unix_nano' : 'time_unix_nano';
+            $predicates = [new ColumnInRange($timeColumn, $window->sinceUnixNano, $window->untilUnixNano)];
+
+            try {
+                $result = $this->scanner->scan($globs, $predicates, $this->defaultPageSize);
+            } catch (\Throwable) {
+                return [];
+            }
+
+            return $result->rows;
+        });
     }
 }

@@ -1,0 +1,50 @@
+{# Live Component: QueryForm. Renders the criteria + aggregation form
+   once the signal profile is resolved on hydration. Pre-hydration
+   paints a one-line "loading…" placeholder so the layout doesn't jump. #}
+<div {{ attributes }} class="form-row">
+    {% if this.signal == '' %}
+        <div aria-busy="true" style="color: #888; font-size: 0.85rem; padding: 0.5rem 0;">Loading filters…</div>
+    {% else %}
+        {% set profile = this.profile %}
+        <form method="get" action="{{ path('app_explorer_index', {slug: this.tenantSlug, signal: this.signal}) }}">
+            <div class="form-row__group">
+                <span class="form-row__label">Filters</span>
+                {% for filter in profile.filters %}
+                    {% set listId = 'filter-options-' ~ filter.key %}
+                    <label class="form-row__chip">
+                        {{ filter.label }}:
+                        <input type="text" name="{{ filter.key }}"
+                               value="{{ this.queryValue(filter.key) }}"
+                               list="{{ listId }}"
+                               style="border: none; background: transparent; outline: none; font: inherit; width: 12ch;">
+                    </label>
+                {% endfor %}
+            </div>
+            <div class="form-row__group">
+                <span class="form-row__label">Time</span>
+                <label>since <input type="text" name="since" value="{{ this.queryValue('since', '1h') }}" placeholder="1h or RFC3339" style="font: inherit; padding: 0.2rem 0.4rem;"></label>
+                <label>until <input type="text" name="until" value="{{ this.queryValue('until') }}" placeholder="(now)" style="font: inherit; padding: 0.2rem 0.4rem;"></label>
+            </div>
+            <div class="form-row__group">
+                <span class="form-row__label">Aggregation</span>
+                <label>fn
+                    <select name="function" style="font: inherit; padding: 0.2rem 0.4rem;">
+                        {% for fn in ['count', 'sum', 'avg', 'min', 'max'] %}
+                            <option value="{{ fn }}" {% if fn == this.queryValue('function', 'count') %}selected{% endif %}>{{ fn }}</option>
+                        {% endfor %}
+                    </select>
+                </label>
+                <label>column
+                    <input type="text" name="column" value="{{ this.queryValue('column', profile.defaultColumn ?? '') }}" placeholder="—" style="font: inherit; padding: 0.2rem 0.4rem; width: 14ch;">
+                </label>
+                <label>groupBy
+                    <input type="text" name="groupBy" value="{{ this.queryValue('groupBy', profile.defaultGroupBy) }}" style="font: inherit; padding: 0.2rem 0.4rem; width: 14ch;">
+                </label>
+                <label>interval
+                    <input type="text" name="interval" value="{{ this.queryValue('interval', '1m') }}" style="font: inherit; padding: 0.2rem 0.4rem; width: 6ch;">
+                </label>
+                <button type="submit" class="form-row__action">Run</button>
+            </div>
+        </form>
+    {% endif %}
+</div>

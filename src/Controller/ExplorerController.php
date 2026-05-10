@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Explorer\SignalProfileRegistry;
-use App\Explorer\UnknownSignalException;
 use App\Read\Criteria\TimeWindow;
 use App\Repository\TenantRepository;
 use App\Security\Voter\TenantVoter;
@@ -40,15 +39,15 @@ final class ExplorerController extends AbstractController
         $tenant = $tenants->findOneBySlug($slug) ?? throw new NotFoundHttpException();
         $this->denyAccessUnlessGranted(TenantVoter::VIEW, $tenant);
 
-        try {
-            $profile = $this->profiles->get($signal);
-        } catch (UnknownSignalException) {
+        // Validate the signal name against the registry but do NOT resolve
+        // the profile here — every profile-dependent piece of the page lives
+        // behind a deferred Live Component, so the controller's job is just
+        // to pass through the tenant slug, the signal name, and the parsed
+        // window bounds. The shell is profile-agnostic.
+        if (!$this->profiles->has($signal)) {
             throw new NotFoundHttpException(\sprintf('Unknown signal "%s".', $signal));
         }
 
-        // Resolve the time window only — the heavyweight scans (KPI bundle,
-        // result table, autocomplete) are pushed into deferred Live Components
-        // so the browser parallelises them and the initial paint is fast.
         try {
             $window = TimeWindow::parse(
                 [
@@ -66,7 +65,6 @@ final class ExplorerController extends AbstractController
 
         return $this->render('explorer/index.html.twig', [
             'tenant' => $tenant,
-            'profile' => $profile,
             'signal' => $signal,
             'window_since_ns' => null === $window ? 0 : $window->sinceUnixNano,
             'window_until_ns' => null === $window ? 0 : $window->untilUnixNano,
