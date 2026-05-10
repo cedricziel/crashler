@@ -210,6 +210,35 @@ task('crashler:assets_install', function () {
 });
 after('deploy:vendors', 'crashler:assets_install');
 
+// Bootstrap DATABASE_URL into the shared/.env.local on first deploy.
+// Reads the connection string from PRODUCTION_DATABASE_URL (set in
+// .env.deploy on the operator's machine; the file is gitignored so
+// credentials never reach the repo). Appends only when the line is not
+// already present in shared/.env.local — operators rotating credentials
+// edit shared/.env.local directly on the host without re-running this.
+task('crashler:bootstrap_database_url', function () {
+    $url = (string) (getenv('PRODUCTION_DATABASE_URL') ?: '');
+    if ('' === $url) {
+        info('PRODUCTION_DATABASE_URL is not set in .env.deploy; skipping DATABASE_URL bootstrap (assuming shared/.env.local already carries it).');
+
+        return;
+    }
+
+    $path = '{{deploy_path}}/shared/.env.local';
+    if (test("[ -s $path ]") && '0' !== run("grep -q '^DATABASE_URL=' $path && echo 1 || echo 0")) {
+        info('shared/.env.local already declares DATABASE_URL; not overwriting.');
+
+        return;
+    }
+
+    // Symfony Dotenv parses DATABASE_URL line literally; quote with double
+    // quotes to handle '!' and special characters cleanly.
+    $escaped = str_replace(['\\', '"', '$', '`'], ['\\\\', '\\"', '\\$', '\\`'], $url);
+    run(\sprintf("set -e; printf '\\nDATABASE_URL=\"%s\"\\n' >> %s; chmod 600 %s", $escaped, $path, $path));
+    info('Appended DATABASE_URL to shared/.env.local.');
+});
+before('deploy:vendors', 'crashler:bootstrap_database_url');
+
 // Run Doctrine migrations after vendors are installed and shared resources
 // are linked, but before deploy:symlink swaps the current/ symlink. The
 // Symfony recipe ships `database:migrate` but does not hook it into the
