@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5e8e3788fca7e2e3436119b62766690b",
+    "content-hash": "55e517e8d06b43a9ec7e8de286cb173f",
     "packages": [
         {
             "name": "api-platform/documentation",
@@ -2508,16 +2508,16 @@
         },
         {
             "name": "flow-php/filesystem",
-            "version": "0.36.0",
+            "version": "0.37.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/filesystem.git",
-                "reference": "3af60d24ff3d87bc0bda5923ab6b3f27d82ae8e0"
+                "reference": "e4fd5c70e3abf26f8a88d68827f09adbb2d6524b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/filesystem/zipball/3af60d24ff3d87bc0bda5923ab6b3f27d82ae8e0",
-                "reference": "3af60d24ff3d87bc0bda5923ab6b3f27d82ae8e0",
+                "url": "https://api.github.com/repos/flow-php/filesystem/zipball/e4fd5c70e3abf26f8a88d68827f09adbb2d6524b",
+                "reference": "e4fd5c70e3abf26f8a88d68827f09adbb2d6524b",
                 "shasum": ""
             },
             "require": {
@@ -2556,7 +2556,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/filesystem/issues",
-                "source": "https://github.com/flow-php/filesystem/tree/0.36.0"
+                "source": "https://github.com/flow-php/filesystem/tree/0.37.0"
             },
             "funding": [
                 {
@@ -2568,20 +2568,20 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-04-21T08:23:13+00:00"
+            "time": "2026-05-08T15:52:52+00:00"
         },
         {
             "name": "flow-php/parquet",
-            "version": "0.36.0",
+            "version": "0.37.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/parquet.git",
-                "reference": "38277a3a337afaff5fd2d72575083079cf7d9a5e"
+                "reference": "72f4d0ffcab573011a932e30c960891c5e5a2b82"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/parquet/zipball/38277a3a337afaff5fd2d72575083079cf7d9a5e",
-                "reference": "38277a3a337afaff5fd2d72575083079cf7d9a5e",
+                "url": "https://api.github.com/repos/flow-php/parquet/zipball/72f4d0ffcab573011a932e30c960891c5e5a2b82",
+                "reference": "72f4d0ffcab573011a932e30c960891c5e5a2b82",
                 "shasum": ""
             },
             "require": {
@@ -2625,7 +2625,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/parquet/issues",
-                "source": "https://github.com/flow-php/parquet/tree/0.36.0"
+                "source": "https://github.com/flow-php/parquet/tree/0.37.0"
             },
             "funding": [
                 {
@@ -2637,11 +2637,11 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-04-07T09:04:12+00:00"
+            "time": "2026-05-08T09:34:30+00:00"
         },
         {
             "name": "flow-php/snappy",
-            "version": "0.36.0",
+            "version": "0.37.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/snappy.git",
@@ -2684,7 +2684,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/snappy/issues",
-                "source": "https://github.com/flow-php/snappy/tree/0.36.0"
+                "source": "https://github.com/flow-php/snappy/tree/0.37.0"
             },
             "funding": [
                 {
@@ -2700,16 +2700,16 @@
         },
         {
             "name": "flow-php/telemetry",
-            "version": "0.36.0",
+            "version": "0.37.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/telemetry.git",
-                "reference": "437852c053682ecf87546c0700219cb7e8af3e3f"
+                "reference": "472c55687de911b25692f93e8b6669169f4cc2b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/telemetry/zipball/437852c053682ecf87546c0700219cb7e8af3e3f",
-                "reference": "437852c053682ecf87546c0700219cb7e8af3e3f",
+                "url": "https://api.github.com/repos/flow-php/telemetry/zipball/472c55687de911b25692f93e8b6669169f4cc2b1",
+                "reference": "472c55687de911b25692f93e8b6669169f4cc2b1",
                 "shasum": ""
             },
             "require": {
@@ -2742,7 +2742,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/telemetry/issues",
-                "source": "https://github.com/flow-php/telemetry/tree/0.36.0"
+                "source": "https://github.com/flow-php/telemetry/tree/0.37.0"
             },
             "funding": [
                 {
@@ -2754,11 +2754,11 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-04-07T09:12:46+00:00"
+            "time": "2026-05-08T15:54:10+00:00"
         },
         {
             "name": "flow-php/types",
-            "version": "0.36.0",
+            "version": "0.37.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/types.git",
@@ -2796,7 +2796,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/types/issues",
-                "source": "https://github.com/flow-php/types/tree/0.36.0"
+                "source": "https://github.com/flow-php/types/tree/0.37.0"
             },
             "funding": [
                 {
