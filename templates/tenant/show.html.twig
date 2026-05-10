@@ -9,6 +9,12 @@
         <h1 style="margin: 0.5rem 0 0 0;">{{ tenant.name }}</h1>
         <code style="color: #666;">/{{ tenant.slug }}</code>
         <span style="color: #666; margin-left: 0.5rem;">in <a href="{{ path('app_org_show', {slug: tenant.org.slug}) }}">{{ tenant.org.name }}</a></span>
+        <nav style="margin-top: 0.75rem; display: flex; gap: 0.5rem; font-size: 0.9rem;" aria-label="Explore">
+            <span style="color: #666;">Explore:</span>
+            {% for s in ['logs', 'traces', 'metrics'] %}
+                <a href="{{ path('app_explorer_index', {slug: tenant.slug, signal: s}) }}" style="color: #06c; text-decoration: none;">{{ s }}</a>
+            {% endfor %}
+        </nav>
     </header>
 
     {% for label, messages in app.flashes(['error', 'success']) %}
