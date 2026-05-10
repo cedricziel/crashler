@@ -53,6 +53,42 @@ echo "Hash (put in crashler.yaml): $(printf '%s' "$TOKEN" | shasum -a 256 | cut 
 
 Add the hash under the appropriate tenant in `config/packages/crashler.yaml`, then redeploy. Tokens are revoked by removing their hash from the config and redeploying.
 
+### Self-service UI
+
+End users get their own surface, separate from the operator-only `/admin` panel:
+
+- `/signup` — public account creation. **Closed by default** (`CRASHLER_SIGNUP_ENABLED=0`). When closed, the URL returns 404 (not 403) so it's invisible to anonymous probing. Set `CRASHLER_SIGNUP_ENABLED=1` to open it; optionally set `CRASHLER_SIGNUP_TERMS_URL` to render an "I accept the terms" checkbox linking to your TOS.
+- `/dashboard` — landing page after sign-in; lists the user's orgs and any tenants they were invited to outside their own orgs. Empty memberships → redirects to onboarding.
+- `/dashboard/onboarding` — single-page wizard that creates an Org + first Tenant + first Token in one transaction. New signups land here.
+- `/orgs/{slug}` — org detail, tenant list, member management. `manage` and `create_tenant` actions gated to org `owner`/`admin`.
+- `/tenants/{slug}` — tenant detail, members, tokens, pending invitations. `manage` actions gated to tenant `owner`/`admin`.
+
+Authorization for these pages goes through `App\Security\Voter\TenantVoter` and `App\Security\Voter\OrgVoter`. Effective access is the union of `OrgMembership` (via the tenant's parent org) and `TenantMembership`; the highest role wins. `ROLE_ADMIN` (the installation operator) bypasses voters and can act on every resource.
+
+#### Invitations
+
+Tenant owners and admins issue invitations from the tenant page. Each invitation:
+
+- generates an opaque single-use claim URL `https://<host>/invitations/claim/<token>`
+- sends an HTML+plaintext email to the invitee (requires `MAILER_DSN` and `CRASHLER_INVITATIONS_FROM_ADDRESS` to be set; see "Email" below)
+- expires in `CRASHLER_INVITATIONS_EXPIRY_DAYS` days (default 7)
+- can be revoked by the inviter as long as it hasn't been accepted
+
+Claim flow:
+
+- **Anonymous visitor** → claim page shows both a sign-in form (prefilled email) and a sign-up form (also prefilled). The sign-up form works **even when public signup is closed**, because the invitation token is the gate.
+- **Authenticated as the invited email** → one-click "Accept" creates a `TenantMembership` and bounces to the tenant page.
+- **Authenticated as a different email** → mismatch page with a "log out and try again" link.
+- **Expired or already-used** → 410 with a clear message.
+
+All claim responses set `Referrer-Policy: same-origin` so the token doesn't leak to onward navigation.
+
+### Email
+
+Invitation email needs Symfony Mailer working. Set `MAILER_DSN` to a real transport in production. In dev, the project's `compose.override.yaml` ships [Mailpit](https://github.com/axllent/mailpit) — point `MAILER_DSN=smtp://localhost:1025` at it for browsable received-mail inspection at `http://localhost:8025`. In test, `null://null` is the default and the test suite does not actually dispatch.
+
+`CRASHLER_INVITATIONS_FROM_ADDRESS` is the From address on outbound mail. Required only when an inviter actually creates an invitation; the kernel boots fine without it. If a send fails (DSN unreachable, etc.), the invitation row stays persisted and the inviter sees a "share this link manually" notice with the claim URL — so a transient mail outage doesn't lose the invitation.
+
 ### Admin UI
 
 `/admin` is the operator dashboard, gated by `ROLE_ADMIN` and powered by EasyAdmin. From here you can manage Users, Organisations, Tenants, Tokens, and per-org / per-tenant memberships.
