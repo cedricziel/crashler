@@ -8,6 +8,7 @@ use App\Security\IngestTokenAuthenticator;
 use App\Security\IngestUser;
 use App\Tenancy\Tenant;
 use App\Tenancy\TenantRegistry;
+use App\Tenancy\Token\LastUsedRecorder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,6 +25,7 @@ final class IngestTokenAuthenticatorTest extends TestCase
     private const string TOKEN = 'cw_b2b8a8d4f9c4d2e3a1f6b5c7d8e9f0a1';
 
     private TenantRegistry $registry;
+    private LastUsedRecorder $lastUsedRecorder;
     private Tenant $acme;
     private string $acmeHash;
 
@@ -31,12 +33,13 @@ final class IngestTokenAuthenticatorTest extends TestCase
     {
         $this->acme = new Tenant('acme', 'Acme Corp');
         $this->acmeHash = hash('sha256', self::TOKEN);
-        $this->registry = new TenantRegistry([$this->acmeHash => $this->acme]);
+        $this->registry = TenantRegistry::fromEntries([[$this->acmeHash, $this->acme]]);
+        $this->lastUsedRecorder = $this->createMock(LastUsedRecorder::class);
     }
 
     public function testSupportsAlwaysReturnsTrueOnFirewallPath(): void
     {
-        $authenticator = new IngestTokenAuthenticator($this->registry);
+        $authenticator = new IngestTokenAuthenticator($this->registry, $this->lastUsedRecorder);
 
         // supports() returns true unconditionally so missing/invalid headers
         // flow through authenticate() → onAuthenticationFailure → JSON 401
@@ -47,7 +50,7 @@ final class IngestTokenAuthenticatorTest extends TestCase
 
     public function testAuthenticateRejectsMissingHeader(): void
     {
-        $authenticator = new IngestTokenAuthenticator($this->registry);
+        $authenticator = new IngestTokenAuthenticator($this->registry, $this->lastUsedRecorder);
 
         $this->expectException(CustomUserMessageAuthenticationException::class);
         $this->expectExceptionMessageMatches('/bearer/i');
@@ -57,7 +60,7 @@ final class IngestTokenAuthenticatorTest extends TestCase
 
     public function testAuthenticateRejectsMalformedScheme(): void
     {
-        $authenticator = new IngestTokenAuthenticator($this->registry);
+        $authenticator = new IngestTokenAuthenticator($this->registry, $this->lastUsedRecorder);
 
         $this->expectException(CustomUserMessageAuthenticationException::class);
 
@@ -66,7 +69,7 @@ final class IngestTokenAuthenticatorTest extends TestCase
 
     public function testAuthenticateRejectsBearerSchemeWithoutToken(): void
     {
-        $authenticator = new IngestTokenAuthenticator($this->registry);
+        $authenticator = new IngestTokenAuthenticator($this->registry, $this->lastUsedRecorder);
 
         $this->expectException(CustomUserMessageAuthenticationException::class);
 
@@ -75,7 +78,7 @@ final class IngestTokenAuthenticatorTest extends TestCase
 
     public function testAuthenticateRejectsRawTokenWithoutBearerPrefix(): void
     {
-        $authenticator = new IngestTokenAuthenticator($this->registry);
+        $authenticator = new IngestTokenAuthenticator($this->registry, $this->lastUsedRecorder);
 
         $this->expectException(CustomUserMessageAuthenticationException::class);
 
@@ -84,7 +87,7 @@ final class IngestTokenAuthenticatorTest extends TestCase
 
     public function testAuthenticateBuildsPassportForValidToken(): void
     {
-        $authenticator = new IngestTokenAuthenticator($this->registry);
+        $authenticator = new IngestTokenAuthenticator($this->registry, $this->lastUsedRecorder);
 
         $passport = $authenticator->authenticate($this->requestWithAuth('Bearer '.self::TOKEN));
 
@@ -103,7 +106,7 @@ final class IngestTokenAuthenticatorTest extends TestCase
 
     public function testPassportUserLoaderRejectsUnknownToken(): void
     {
-        $authenticator = new IngestTokenAuthenticator($this->registry);
+        $authenticator = new IngestTokenAuthenticator($this->registry, $this->lastUsedRecorder);
 
         $passport = $authenticator->authenticate($this->requestWithAuth('Bearer cw_unknown_token_value_12345'));
         $badge = $passport->getBadge(UserBadge::class);
@@ -118,7 +121,7 @@ final class IngestTokenAuthenticatorTest extends TestCase
 
     public function testOnAuthenticationFailureReturnsJsonUnauthorized(): void
     {
-        $authenticator = new IngestTokenAuthenticator($this->registry);
+        $authenticator = new IngestTokenAuthenticator($this->registry, $this->lastUsedRecorder);
 
         $response = $authenticator->onAuthenticationFailure(
             Request::create('/v1/logs'),
@@ -136,7 +139,7 @@ final class IngestTokenAuthenticatorTest extends TestCase
 
     public function testOnAuthenticationFailureMessageDoesNotLeakInternalDetail(): void
     {
-        $authenticator = new IngestTokenAuthenticator($this->registry);
+        $authenticator = new IngestTokenAuthenticator($this->registry, $this->lastUsedRecorder);
 
         $response = $authenticator->onAuthenticationFailure(
             Request::create('/v1/logs'),
@@ -151,7 +154,7 @@ final class IngestTokenAuthenticatorTest extends TestCase
 
     public function testOnAuthenticationSuccessReturnsNullForStatelessFlow(): void
     {
-        $authenticator = new IngestTokenAuthenticator($this->registry);
+        $authenticator = new IngestTokenAuthenticator($this->registry, $this->lastUsedRecorder);
 
         $token = new PreAuthenticatedToken(new IngestUser($this->acme), 'main', ['ROLE_INGEST']);
         $response = $authenticator->onAuthenticationSuccess(

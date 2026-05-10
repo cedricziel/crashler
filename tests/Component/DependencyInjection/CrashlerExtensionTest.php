@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace App\Tests\Component\DependencyInjection;
 
 use App\DependencyInjection\CrashlerExtension;
+use App\Tenancy\Source\ConfigTenantSource;
 use App\Tenancy\Tenant;
 use App\Tenancy\TenantRegistry;
-use App\Tenancy\TenantRegistryFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\DependencyInjection\Definition;
 
 #[CoversClass(CrashlerExtension::class)]
 final class CrashlerExtensionTest extends TestCase
@@ -38,26 +37,20 @@ final class CrashlerExtensionTest extends TestCase
         self::assertSame([$hashAcme], $param['acme']['token_hashes']);
     }
 
-    public function testParameterFeedsTenantRegistryFactoryEndToEnd(): void
+    public function testParameterFeedsConfigTenantSource(): void
     {
         $hashAcme = str_repeat('a', 64);
 
-        $container = $this->buildContainer([
-            'tenants' => [
-                'acme' => ['name' => 'Acme Corp', 'token_hashes' => [$hashAcme]],
-            ],
-        ]);
+        $validated = [
+            'acme' => ['name' => 'Acme Corp', 'token_hashes' => [$hashAcme]],
+        ];
 
-        // Mimic services.yaml's TenantRegistry definition (factory + parameter).
-        $registryDefinition = new Definition(TenantRegistry::class);
-        $registryDefinition->setFactory([TenantRegistryFactory::class, 'fromValidatedConfig']);
-        $registryDefinition->setArguments(['%crashler.tenants_validated%']);
-        $registryDefinition->setPublic(true);
-        $container->setDefinition(TenantRegistry::class, $registryDefinition);
-        $container->compile();
-
-        /** @var TenantRegistry $registry */
-        $registry = $container->get(TenantRegistry::class);
+        $source = new ConfigTenantSource($validated);
+        $registry = TenantRegistry::fromEntries(iterator_to_array((function () use ($source): \Generator {
+            foreach ($source->entries() as $entry) {
+                yield $entry;
+            }
+        })(), false));
 
         $found = $registry->findByTokenHash($hashAcme);
         self::assertNotNull($found);

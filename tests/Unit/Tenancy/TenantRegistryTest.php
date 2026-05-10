@@ -15,7 +15,7 @@ final class TenantRegistryTest extends TestCase
 {
     public function testEmptyRegistryReturnsNullForAnyHash(): void
     {
-        $registry = new TenantRegistry([]);
+        $registry = TenantRegistry::fromEntries([]);
 
         self::assertNull($registry->findByTokenHash(str_repeat('0', 64)));
     }
@@ -24,7 +24,7 @@ final class TenantRegistryTest extends TestCase
     {
         $tenant = new Tenant('acme', 'Acme Corp');
         $hash = str_repeat('a', 64);
-        $registry = new TenantRegistry([$hash => $tenant]);
+        $registry = TenantRegistry::fromEntries([[$hash, $tenant]]);
 
         $found = $registry->findByTokenHash($hash);
 
@@ -34,8 +34,8 @@ final class TenantRegistryTest extends TestCase
 
     public function testReturnsNullForUnknownHashWhenRegistryHasOtherEntries(): void
     {
-        $registry = new TenantRegistry([
-            str_repeat('a', 64) => new Tenant('acme', 'Acme Corp'),
+        $registry = TenantRegistry::fromEntries([
+            [str_repeat('a', 64), new Tenant('acme', 'Acme Corp')],
         ]);
 
         self::assertNull($registry->findByTokenHash(str_repeat('b', 64)));

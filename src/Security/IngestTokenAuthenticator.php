@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Security;
 
 use App\Tenancy\TenantRegistry;
+use App\Tenancy\Token\LastUsedRecorder;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,6 +24,7 @@ final class IngestTokenAuthenticator extends AbstractAuthenticator
 
     public function __construct(
         private readonly TenantRegistry $registry,
+        private readonly LastUsedRecorder $lastUsedRecorder,
     ) {
     }
 
@@ -61,6 +63,7 @@ final class IngestTokenAuthenticator extends AbstractAuthenticator
                     if (null === $tenant) {
                         throw new UserNotFoundException('Unknown bearer token.');
                     }
+                    $this->lastUsedRecorder->record($hash);
 
                     return new IngestUser($tenant);
                 },
