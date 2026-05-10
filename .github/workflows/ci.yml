@@ -57,12 +57,34 @@ jobs:
       matrix:
         php: ["8.5"]
 
+    # Postgres service for the functional tests added in
+    # add-identity-and-tenant-persistence + add-tenant-self-service-ui.
+    # Doctrine config appends `_test` to the configured dbname when APP_ENV=test
+    # (see config/packages/doctrine.yaml `when@test`), so the DB the tests
+    # actually connect to is `app_test` — created here directly.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: app_test
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: '!ChangeMe!'
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app -d app_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
     env:
       APP_ENV: test
       APP_SHARE_DIR: ${{ github.workspace }}/var/share
       CRASHLER_PARQUET_COMPRESSION: GZIP
       CRASHLER_INGEST_MAX_BODY_BYTES: "4194304"
       CRASHLER_INGEST_MAX_DECOMPRESSED_BYTES: "16777216"
+      CRASHLER_INVITATIONS_FROM_ADDRESS: "noreply@crashler.test"
+      DATABASE_URL: "postgresql://app:!ChangeMe!@127.0.0.1:5432/app?serverVersion=16&charset=utf8"
 
     steps:
       - name: Checkout
@@ -72,7 +94,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: ctype, iconv, intl, zip, dom, mbstring, zlib
+          extensions: ctype, iconv, intl, zip, dom, mbstring, zlib, pdo_pgsql
           coverage: pcov
           tools: composer:v2
           ini-values: |
@@ -106,7 +128,7 @@ jobs:
         run: composer test:functional
 
       - name: Run coverage gate
-        run: composer test:coverage
+        run: composer coverage:gate
 
       - name: Upload coverage report
         if: always()

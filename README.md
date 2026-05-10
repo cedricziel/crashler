@@ -21,22 +21,27 @@ In active development. The first feature — OTLP/HTTP-JSON log ingest with mult
 
 ## Quality stack
 
-Three quality tools live under `tools/<tool>/` with their own isolated `composer.json` and `composer.lock` so their dependencies never collide with the main app's. The main `composer.json` does not carry them as require-dev — production installs (`composer install --no-dev`) skip them entirely.
+Four quality tools live under `tools/<tool>/` with their own isolated `composer.json` and `composer.lock` so their dependencies never collide with the main app's. The main `composer.json` does not carry them as require-dev — production installs (`composer install --no-dev`) skip them entirely.
 
-| Tool          | Path                | Purpose                          |
-|---------------|---------------------|----------------------------------|
-| PHPStan       | `tools/phpstan/`    | Static analysis at level 6       |
-| PHP-CS-Fixer  | `tools/php-cs-fixer/` | Code-style enforcement (Symfony preset) |
-| Rector       | `tools/rector/`     | On-demand automated refactors    |
+| Tool          | Path                  | Purpose                                          |
+|---------------|-----------------------|--------------------------------------------------|
+| PHPStan       | `tools/phpstan/`      | Static analysis at level 6                       |
+| PHP-CS-Fixer  | `tools/php-cs-fixer/` | Code-style enforcement (Symfony preset)          |
+| Rector        | `tools/rector/`       | On-demand automated refactors                    |
+| Infection     | `tools/infection/`    | Mutation testing (on demand; not in CI hot path) |
 
 ### One-time setup
 
 ```bash
 composer tools:install                     # populate tools/<tool>/vendor/
-git config core.hooksPath .githooks        # opt in to the pre-commit hook
+git config core.hooksPath .githooks        # opt in to pre-commit + pre-push hooks
 ```
 
-The pre-commit hook runs PHP-CS-Fixer on staged `.php` files (auto-fix + re-stage) then PHPStan against the whole project. Aborts the commit on PHPStan failures. Bypass once with `git commit --no-verify` if you really need to land something despite findings — CI runs the same checks via `composer quality` and won't merge if they fail.
+The **pre-commit hook** runs PHP-CS-Fixer on staged `.php` files (auto-fix + re-stage) then PHPStan against the whole project. Aborts the commit on PHPStan failures.
+
+The **pre-push hook** runs `composer test:unit` before letting any commit reach the remote. The unit suite is fast (sub-second on a warm cache, no DB) and catches obvious breakage before it reaches CI.
+
+Bypass either with `--no-verify` (`git commit --no-verify`, `git push --no-verify`) when you really need to. CI runs the same checks via `composer quality` and `composer coverage:gate`, so unverified pushes still fail the build.
 
 ### Day-to-day commands
 
@@ -47,10 +52,15 @@ composer cs:fix             # actually apply the changes
 composer phpstan            # static analysis
 composer rector:dry         # preview Rector's suggestions
 composer rector             # apply Rector (don't do this casually)
+composer infection:dry      # preview Infection (mutation testing) cheaply
+composer infection          # full mutation testing run (slow; expects pcov)
+composer coverage:gate      # phpunit with coverage + threshold check (CI uses this)
 composer tools:update       # bump tool versions and refresh per-tool lockfiles
 ```
 
 The PHPStan baseline at `phpstan-baseline.neon` captures pre-existing findings while the codebase catches up. New code should not add to it; the baseline file is regenerated with `composer phpstan -- --generate-baseline` and entries are removed as code is fixed.
+
+The coverage gate fails CI if line coverage drops below `--min=70` (threshold tunable in `composer.json`). Adjust upward as the suite grows.
 
 ## Configuration
 

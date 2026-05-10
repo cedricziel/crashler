@@ -56,9 +56,9 @@
 - [ ] 9.3 CI smoke test: open a no-op PR; confirm the new quality step runs and passes. (Will exercise on the first push of this change.)
 - [ ] 9.4 Dependabot smoke test: push the change to a branch, wait for GitHub to evaluate the new `.github/dependabot.yml`. Confirm no syntax errors in the Dependabot tab.
 
-## 10. Deferred / future
+## 10. Implemented after the initial round
 
-- [ ] 10.1 Coverage tooling (pcov + threshold) — out of scope here; lands as its own change when prioritised.
-- [ ] 10.2 Mutation testing (Infection) — same.
-- [ ] 10.3 Pre-push hook running `composer test:unit` — different feedback loop, distinct concerns.
-- [ ] 10.4 Auto-update via Dependabot grouping rules (group all phpstan-* updates into one PR) — viable optimisation once we've observed actual update churn.
+- [x] 10.1 Coverage threshold: `bin/coverage-threshold` parses the existing `var/coverage/clover.xml` and exits non-zero if line coverage is below 70%. Wired into `composer coverage:gate` (which the CI test job runs), and exposed as `composer coverage:check` standalone. Threshold tunable via `--min=<percent>`.
+- [x] 10.2 Mutation testing (Infection): scaffolded as a fourth isolated tool under `tools/infection/` with its own composer.json + lock. Top-level `composer infection` and `composer infection:dry` scripts. `infection.json5` config at the repo root excludes plumbing (DTOs, Console commands, Composer hook). Dependabot entry per the convention. Not run pre-commit or in CI by default — it's slow and noisy; on demand only.
+- [x] 10.3 Pre-push hook: `.githooks/pre-push` runs `composer test:unit` before any commit reaches the remote. Same `core.hooksPath` activation as pre-commit; same `--no-verify` bypass. Component + functional suites stay CI-only since they need real I/O.
+- [x] 10.4 Dependabot grouping: phpstan group already landed in the initial round (groups `phpstan/*` so the four phpstan-* packages travel together). Infection group added in this round. PHP-CS-Fixer and Rector each ship a single package and don't need grouping.

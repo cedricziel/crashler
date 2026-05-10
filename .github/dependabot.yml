@@ -75,6 +75,23 @@ updates:
       - php
       - tools
 
+  - package-ecosystem: composer
+    directory: /tools/infection
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - php
+      - tools
+    groups:
+      infection:
+        patterns:
+          - "infection/*"
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
