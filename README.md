@@ -23,35 +23,20 @@ In active development. The first feature — OTLP/HTTP-JSON log ingest with mult
 
 ### Tenants and ingest tokens
 
-Tenants and ingest tokens load from **two sources** at request time and are merged into a single in-memory registry:
+Tenants and ingest tokens live in the **database** (`tenant` and `tenant_token` tables) and are managed via the admin UI at `/admin` or the user-facing tenant page at `/tenants/<slug>`. Each tenant belongs to exactly one Org; a user's effective access to a tenant is the union of their `OrgMembership` (via the tenant's parent org) and any direct `TenantMembership`. Earlier releases supported a YAML configuration tree (`crashler.tenants`) as a fallback alongside the database; that path has been removed once the migration helper finished its work.
 
-1. **Database** (recommended) — `tenant` and `tenant_token` rows managed via the admin UI at `/admin`. Issuing a token here generates the plaintext server-side, shows it once, and stores only its SHA-256 hash with audit metadata (creator, created-at, last-used-at, optional expiry).
-2. **YAML configuration** (fallback) — `crashler.tenants` in `config/packages/crashler.yaml`. Operators add a tenant by editing the file and redeploying. Plaintext tokens are never stored; only their SHA-256 hex hashes.
+Issuing a token generates the plaintext server-side, shows it exactly once with a copy-to-clipboard button, and stores only its SHA-256 hash plus audit metadata (creator, created-at, last-used-at, optional expiry).
 
-On hash collision between the two sources, **the database entry wins** and a warning is logged. Within a single source, duplicate hashes hard-fail at boot. Plaintext tokens are never persisted in either source. Recommend the DB path for new installs; YAML is retained for one transition release.
-
-#### Issuing tokens via the admin UI
+#### Issuing tokens
 
 After bootstrapping an admin (see "Admin UI" below):
 
 1. Sign in at `/login`.
-2. Navigate to **Tokens → Add new** under `/admin`.
+2. Navigate to **Tokens → Add new** under `/admin`, or open the tenant page at `/tenants/<slug>` and click "+ Issue token".
 3. Pick the parent tenant, give the token a label, and (optionally) set an expiry.
-4. The next page renders the plaintext exactly once with a copy-to-clipboard affordance. **Copy it now** — only the SHA-256 hash is stored, so a lost plaintext means re-issuing.
+4. The next page renders the plaintext exactly once. **Copy it now** — only the SHA-256 hash is stored, so a lost plaintext means re-issuing.
 
-Revoke a token by deleting the row in the admin UI. The change takes effect on the next request without a redeploy.
-
-#### Issuing tokens via YAML (legacy / emergency)
-
-Useful as a continuity fallback when the database is unavailable: keep at least one YAML token per tenant for emergency operator access.
-
-```bash
-TOKEN="cw_$(openssl rand -hex 16)"
-echo "Token (give to client): $TOKEN"
-echo "Hash (put in crashler.yaml): $(printf '%s' "$TOKEN" | shasum -a 256 | cut -d' ' -f1)"
-```
-
-Add the hash under the appropriate tenant in `config/packages/crashler.yaml`, then redeploy. Tokens are revoked by removing their hash from the config and redeploying.
+Revoke a token by deleting the row from either UI surface. The change takes effect on the next request — no redeploy needed.
 
 ### Self-service UI
 

@@ -30,10 +30,6 @@ set('bin/php', static fn (): string => getenv('DEPLOY_PHP_BIN') ?: '/usr/bin/env
 
 set('shared_files', [
     '.env.local',
-    // Production tenant + token-hash registry. Lives outside the repo so
-    // tenant slugs/names don't leak via the public source. Managed by
-    // the crashler:tenant:add task (see below).
-    'config/packages/prod/crashler.yaml',
 ]);
 
 set('shared_dirs', [
@@ -249,73 +245,6 @@ task('crashler:migrate', function () {
     run('cd {{release_path}} && {{bin/php}} bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=prod --no-debug');
 });
 after('deploy:vendors', 'crashler:migrate');
-
-// Bootstrap the shared tenants YAML so the kernel can boot before any
-// tenant has been registered. Symfony's config loader fails on an empty
-// file; this idempotently writes a valid 'tenants: {}' if the file is
-// missing or zero-bytes. Subsequent deploys are no-ops.
-task('crashler:bootstrap_tenants_yaml', function () {
-    $dir = '{{deploy_path}}/shared/config/packages/prod';
-    $path = "$dir/crashler.yaml";
-    run("mkdir -p $dir");
-    if (test("[ -s $path ]")) {
-        return;
-    }
-    run("printf 'crashler:\\n    tenants: {}\\n' > $path");
-    info('Bootstrapped shared/config/packages/prod/crashler.yaml (empty tenants)');
-});
-before('deploy:shared', 'crashler:bootstrap_tenants_yaml');
-
-// Add a tenant to the production registry. Mints a fresh plaintext token
-// on the host (the secret only leaves the host once, via stdout), stores
-// its SHA-256 hash in the shared YAML using Symfony's Yaml component to
-// safely merge with any existing tenants, and clears the prod container
-// cache so the new tenant is live without a redeploy.
-//
-// Usage: dep crashler:tenant:add --slug=<slug> [--name='<display name>'] stage=production
-//
-// The actual mutation lives in .deployer/scripts/tenant_add.php — uploaded
-// fresh on each invocation so the host always runs the version that
-// matches the deploy.php you're invoking from.
-task('crashler:tenant:add', function () {
-    $slug = (string) input()->getOption('slug');
-    $name = (string) (input()->getOption('name') ?: $slug);
-
-    if ('' === $slug || 1 !== preg_match('/^[a-z][a-z0-9-]{2,31}$/', $slug) || str_ends_with($slug, '-')) {
-        throw new \RuntimeException(\sprintf(
-            'Invalid slug "%s": must match ^[a-z][a-z0-9-]{2,31}$ and not end with "-".',
-            $slug,
-        ));
-    }
-    if (1 === preg_match("/['\"\\n\\r\\t]/", $name)) {
-        throw new \RuntimeException('Tenant name must not contain quotes, newlines, or tabs.');
-    }
-
-    $localScript = __DIR__.'/.deployer/scripts/tenant_add.php';
-    $remoteScript = '{{deploy_path}}/.dep/tenant_add.php';
-    $sharedYaml = '{{deploy_path}}/shared/config/packages/prod/crashler.yaml';
-
-    upload($localScript, $remoteScript);
-
-    $output = run(\sprintf(
-        '{{bin/php}} %s %s %s %s',
-        escapeshellarg($remoteScript),
-        escapeshellarg($sharedYaml),
-        escapeshellarg($slug),
-        escapeshellarg($name),
-    ));
-    run("rm -f $remoteScript");
-
-    run('{{bin/php}} {{deploy_path}}/current/bin/console cache:clear --env=prod --no-debug');
-
-    info("Tenant '$slug' registered. Plaintext token follows (shown once):");
-    writeln('');
-    writeln($output);
-    writeln('');
-    info('Store the token in your client; the server only keeps its hash.');
-});
-option('slug', null, \Symfony\Component\Console\Input\InputOption::VALUE_REQUIRED, 'Tenant slug');
-option('name', null, \Symfony\Component\Console\Input\InputOption::VALUE_REQUIRED, 'Tenant display name (defaults to slug)');
 
 // Hooks ------------------------------------------------------------------
 

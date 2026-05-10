@@ -121,7 +121,6 @@ final class SchemaCatalogWiringTest extends TestCase
     {
         $container = new ContainerBuilder();
         $container->setParameter('crashler.schema_dir', $schemaDir);
-        $container->setParameter('crashler.tenants_validated', []);
 
         // SchemaCatalog as it would be wired via services.yaml.
         $catalogDefinition = new Definition(SchemaCatalog::class);

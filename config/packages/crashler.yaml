@@ -1,29 +1,12 @@
-# Tenant identities and authorized OTLP ingest tokens.
-#
-# Each tenant has:
-#   - a slug (key) — used as a filesystem path component for stored Parquet
-#     files. Must match ^[a-z][a-z0-9-]{2,31}$ and not end with "-".
-#   - a name — display string only.
-#   - token_hashes — list of SHA-256 hex digests (lowercase, 64 chars) of
-#     valid plaintext bearer tokens. Plaintext tokens are NEVER stored.
-#
-# Generate a token + hash:
-#   TOKEN="cw_$(openssl rand -hex 16)"
-#   echo "Token (give to client): $TOKEN"
-#   echo "Hash (put below):       $(printf '%s' "$TOKEN" | shasum -a 256 | cut -d' ' -f1)"
-#
-# Revoke by removing the hash and redeploying.
+# Self-service UI configuration. Tenants and ingest tokens live in the
+# database (managed via /admin or the user-facing /tenants/<slug> page);
+# the YAML configuration that earlier releases used has been removed.
+# See README → "Tenants and ingest tokens".
 
 crashler:
-    tenants: {}
     signup:
         enabled: '%env(bool:CRASHLER_SIGNUP_ENABLED)%'
         terms_url: '%env(default::CRASHLER_SIGNUP_TERMS_URL)%'
     invitations:
         expiry_days: '%env(int:CRASHLER_INVITATIONS_EXPIRY_DAYS)%'
         from_address: '%env(default::CRASHLER_INVITATIONS_FROM_ADDRESS)%'
-    # Example:
-    # acme:
-    #     name: 'Acme Corp'
-    #     token_hashes:
-    #         - '5b8aa5a2d2c872e8321cf37308d69df2a4c5b7e8f9d0c1a2b3c4d5e6f7a8b9c0'

@@ -301,3 +301,15 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+when@test:
+    services:
+        # Test-only TenantSourceInterface fixture. Supplies the historical
+        # `test-tenant` (plaintext `cw_test_token_aaaaaaaaaaaaaaaaaa`) the
+        # functional test suite has long depended on for authenticating
+        # ingest/read calls. DbTenantSource still wins on collision because
+        # it ships at priority 100; this fixture lives at priority 0.
+        App\Tests\Support\Tenancy\TestTenantSource:
+            autoconfigure: true
+            tags:
+                - { name: crashler.tenant_source, priority: 0 }

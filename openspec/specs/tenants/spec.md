@@ -1,34 +1,23 @@
 ## Purpose
 
-Defines tenant identities and the bearer-token registry that authenticates inbound OTLP requests. Tenants and their token hashes are configured statically; plaintext tokens are never stored. Tenant slugs become filesystem path components for tenant-scoped storage, providing physical isolation between tenants.
+Defines tenant identities and the bearer-token registry that authenticates inbound OTLP requests. Tenants live in the database and are managed through the admin UI or the user-facing tenant page; plaintext tokens are never stored. Tenant slugs become filesystem path components for tenant-scoped storage, providing physical isolation between tenants.
 ## Requirements
-### Requirement: Tenant configuration file
+### Requirement: Tenant configuration source
 
-The system SHALL load tenant identities and authorized token hashes from **two sources**: the `tenant` and `tenant_token` tables (primary), and the `crashler.tenants` Symfony configuration tree (fallback). Both sources SHALL be assembled at request time into a single in-memory `TenantRegistry`. On hash collision between the two sources, the database entry SHALL win and a WARNING SHALL be logged naming both tenants. Within a single source, duplicate hashes SHALL still hard-fail at boot or at request-assembly time. The system SHALL NOT store plaintext tokens at rest in any form (hashed-only persistence applies equally to YAML and DB).
-
-The YAML configuration is retained for one transition release so existing operators are not forced to migrate before deploying this change. A future change will deprecate and then remove the YAML source.
-
-#### Scenario: Tenants loaded from both sources
-- **WHEN** the application boots with both DB-stored tenants and a `crashler.yaml` containing additional tenants
-- **THEN** authentication succeeds for any token whose SHA-256 hex matches an entry from either source
-
-#### Scenario: DB beats YAML on hash collision
-- **WHEN** the same hash is configured in YAML for tenant `legacy-acme` and stored in the DB for tenant `acme`
-- **THEN** authenticating that token associates the request with the DB-stored `acme`
-- **AND** a WARNING-level log entry names both slugs
+The system SHALL load tenant identities and authorized token hashes exclusively from the database (`tenant` and `tenant_token` tables). Sources are wired via the `crashler.tenant_source` service tag — additional sources (cache layers, federated lookups) MAY be added in future changes but the in-tree source is DB-backed only. The system SHALL NOT store plaintext tokens at rest in any form (only their SHA-256 hash). Earlier releases supported a YAML configuration tree (`crashler.tenants`) as a transition fallback alongside the database; that path has been removed.
 
 #### Scenario: Empty registry rejects all requests
-- **WHEN** the DB has no `tenant_token` rows AND `crashler.tenants` is empty or absent
+- **WHEN** the database has no `tenant_token` rows
 - **THEN** every authenticated request to `/v1/logs` is rejected with HTTP 401
 
 #### Scenario: Plaintext token never persisted
-- **WHEN** a token is created via the EasyAdmin issuance flow, or recorded in YAML by hand
+- **WHEN** a token is created via the admin or self-service UI
 - **THEN** the value at rest is a SHA-256 hex digest, not the plaintext
 - **AND** the application has no API to retrieve or display the plaintext after the one-time create response
 
 ### Requirement: Tenant slug rules
 
-Each tenant slug SHALL match the pattern `^[a-z][a-z0-9-]{2,31}$` and SHALL NOT end with a hyphen. The slug SHALL be globally unique (across all orgs, since it remains the filesystem path component). The slug SHALL be immutable after creation. The application SHALL fail fast at request-assembly time (or at form-validation time) with a clear error if any slug violates these rules.
+Each tenant slug SHALL match the pattern `^[a-z][a-z0-9-]{2,31}$` and SHALL NOT end with a hyphen. The slug SHALL be globally unique (across all orgs, since it remains the filesystem path component). The slug SHALL be immutable after creation. The application SHALL fail fast at form-validation time with a clear error if any slug violates these rules.
 
 #### Scenario: Slug pattern unchanged from v1
 - **WHEN** a Tenant is created with slug `acme-corp`
@@ -42,53 +31,45 @@ Each tenant slug SHALL match the pattern `^[a-z][a-z0-9-]{2,31}$` and SHALL NOT 
 
 #### Scenario: Slug is immutable post-creation
 - **WHEN** an administrator edits an existing Tenant
-- **THEN** the slug field is read-only (or hidden) in EasyAdmin
+- **THEN** the slug field is read-only (or hidden) in the UI
 - **AND** any attempt to change the slug via tampered POST data is rejected
 
 ### Requirement: Token hash format and uniqueness
 
-Each token hash SHALL be a string of exactly 64 lowercase hexadecimal characters. The same token hash SHALL NOT appear under two different tenants in the *same source* (DB unique constraint on `tenant_token.hash`; configuration-time check for YAML). Cross-source duplicates are tolerated with the DB-wins precedence rule (see "Tenant configuration source").
+Each token hash SHALL be a string of exactly 64 lowercase hexadecimal characters. The same token hash SHALL NOT appear in two `tenant_token` rows (DB unique constraint). Hashes that do not meet the format SHALL be rejected at form-validation time before insert; if a malformed hash ever reaches the table (e.g., via direct DB tooling), the request-assembly path SHALL skip it with a WARNING.
 
-#### Scenario: Malformed DB-stored hash rejected at form-validation
-- **WHEN** an administrator attempts to insert a TenantToken with a 32-char or non-hex `hash` value (e.g., via direct DB tooling)
-- **THEN** the application's request-assembly path emits a WARNING and skips the malformed row
-- **AND** the validator rejects any malformed hash submitted via EasyAdmin before the row is inserted
+#### Scenario: Malformed hash rejected at form-validation
+- **WHEN** an administrator attempts to insert a TenantToken with a 32-char or non-hex `hash` value via the UI
+- **THEN** the validator rejects the submission before any row is inserted
 
-#### Scenario: Malformed YAML hash rejected at boot
-- **WHEN** a `crashler.yaml` `token_hashes` entry is shorter than 64 chars, contains uppercase or non-hex characters
-- **THEN** the application fails to boot with a clear error naming the offending tenant and entry (existing behaviour preserved)
+#### Scenario: Malformed hash from direct-DB tooling is logged and skipped
+- **WHEN** a row exists in `tenant_token` whose `hash` does not match `^[a-f0-9]{64}$`
+- **THEN** the registry assembler emits a WARNING naming the row id and tenant slug
+- **AND** the row is skipped (not used for authentication)
 
-#### Scenario: Intra-DB duplicate rejected at insert
+#### Scenario: Duplicate hash rejected at insert
 - **WHEN** an attempt is made to insert a second `tenant_token` row with a hash that already exists in the table
 - **THEN** the database unique constraint rejects the insert
 - **AND** the application surfaces a clear error to the administrator
 
-#### Scenario: Intra-YAML duplicate rejected at boot
-- **WHEN** the same hash appears under two different YAML tenants
-- **THEN** the application fails to boot (existing behaviour preserved)
-
 ### Requirement: Bearer token authentication on /v1/logs
 
-The system SHALL authenticate requests to `/v1/logs` (and other ingest/read paths under `/v1/` and `/compat/`) by extracting the bearer token from the `Authorization: Bearer <token>` header, computing its SHA-256 in lowercase hex, and looking up the resulting hash in the assembled `TenantRegistry` (DB + YAML). On a hit, the system SHALL attach the matching `Tenant` value object (slug + name) to the request context for downstream handling. On a miss, on a missing or malformed `Authorization` header, the system SHALL respond with HTTP 401 and an OTLP-shaped error body. The behaviour observable from outside `IngestTokenAuthenticator` SHALL be identical to the v1 implementation; only the registry assembly changes.
+The system SHALL authenticate requests to `/v1/logs` (and other ingest/read paths under `/v1/` and `/compat/`) by extracting the bearer token from the `Authorization: Bearer <token>` header, computing its SHA-256 in lowercase hex, and looking up the resulting hash in the assembled `TenantRegistry`. On a hit, the system SHALL attach the matching `Tenant` value object (slug + name) to the request context for downstream handling. On a miss, on a missing or malformed `Authorization` header, the system SHALL respond with HTTP 401 and an OTLP-shaped error body.
 
 After successful authentication, the system SHALL update the matched `tenant_token.last_used_at` **out-of-band** (after the response is flushed via a `kernel.terminate` listener) so the auth path remains read-only. Failures of this update SHALL log at WARNING and SHALL NOT bubble to the request.
 
 #### Scenario: Valid DB-stored token authenticates
-- **WHEN** a token issued via EasyAdmin is presented in `Authorization: Bearer <plaintext>`
+- **WHEN** a token issued via the admin or self-service UI is presented in `Authorization: Bearer <plaintext>`
 - **THEN** the request is associated with the corresponding Tenant
 - **AND** request handling proceeds
 - **AND** the matching `tenant_token.last_used_at` is updated after the response is sent
 
-#### Scenario: Valid YAML-configured token still authenticates
-- **WHEN** a token configured in `crashler.yaml` is presented
-- **THEN** the request is associated with the corresponding Tenant exactly as in v1
-
-#### Scenario: Missing Authorization header rejected (unchanged)
+#### Scenario: Missing Authorization header rejected
 - **WHEN** a request arrives without an Authorization header
 - **THEN** the system responds with HTTP 401
 
-#### Scenario: Unknown token rejected (unchanged)
-- **WHEN** a request presents a token whose SHA-256 hex is not in either source
+#### Scenario: Unknown token rejected
+- **WHEN** a request presents a token whose SHA-256 hex is not in `tenant_token`
 - **THEN** the system responds with HTTP 401
 
 #### Scenario: last_used_at update failure does not affect the response
@@ -106,7 +87,7 @@ When comparing a presented token's SHA-256 against configured hashes, the system
 
 ### Requirement: Tenant entity persisted in the database
 
-The system SHALL persist tenants as `App\Entity\Tenant` rows in Postgres. Each Tenant SHALL belong to exactly one Org via a non-nullable `org_id` foreign key. The tenant entity SHALL carry the slug (globally unique), display name, and creation timestamp. The existing `App\Tenancy\Tenant` value object (slug + name) SHALL remain unchanged and SHALL continue to be the type passed through the ingest hot path; the entity is converted to the value object at the boundary of the registry.
+The system SHALL persist tenants as `App\Entity\Tenant` rows. Each Tenant SHALL belong to exactly one Org via a non-nullable `org_id` foreign key. The tenant entity SHALL carry the slug (globally unique), display name, and creation timestamp. The existing `App\Tenancy\Tenant` value object (slug + name) SHALL remain unchanged and SHALL continue to be the type passed through the ingest hot path; the entity is converted to the value object at the boundary of the registry.
 
 #### Scenario: Tenant requires an Org
 - **WHEN** an administrator attempts to create a Tenant without an Org
@@ -119,7 +100,7 @@ The system SHALL persist tenants as `App\Entity\Tenant` rows in Postgres. Each T
 
 ### Requirement: TenantMembership links users to tenants directly
 
-The system SHALL persist `App\Entity\TenantMembership` rows linking exactly one User to exactly one Tenant with one role from the shared `MembershipRole` enum. The composite `(user_id, tenant_id)` SHALL be unique. A user MAY have a TenantMembership without having an OrgMembership to the tenant's parent org (this is the "invited collaborator" case introduced in Change 2). Deleting the User SHALL cascade-delete their tenant memberships. Deleting the Tenant SHALL be restricted while memberships exist.
+The system SHALL persist `App\Entity\TenantMembership` rows linking exactly one User to exactly one Tenant with one role from the shared `MembershipRole` enum. The composite `(user_id, tenant_id)` SHALL be unique. A user MAY have a TenantMembership without having an OrgMembership to the tenant's parent org (this is the "invited collaborator" case). Deleting the User SHALL cascade-delete their tenant memberships. Deleting the Tenant SHALL be restricted while memberships exist.
 
 Effective tenant access SHALL be the *union* of OrgMembership(via `Tenant.org`) and TenantMembership; the effective role SHALL be the maximum by precedence (`owner > admin > member`). A domain service `App\Tenancy\TenantAccessChecker` SHALL implement this resolution and SHALL be used by all authorization decisions outside the ingest hot path.
 
@@ -141,13 +122,13 @@ Effective tenant access SHALL be the *union* of OrgMembership(via `Tenant.org`) 
 The system SHALL persist tokens as `App\Entity\TenantToken` rows with the following columns: `id`, `tenant_id` (FK, NOT NULL), `name` (operator label, NOT NULL), `hash` (string(64), unique, NOT NULL), `expires_at` (nullable), `last_used_at` (nullable), `created_at` (NOT NULL), `created_by_user_id` (FK, nullable). Plaintext tokens SHALL be generated server-side as `cw_<32 lowercase hex chars>` (16 bytes from `random_bytes`), shown to the operator exactly once at creation, and never persisted. The hash SHALL be `lowercase(hex(sha256(plaintext)))`.
 
 #### Scenario: Token issuance returns plaintext exactly once
-- **WHEN** an administrator creates a TenantToken via EasyAdmin
+- **WHEN** an administrator creates a TenantToken via the admin or self-service UI
 - **THEN** the response page renders the plaintext value once with a clear "this is the only time you will see this" notice
 - **AND** the plaintext is NOT stored in the session, in a flash message, or in any URL parameter
 - **AND** subsequent visits to the token's edit page do not display the plaintext
 
 #### Scenario: Token created via console has null createdBy
-- **WHEN** a token is created via a future console command (or imported from YAML)
+- **WHEN** a token is created via a console command without an authenticated user
 - **THEN** `created_by_user_id` is NULL
 - **AND** the row is otherwise valid and authenticates as expected
 
@@ -156,4 +137,3 @@ The system SHALL persist tokens as `App\Entity\TenantToken` rows with the follow
 - **THEN** the system responds with HTTP 401
 - **AND** the matched row's `last_used_at` is NOT updated
 - **AND** a structured log entry includes the tenant slug and "token expired"
-
