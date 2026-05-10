@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Explorer\KpiBundleResolver;
 use App\Explorer\KpiValue;
 use App\Explorer\SignalProfileRegistry;
+use App\Explorer\TableResultResolver;
 use App\Explorer\UnknownSignalException;
 use App\Read\Criteria\TimeWindow;
 use App\Repository\TenantRepository;
@@ -23,6 +24,7 @@ final class ExplorerController extends AbstractController
     public function __construct(
         private readonly SignalProfileRegistry $profiles,
         private readonly KpiBundleResolver $kpiResolver,
+        private readonly TableResultResolver $tableResolver,
         private readonly ClockInterface $clock,
         private readonly int $maxTimeWindowDays,
     ) {
@@ -71,9 +73,17 @@ final class ExplorerController extends AbstractController
             ? 'error'
             : (self::anyKpiPopulated($kpiValues) ? 'populated' : 'empty');
 
-        // Chart + table data resolution lands in follow-up; until then we
-        // render their empty states. The page already invests in the right
-        // shape — a populated chart/table is purely additive.
+        $rows = null === $window
+            ? []
+            : $this->tableResolver->firstPage($tenant->getSlug(), $signal, $window);
+
+        $tableState = null === $window
+            ? 'error'
+            : ([] === $rows ? 'empty' : 'populated');
+
+        // Chart endpoint lands in a follow-up; until then we render its
+        // empty-state copy. The data shape passed to the template is
+        // contract-stable.
         return $this->render('explorer/index.html.twig', [
             'tenant' => $tenant,
             'profile' => $profile,
@@ -81,7 +91,8 @@ final class ExplorerController extends AbstractController
             'kpi_values' => $kpiValues,
             'kpi_state' => $kpiState,
             'chart_state' => 'empty',
-            'table_state' => 'empty',
+            'rows' => $rows,
+            'table_state' => $tableState,
             'window_error' => $windowError,
         ]);
     }

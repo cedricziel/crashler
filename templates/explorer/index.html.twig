@@ -127,11 +127,33 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% if table_state == 'empty' %}
+                    {% if table_state == 'empty' or table_state == 'error' %}
                         <tr class="empty-row"><td colspan="{{ profile.tableColumns|length }}">No rows match. Try widening the time range or removing filters.</td></tr>
                     {% elseif table_state == 'loading' %}
                         {% for _ in 1..5 %}
                             <tr aria-busy="true"><td colspan="{{ profile.tableColumns|length }}" style="background: #f7f7f7; height: 1.5rem;">&nbsp;</td></tr>
+                        {% endfor %}
+                    {% else %}
+                        {% for row in rows %}
+                            <tr>
+                                {% for col in profile.tableColumns %}
+                                    {% set raw = row[col.key] ?? null %}
+                                    <td class="{% if col.monospace %}mono{% endif %}">
+                                        {% if col.key == 'time' or col.key ends with 'time_unix_nano' %}
+                                            {# normalise nanosecond timestamps to a human-readable HH:MM:SS.mmm #}
+                                            {% set ns = row.time_unix_nano|default(row.start_time_unix_nano|default(null)) %}
+                                            {% if ns %}{{ ((ns // 1000000) / 1000)|date('H:i:s.v') }}{% else %}—{% endif %}
+                                        {% elseif raw is null %}
+                                            <span style="color: #bbb;">—</span>
+                                        {% elseif raw is iterable %}
+                                            <code style="font-size: 0.78rem;">{{ raw|json_encode|slice(0, 60) }}</code>
+                                        {% else %}
+                                            {% set str = raw|default('—')|e %}
+                                            {{ str|length > 80 ? str|slice(0, 80) ~ '…' : str }}
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+                            </tr>
                         {% endfor %}
                     {% endif %}
                 </tbody>
