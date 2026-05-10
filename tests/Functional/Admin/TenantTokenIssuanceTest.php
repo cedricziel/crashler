@@ -48,13 +48,4 @@ final class TenantTokenIssuanceTest extends DatabaseTestCase
 
         return $admin;
     }
-
-    private function adminUrl(string $crudControllerFqcn, string $action): string
-    {
-        return static::getContainer()->get(AdminUrlGenerator::class)
-            ->setDashboard(DashboardController::class)
-            ->setController($crudControllerFqcn)
-            ->setAction($action)
-            ->generateUrl();
-    }
 }
