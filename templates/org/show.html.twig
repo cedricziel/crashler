@@ -1,0 +1,85 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Org · {{ org.name }}{% endblock %}
+
+{% block body %}
+<main style="max-width: 56rem; margin: 2rem auto; font-family: -apple-system, system-ui, sans-serif;">
+    <header style="margin-bottom: 1.5rem;">
+        <a href="{{ path('app_dashboard') }}" style="font-size: 0.85em; color: #666;">← Dashboard</a>
+        <h1 style="margin: 0.5rem 0 0 0;">{{ org.name }}</h1>
+        <code style="color: #666;">/{{ org.slug }}</code>
+    </header>
+
+    {% for label, messages in app.flashes(['error', 'success']) %}
+        {% for message in messages %}
+            <div role="alert" style="padding: 0.75rem 1rem; margin-bottom: 1rem; background: {{ label == 'error' ? '#fee' : '#efe' }}; border: 1px solid {{ label == 'error' ? '#fcc' : '#cfc' }};">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    <section style="margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+            <h2 style="margin: 0;">Tenants</h2>
+            {% if is_granted('create_tenant', org) %}
+                <details style="margin-left: 1rem;">
+                    <summary style="cursor: pointer; font-size: 0.9em; color: #06c;">+ New tenant</summary>
+                    <form method="post" action="{{ path('app_tenant_create', {slug: org.slug}) }}" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <input type="text" name="slug" placeholder="tenant-slug" required pattern="[a-z][a-z0-9-]{2,31}" style="padding: 0.4rem; font-family: monospace;">
+                        <input type="text" name="name" placeholder="Display name" required style="padding: 0.4rem;">
+                        <button type="submit" style="padding: 0.4rem 0.8rem; background: #222; color: #fff; border: none; cursor: pointer;">Create</button>
+                    </form>
+                </details>
+            {% endif %}
+        </div>
+        {% if org.tenants|length == 0 %}
+            <p style="color: #666;">No tenants yet.</p>
+        {% else %}
+            <ul style="list-style: none; padding: 0;">
+                {% for tenant in org.tenants %}
+                    <li style="padding: 0.6rem 1rem; border: 1px solid #ddd; margin-bottom: 0.4rem;">
+                        <a href="{{ path('app_tenant_show', {slug: tenant.slug}) }}"><strong>{{ tenant.name }}</strong></a>
+                        <code style="color: #666; margin-left: 0.5rem;">/{{ tenant.slug }}</code>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+
+    <section>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+            <h2 style="margin: 0;">Members</h2>
+            {% if is_granted('manage', org) %}
+                <details style="margin-left: 1rem;">
+                    <summary style="cursor: pointer; font-size: 0.9em; color: #06c;">+ Add member</summary>
+                    <form method="post" action="{{ path('app_org_membership_create', {slug: org.slug}) }}" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <input type="email" name="email" placeholder="user@example.com" required style="padding: 0.4rem;">
+                        <select name="role" style="padding: 0.4rem;">
+                            <option value="member">member</option>
+                            <option value="admin">admin</option>
+                            <option value="owner">owner</option>
+                        </select>
+                        <button type="submit" style="padding: 0.4rem 0.8rem; background: #222; color: #fff; border: none; cursor: pointer;">Add</button>
+                    </form>
+                    <p style="font-size: 0.85em; color: #666; margin-top: 0.4rem;">The user must already have an account. To onboard someone new, send them a tenant invitation instead.</p>
+                </details>
+            {% endif %}
+        </div>
+        <ul style="list-style: none; padding: 0;">
+            {% for membership in org.memberships %}
+                <li style="padding: 0.6rem 1rem; border: 1px solid #ddd; margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span>
+                        {{ membership.user.email }}
+                        <span style="margin-left: 0.5rem; font-size: 0.85em; padding: 0.15rem 0.4rem; background: #eef; border-radius: 3px;">{{ membership.role.value }}</span>
+                    </span>
+                    {% if is_granted('manage', org) %}
+                        <form method="post" action="{{ path('app_org_membership_delete', {slug: org.slug, id: membership.id}) }}" onsubmit="return confirm('Remove {{ membership.user.email }} from this org?')">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete-org-membership-' ~ membership.id) }}">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" style="background: none; border: none; color: #c00; cursor: pointer;">Remove</button>
+                        </form>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+</main>
+{% endblock %}

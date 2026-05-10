@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Accept invitation{% endblock %}
+
+{% block body %}
+<main style="max-width: 28rem; margin: 4rem auto; font-family: -apple-system, system-ui, sans-serif;">
+    <h1 style="margin-bottom: 0.5rem;">You're invited</h1>
+    <p style="color: #666;">to join <strong>{{ invitation.tenant.name }}</strong> (<code>/{{ invitation.tenant.slug }}</code>) as <code>{{ invitation.role.value }}</code>.</p>
+
+    {% for label, messages in app.flashes(['error', 'success']) %}
+        {% for message in messages %}
+            <div role="alert" style="padding: 0.75rem 1rem; margin: 1rem 0; background: {{ label == 'error' ? '#fee' : '#efe' }}; border: 1px solid {{ label == 'error' ? '#fcc' : '#cfc' }};">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    <section style="border: 1px solid #ddd; padding: 1rem; margin: 1.5rem 0;">
+        <h2 style="margin: 0 0 0.5rem 0; font-size: 1.1em;">Already have an account?</h2>
+        <form method="post" action="{{ path('app_login') }}">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+            <input type="hidden" name="_target_path" value="{{ path('app_invitation_claim', {token: invitation.token}) }}">
+            <label style="display: block; margin-bottom: 0.25rem;">Email
+                <input type="email" name="_username" value="{{ invitation.email }}" required readonly style="display: block; width: 100%; padding: 0.5rem; box-sizing: border-box; background: #f5f5f5;">
+            </label>
+            <label style="display: block; margin-bottom: 0.5rem;">Password
+                <input type="password" name="_password" required autocomplete="current-password" style="display: block; width: 100%; padding: 0.5rem; box-sizing: border-box;">
+            </label>
+            <button type="submit" style="display: block; width: 100%; padding: 0.5rem; background: #222; color: #fff; border: none; cursor: pointer;">Sign in</button>
+        </form>
+    </section>
+
+    <section style="border: 1px solid #ddd; padding: 1rem; margin: 1.5rem 0;">
+        <h2 style="margin: 0 0 0.5rem 0; font-size: 1.1em;">New here? Create an account</h2>
+        <form method="post" action="{{ path('app_invitation_claim_signup', {token: invitation.token}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('signup-invitation-' ~ invitation.id) }}">
+            <p style="margin: 0 0 0.5rem 0;">We'll create an account for <code>{{ invitation.email }}</code>.</p>
+            <label style="display: block; margin-bottom: 0.25rem;">Password (min 8 chars)
+                <input type="password" name="password" required minlength="8" autocomplete="new-password" style="display: block; width: 100%; padding: 0.5rem; box-sizing: border-box;">
+            </label>
+            <label style="display: block; margin-bottom: 0.5rem;">Confirm password
+                <input type="password" name="password_confirm" required minlength="8" autocomplete="new-password" style="display: block; width: 100%; padding: 0.5rem; box-sizing: border-box;">
+            </label>
+            <button type="submit" style="display: block; width: 100%; padding: 0.5rem; background: #222; color: #fff; border: none; cursor: pointer;">Create account</button>
+        </form>
+    </section>
+</main>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Get started{% endblock %}
+
+{% block body %}
+<main style="max-width: 32rem; margin: 2rem auto; font-family: -apple-system, system-ui, sans-serif;">
+    <h1>Welcome to Crashler</h1>
+    <p style="color: #666;">Let's set up your first org and tenant. You can change names later, but slugs are immutable, so pick something you can live with.</p>
+
+    {{ form_start(form) }}
+        {{ form_errors(form) }}
+
+        <fieldset style="border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem;">
+            <legend>Org</legend>
+            <div style="margin-bottom: 1rem;">
+                {{ form_label(form.orgSlug) }}
+                {{ form_widget(form.orgSlug, {'attr': {'style': 'display: block; width: 100%; padding: 0.5rem; box-sizing: border-box; font-family: ui-monospace, monospace;'}}) }}
+                {{ form_help(form.orgSlug) }}
+                {{ form_errors(form.orgSlug) }}
+            </div>
+            <div>
+                {{ form_label(form.orgName) }}
+                {{ form_widget(form.orgName, {'attr': {'style': 'display: block; width: 100%; padding: 0.5rem; box-sizing: border-box;'}}) }}
+                {{ form_help(form.orgName) }}
+                {{ form_errors(form.orgName) }}
+            </div>
+        </fieldset>
+
+        <fieldset style="border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem;">
+            <legend>First tenant</legend>
+            <div style="margin-bottom: 1rem;">
+                {{ form_label(form.tenantSlug) }}
+                {{ form_widget(form.tenantSlug, {'attr': {'style': 'display: block; width: 100%; padding: 0.5rem; box-sizing: border-box; font-family: ui-monospace, monospace;'}}) }}
+                {{ form_help(form.tenantSlug) }}
+                {{ form_errors(form.tenantSlug) }}
+            </div>
+            <div>
+                {{ form_label(form.tenantName) }}
+                {{ form_widget(form.tenantName, {'attr': {'style': 'display: block; width: 100%; padding: 0.5rem; box-sizing: border-box;'}}) }}
+                {{ form_help(form.tenantName) }}
+                {{ form_errors(form.tenantName) }}
+            </div>
+        </fieldset>
+
+        <fieldset style="border: 1px solid #ddd; padding: 1rem; margin-bottom: 1rem;">
+            <legend>First token</legend>
+            <div>
+                {{ form_label(form.tokenName) }}
+                {{ form_widget(form.tokenName, {'attr': {'style': 'display: block; width: 100%; padding: 0.5rem; box-sizing: border-box;'}}) }}
+                {{ form_help(form.tokenName) }}
+                {{ form_errors(form.tokenName) }}
+            </div>
+        </fieldset>
+
+        {{ form_widget(form.submit, {'attr': {'style': 'display: block; width: 100%; padding: 0.6rem; background: #222; color: #fff; border: none; cursor: pointer;'}}) }}
+    {{ form_end(form) }}
+</main>
+{% endblock %}

@@ -60,9 +60,14 @@ security:
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/logout, roles: PUBLIC_ACCESS }
+        - { path: ^/signup, roles: PUBLIC_ACCESS }
+        - { path: ^/invitations/claim/, roles: PUBLIC_ACCESS }
         - { path: ^/v1/, roles: ROLE_INGEST }
         - { path: ^/compat/, roles: ROLE_INGEST }
         - { path: ^/admin, roles: ROLE_ADMIN }
+        - { path: ^/dashboard, roles: ROLE_USER }
+        - { path: ^/orgs, roles: ROLE_USER }
+        - { path: ^/tenants, roles: ROLE_USER }
 
 when@test:
     security:

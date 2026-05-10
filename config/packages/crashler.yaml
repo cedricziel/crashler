@@ -16,6 +16,12 @@
 
 crashler:
     tenants: {}
+    signup:
+        enabled: '%env(bool:CRASHLER_SIGNUP_ENABLED)%'
+        terms_url: '%env(default::CRASHLER_SIGNUP_TERMS_URL)%'
+    invitations:
+        expiry_days: '%env(int:CRASHLER_INVITATIONS_EXPIRY_DAYS)%'
+        from_address: '%env(default::CRASHLER_INVITATIONS_FROM_ADDRESS)%'
     # Example:
     # acme:
     #     name: 'Acme Corp'

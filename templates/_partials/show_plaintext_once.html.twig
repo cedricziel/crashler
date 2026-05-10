@@ -1,0 +1,27 @@
+{# Renders a freshly-issued plaintext token exactly once, with a copy-to-clipboard
+   button. The plaintext is passed through from a one-shot session value that the
+   controller has already consumed, so re-rendering this template after a refresh
+   yields nothing. #}
+
+<div role="alert" data-controller="copy-to-clipboard" style="padding: 1rem; margin-bottom: 1.5rem; background: #fff8e1; border: 1px solid #f0c36d; color: #5a4400;">
+    <strong>Copy this token now.</strong>
+    This is the only time it will be shown — only the SHA-256 hash is stored. Lose it and you'll need to issue a new one.
+
+    <div style="display: flex; gap: 0.5rem; align-items: stretch; margin-top: 0.75rem;">
+        <input
+            type="text"
+            value="{{ plaintext }}"
+            readonly
+            data-copy-to-clipboard-target="source"
+            onclick="this.select()"
+            style="flex: 1; padding: 0.6rem 0.8rem; font-family: ui-monospace, SF Mono, Menlo, monospace; font-size: 0.95rem; border: 1px solid #999;"
+        >
+        <button
+            type="button"
+            data-action="copy-to-clipboard#copy"
+            style="padding: 0.6rem 1rem; background: #222; color: #fff; border: none; cursor: pointer;"
+        >
+            Copy
+        </button>
+    </div>
+</div>

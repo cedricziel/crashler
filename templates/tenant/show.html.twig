@@ -1,0 +1,125 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tenant · {{ tenant.name }}{% endblock %}
+
+{% block body %}
+<main style="max-width: 56rem; margin: 2rem auto; font-family: -apple-system, system-ui, sans-serif;">
+    <header style="margin-bottom: 1.5rem;">
+        <a href="{{ path('app_dashboard') }}" style="font-size: 0.85em; color: #666;">← Dashboard</a>
+        <h1 style="margin: 0.5rem 0 0 0;">{{ tenant.name }}</h1>
+        <code style="color: #666;">/{{ tenant.slug }}</code>
+        <span style="color: #666; margin-left: 0.5rem;">in <a href="{{ path('app_org_show', {slug: tenant.org.slug}) }}">{{ tenant.org.name }}</a></span>
+    </header>
+
+    {% for label, messages in app.flashes(['error', 'success']) %}
+        {% for message in messages %}
+            <div role="alert" style="padding: 0.75rem 1rem; margin-bottom: 1rem; background: {{ label == 'error' ? '#fee' : '#efe' }}; border: 1px solid {{ label == 'error' ? '#fcc' : '#cfc' }};">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    {% if plaintext is not null %}
+        {% include '_partials/show_plaintext_once.html.twig' with {plaintext: plaintext} only %}
+    {% endif %}
+
+    <section style="margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+            <h2 style="margin: 0;">Tokens</h2>
+            {% if is_granted('manage', tenant) %}
+                <details style="margin-left: 1rem;">
+                    <summary style="cursor: pointer; font-size: 0.9em; color: #06c;">+ Issue token</summary>
+                    <form method="post" action="{{ path('app_tenant_token_create', {slug: tenant.slug}) }}" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <input type="text" name="name" placeholder="Token label, e.g. otel-collector-prod" required style="padding: 0.4rem; flex: 1;">
+                        <input type="datetime-local" name="expiresAt" placeholder="Optional expiry" style="padding: 0.4rem;">
+                        <button type="submit" style="padding: 0.4rem 0.8rem; background: #222; color: #fff; border: none; cursor: pointer;">Issue</button>
+                    </form>
+                </details>
+            {% endif %}
+        </div>
+        {% if tenant.tokens|length == 0 %}
+            <p style="color: #666;">No tokens yet.</p>
+        {% else %}
+            <ul style="list-style: none; padding: 0;">
+                {% for token in tenant.tokens %}
+                    <li style="padding: 0.6rem 1rem; border: 1px solid #ddd; margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: space-between;">
+                        <span>
+                            <strong>{{ token.name }}</strong>
+                            <code style="color: #666; margin-left: 0.5rem;">{{ token.hashPrefix }}…</code>
+                            {% if token.expiresAt %}<span style="font-size: 0.85em; color: #c60; margin-left: 0.5rem;">expires {{ token.expiresAt|date('Y-m-d') }}</span>{% endif %}
+                            {% if token.lastUsedAt %}<span style="font-size: 0.85em; color: #666; margin-left: 0.5rem;">last used {{ token.lastUsedAt|date('Y-m-d H:i') }}</span>{% endif %}
+                        </span>
+                        {% if is_granted('manage', tenant) %}
+                            <form method="post" action="{{ path('app_tenant_token_delete', {slug: tenant.slug, id: token.id}) }}" onsubmit="return confirm('Revoke {{ token.name }}? Existing clients using it will start failing.')">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete-tenant-token-' ~ token.id) }}">
+                                <input type="hidden" name="_method" value="DELETE">
+                                <button type="submit" style="background: none; border: none; color: #c00; cursor: pointer;">Revoke</button>
+                            </form>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+
+    {% if is_granted('manage', tenant) %}
+        <section style="margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                <h2 style="margin: 0;">Pending invitations</h2>
+                <details style="margin-left: 1rem;">
+                    <summary style="cursor: pointer; font-size: 0.9em; color: #06c;">+ Invite by email</summary>
+                    <form method="post" action="{{ path('app_tenant_invitation_create', {slug: tenant.slug}) }}" style="margin-top: 0.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <input type="email" name="email" placeholder="user@example.com" required style="padding: 0.4rem; flex: 1;">
+                        <select name="role" style="padding: 0.4rem;">
+                            <option value="member">member</option>
+                            <option value="admin">admin</option>
+                            <option value="owner">owner</option>
+                        </select>
+                        <button type="submit" style="padding: 0.4rem 0.8rem; background: #222; color: #fff; border: none; cursor: pointer;">Invite</button>
+                    </form>
+                </details>
+            </div>
+            {% set pending = pending_invitations|default([]) %}
+            {% if pending|length == 0 %}
+                <p style="color: #666;">No pending invitations.</p>
+            {% else %}
+                <ul style="list-style: none; padding: 0;">
+                    {% for inv in pending %}
+                        <li style="padding: 0.6rem 1rem; border: 1px solid #ddd; margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: space-between;">
+                            <span>
+                                {{ inv.email }}
+                                <span style="margin-left: 0.5rem; font-size: 0.85em; padding: 0.15rem 0.4rem; background: #eef; border-radius: 3px;">{{ inv.role.value }}</span>
+                                <span style="margin-left: 0.5rem; font-size: 0.85em; color: #666;">expires {{ inv.expiresAt|date('Y-m-d') }}</span>
+                            </span>
+                            <form method="post" action="{{ path('app_tenant_invitation_delete', {slug: tenant.slug, id: inv.id}) }}" onsubmit="return confirm('Revoke invitation to {{ inv.email }}?')">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete-invitation-' ~ inv.id) }}">
+                                <input type="hidden" name="_method" value="DELETE">
+                                <button type="submit" style="background: none; border: none; color: #c00; cursor: pointer;">Revoke</button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </section>
+    {% endif %}
+
+    <section>
+        <h2 style="margin: 0 0 0.75rem 0;">Members</h2>
+        <ul style="list-style: none; padding: 0;">
+            {% for membership in tenant.memberships %}
+                <li style="padding: 0.6rem 1rem; border: 1px solid #ddd; margin-bottom: 0.4rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span>
+                        {{ membership.user.email }}
+                        <span style="margin-left: 0.5rem; font-size: 0.85em; padding: 0.15rem 0.4rem; background: #eef; border-radius: 3px;">{{ membership.role.value }}</span>
+                    </span>
+                    {% if is_granted('manage', tenant) %}
+                        <form method="post" action="{{ path('app_tenant_membership_delete', {slug: tenant.slug, id: membership.id}) }}" onsubmit="return confirm('Remove {{ membership.user.email }} from this tenant?')">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete-tenant-membership-' ~ membership.id) }}">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" style="background: none; border: none; color: #c00; cursor: pointer;">Remove</button>
+                        </form>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </section>
+</main>
+{% endblock %}

@@ -5,6 +5,11 @@ framework:
     # Note that the session will be started ONLY if you read or write from it.
     session: true
 
+    # Lets HTML forms emulate DELETE/PATCH via a hidden `_method` field on
+    # POST. Used by the org/tenant management pages where each "Remove"
+    # button is a form (anchors can't carry CSRF tokens safely).
+    http_method_override: true
+
     #esi: true
     #fragments: true
 

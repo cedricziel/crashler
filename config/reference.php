@@ -1504,6 +1504,14 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *             name?: scalar|Param|null,
  *             token_hashes?: list<scalar|Param|null>,
  *         }>,
+ *     signup?: array{ // Public-signup configuration for the user-facing UI.
+ *         enabled?: bool|Param, // When false, GET /signup returns 404 (not 403). Defaults to closed for self-hosted installs. // Default: false
+ *         terms_url?: scalar|Param|null, // Optional URL to the terms-of-service page. When set, the signup form renders an "accept terms" checkbox linking here. // Default: null
+ *     },
+ *     invitations?: array{ // Tenant-invitation configuration for the user-facing UI.
+ *         expiry_days?: int|Param, // Days until a pending invitation expires. Default 7. // Default: 7
+ *         from_address?: scalar|Param|null, // From address used by InvitationMailer. Required at runtime if invitations are sent. // Default: null
+ *     },
  * }
  * @psalm-type ApiPlatformConfig = array{
  *     title?: scalar|Param|null, // The title of the API. // Default: ""

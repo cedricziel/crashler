@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Sign up{% endblock %}
+
+{% block body %}
+<main style="max-width: 24rem; margin: 4rem auto; font-family: -apple-system, system-ui, sans-serif;">
+    <h1 style="margin-bottom: 1.5rem;">Sign up</h1>
+
+    {{ form_start(form) }}
+        {{ form_errors(form) }}
+
+        <div style="margin-bottom: 1rem;">
+            {{ form_label(form.email) }}
+            {{ form_widget(form.email, {'attr': {'style': 'display: block; width: 100%; padding: 0.5rem; box-sizing: border-box;'}}) }}
+            {{ form_errors(form.email) }}
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            {{ form_label(form.plainPassword.first) }}
+            {{ form_widget(form.plainPassword.first, {'attr': {'style': 'display: block; width: 100%; padding: 0.5rem; box-sizing: border-box;'}}) }}
+            {{ form_errors(form.plainPassword.first) }}
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+            {{ form_label(form.plainPassword.second) }}
+            {{ form_widget(form.plainPassword.second, {'attr': {'style': 'display: block; width: 100%; padding: 0.5rem; box-sizing: border-box;'}}) }}
+            {{ form_errors(form.plainPassword.second) }}
+        </div>
+
+        {% if form.acceptTerms is defined %}
+            <div style="margin-bottom: 1rem;">
+                {{ form_widget(form.acceptTerms) }}
+                <label for="{{ form.acceptTerms.vars.id }}">
+                    I accept the
+                    {% if terms_url %}<a href="{{ terms_url }}" target="_blank" rel="noopener">terms of service</a>{% else %}terms of service{% endif %}
+                </label>
+                {{ form_errors(form.acceptTerms) }}
+            </div>
+        {% endif %}
+
+        {{ form_widget(form.submit, {'attr': {'style': 'display: block; width: 100%; padding: 0.6rem; background: #222; color: #fff; border: none; cursor: pointer;'}}) }}
+    {{ form_end(form) }}
+
+    <p style="margin-top: 1rem; text-align: center;">
+        Already have an account? <a href="{{ path('app_login') }}">Sign in</a>
+    </p>
+</main>
+{% endblock %}

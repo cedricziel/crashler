@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Invitation already used{% endblock %}
+
+{% block body %}
+<main style="max-width: 28rem; margin: 4rem auto; font-family: -apple-system, system-ui, sans-serif; text-align: center;">
+    <h1>This invitation has already been used</h1>
+    <p style="color: #666;">Each invitation can only be claimed once.</p>
+    <p style="font-size: 0.9em;">If you've already accepted, you can <a href="{{ path('app_dashboard') }}">go to your dashboard</a>. If something looks off, ask the inviter to issue a fresh invitation.</p>
+</main>
+{% endblock %}

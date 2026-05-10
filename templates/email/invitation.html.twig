@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>You're invited to {{ tenant.name }}</title>
+</head>
+<body style="margin: 0; padding: 2rem; font-family: -apple-system, system-ui, sans-serif; color: #222;">
+    <div style="max-width: 32rem; margin: 0 auto;">
+        <h1 style="font-size: 1.4rem;">You're invited</h1>
+        <p><strong>{{ inviter.email }}</strong> invited you to join <strong>{{ tenant.name }}</strong> (<code>/{{ tenant.slug }}</code>) on Crashler.</p>
+        <p>Role: <code>{{ role.value }}</code></p>
+        <p style="margin: 2rem 0;">
+            <a href="{{ claim_url }}" style="display: inline-block; padding: 0.75rem 1.25rem; background: #222; color: #fff; text-decoration: none;">Accept invitation</a>
+        </p>
+        <p style="font-size: 0.9em; color: #666;">Or paste this URL into your browser:<br><code style="word-break: break-all;">{{ claim_url }}</code></p>
+        <p style="font-size: 0.9em; color: #666;">The link expires on <strong>{{ expires_at|date('Y-m-d H:i T') }}</strong>.</p>
+        <p style="font-size: 0.85em; color: #999;">If you don't recognise this invitation, you can safely ignore this email — nothing happens until you click.</p>
+    </div>
+</body>
+</html>

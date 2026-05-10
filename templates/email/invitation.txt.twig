@@ -1,0 +1,9 @@
+{{ inviter.email }} invited you to join {{ tenant.name }} (/{{ tenant.slug }}) on Crashler.
+
+Role: {{ role.value }}
+
+Open this link to accept the invitation:
+
+{{ claim_url }}
+
+The link expires on {{ expires_at|date('Y-m-d H:i T') }}. If you don't recognise this invitation, you can safely ignore this email — nothing happens until you click.

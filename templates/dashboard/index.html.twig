@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block body %}
+<main style="max-width: 56rem; margin: 2rem auto; font-family: -apple-system, system-ui, sans-serif;">
+    <header style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem;">
+        <h1 style="margin: 0;">Dashboard</h1>
+        <div>
+            <span style="margin-right: 1rem; color: #666;">{{ app.user.email }}</span>
+            <a href="{{ path('app_logout') }}">Sign out</a>
+        </div>
+    </header>
+
+    <section style="margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+            <h2 style="margin: 0;">Your orgs</h2>
+            <a href="#" style="font-size: 0.9em;">Create another org</a>
+        </div>
+        {% if org_memberships|length == 0 %}
+            <p style="color: #666;">You aren't an owner or member of any org. Create one via onboarding.</p>
+        {% else %}
+            <ul style="list-style: none; padding: 0;">
+                {% for membership in org_memberships %}
+                    {% set org = membership.org %}
+                    <li style="padding: 0.75rem 1rem; border: 1px solid #ddd; margin-bottom: 0.5rem;">
+                        <a href="{{ path('app_org_show', {slug: org.slug}) }}"><strong>{{ org.name }}</strong></a>
+                        <span style="color: #666; margin-left: 0.5rem;">/{{ org.slug }}</span>
+                        <span style="float: right; font-size: 0.85em; padding: 0.2rem 0.5rem; background: #eef; border-radius: 3px;">{{ membership.role.value }}</span>
+                        <div style="font-size: 0.85em; color: #666; margin-top: 0.25rem;">{{ org.tenants|length }} tenant{{ org.tenants|length == 1 ? '' : 's' }}</div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+
+    {% if direct_tenant_memberships|length > 0 %}
+        <section>
+            <h2>Tenants you've been invited to</h2>
+            <p style="color: #666; font-size: 0.9em;">These are tenants you have direct access to without belonging to their parent org.</p>
+            <ul style="list-style: none; padding: 0;">
+                {% for membership in direct_tenant_memberships %}
+                    {% set tenant = membership.tenant %}
+                    <li style="padding: 0.75rem 1rem; border: 1px solid #ddd; margin-bottom: 0.5rem;">
+                        <a href="{{ path('app_tenant_show', {slug: tenant.slug}) }}"><strong>{{ tenant.name }}</strong></a>
+                        <span style="color: #666; margin-left: 0.5rem;">/{{ tenant.slug }}</span>
+                        <span style="float: right; font-size: 0.85em; padding: 0.2rem 0.5rem; background: #eef; border-radius: 3px;">{{ membership.role.value }}</span>
+                        <div style="font-size: 0.85em; color: #666; margin-top: 0.25rem;">in {{ tenant.org.name }} (/{{ tenant.org.slug }})</div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    {% endif %}
+</main>
+{% endblock %}

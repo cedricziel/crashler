@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Wrong account{% endblock %}
+
+{% block body %}
+<main style="max-width: 28rem; margin: 4rem auto; font-family: -apple-system, system-ui, sans-serif; text-align: center;">
+    <h1>Wrong account</h1>
+    <p>This invitation was issued to <strong>{{ invitation.email }}</strong>, but you're signed in as <strong>{{ current_email }}</strong>.</p>
+
+    <p style="margin-top: 2rem;">
+        <a href="{{ path('app_logout') }}" style="display: inline-block; padding: 0.6rem 1.25rem; background: #222; color: #fff; text-decoration: none;">Sign out and try again</a>
+    </p>
+
+    <p style="margin-top: 1.5rem; font-size: 0.9em; color: #666;">After signing out you'll be returned to the login page; sign in as <code>{{ invitation.email }}</code> and re-open the invitation link.</p>
+</main>
+{% endblock %}
