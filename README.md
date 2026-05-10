@@ -60,7 +60,7 @@ composer tools:update       # bump tool versions and refresh per-tool lockfiles
 
 The PHPStan baseline at `phpstan-baseline.neon` captures pre-existing findings while the codebase catches up. New code should not add to it; the baseline file is regenerated with `composer phpstan -- --generate-baseline` and entries are removed as code is fixed.
 
-The coverage gate fails CI if line coverage drops below `--min=70` (threshold tunable in `composer.json`). Adjust upward as the suite grows.
+The coverage gate fails CI if line coverage drops below `--min=80` (threshold tunable in `composer.json`). Adjust upward as the suite grows.
 
 ## Configuration
 

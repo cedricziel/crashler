@@ -102,7 +102,7 @@
         "test:component": "phpunit --testsuite=component --no-coverage",
         "test:functional": "phpunit --testsuite=functional --no-coverage",
         "test:coverage": "phpunit --testsuite=unit,component,functional",
-        "coverage:check": "bin/coverage-threshold --min=70",
+        "coverage:check": "bin/coverage-threshold --min=80",
         "coverage:gate": [
             "@test:coverage",
             "@coverage:check"
