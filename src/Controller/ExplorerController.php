@@ -53,9 +53,15 @@ final class ExplorerController extends AbstractController
 
         // Resolve the time window. Same parser the read API uses, so a
         // window > the configured cap surfaces the same 400 error.
+        // HTML forms always submit the field even when empty — coerce the
+        // empty string to null so TimeWindow::parse doesn't treat it as
+        // an explicit absolute boundary clashing with `since=<duration>`.
         try {
             $window = TimeWindow::parse(
-                ['since' => $request->query->get('since'), 'until' => $request->query->get('until')],
+                [
+                    'since' => self::nullIfBlank($request->query->get('since')),
+                    'until' => self::nullIfBlank($request->query->get('until')),
+                ],
                 $this->clock,
                 $this->maxTimeWindowDays,
             );
@@ -109,5 +115,14 @@ final class ExplorerController extends AbstractController
         }
 
         return false;
+    }
+
+    private static function nullIfBlank(mixed $value): ?string
+    {
+        if (!\is_string($value)) {
+            return null;
+        }
+
+        return '' === trim($value) ? null : $value;
     }
 }

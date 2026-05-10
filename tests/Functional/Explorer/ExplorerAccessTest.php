@@ -88,6 +88,24 @@ final class ExplorerAccessTest extends DatabaseTestCase
         }
     }
 
+    public function testFormSubmissionWithEmptyUntilStillRenders(): void
+    {
+        $member = $this->createUser('alice@example.com', 'pw-12345');
+        $org = $this->createOrg('acme', 'Acme Corp');
+        $tenant = $this->createTenant($org, 'acme-prod', 'Acme Production');
+        $this->grantTenant($member, $tenant, MembershipRole::Member);
+        $this->client->loginUser($member, 'app');
+
+        // The default form submits `since=1h&until=` (empty). The empty
+        // string MUST be coerced to null before TimeWindow::parse, or the
+        // parser rejects with "mixed time semantics".
+        $this->client->request('GET', '/tenants/acme-prod/explore/logs?since=1h&until=&function=count');
+
+        self::assertResponseIsSuccessful();
+        $body = (string) $this->client->getResponse()->getContent();
+        self::assertStringNotContainsString('mixed time semantics', $body);
+    }
+
     public function testEmptyStateCopyMentionsTimeRange(): void
     {
         $member = $this->createUser('alice@example.com', 'pw-12345');
