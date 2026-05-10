@@ -27,4 +27,14 @@ return [
     '@hotwired/turbo' => [
         'version' => '8.0.23',
     ],
+    '@symfony/ux-live-component' => [
+        'path' => './vendor/symfony/ux-live-component/assets/dist/live_controller.js',
+    ],
+    'uplot' => [
+        'version' => '1.6.32',
+    ],
+    'uplot/dist/uPlot.min.css' => [
+        'version' => '1.6.32',
+        'type' => 'css',
+    ],
 ];

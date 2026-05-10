@@ -1,0 +1,137 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Explore · {{ signal }} · {{ tenant.name }}{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .explorer { max-width: 80rem; margin: 1.5rem auto; padding: 0 1rem; font-family: -apple-system, system-ui, sans-serif; color: #1a1a1a; }
+        .explorer h1 { margin: 0; font-size: 1.25rem; font-weight: 600; }
+        .explorer header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #e5e5e5; }
+        .explorer__tabs { display: flex; gap: 0.25rem; }
+        .explorer__tab { padding: 0.4rem 0.9rem; border: 1px solid transparent; border-radius: 6px; text-decoration: none; color: #555; font-size: 0.9rem; }
+        .explorer__tab:hover { background: #f3f3f3; }
+        .explorer__tab--active { background: #1a1a1a; color: #fff; }
+        .explorer__row { margin-bottom: 1.25rem; }
+        .explorer__row-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 0.4rem; }
+
+        .kpi-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
+        .chart { height: 16rem; background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 1rem; display: flex; align-items: center; justify-content: center; color: #999; font-size: 0.85rem; }
+        .form-row { background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 0.85rem 1rem; }
+        .form-row__group { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+        .form-row__label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #666; min-width: 5rem; }
+        .form-row__chip { padding: 0.25rem 0.6rem; border-radius: 999px; background: #fff; border: 1px solid #d4d4d4; font-size: 0.85rem; }
+        .form-row__action { margin-left: auto; padding: 0.4rem 1rem; background: #1a1a1a; color: #fff; border: none; border-radius: 6px; font-size: 0.9rem; cursor: pointer; }
+        .table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .table th { text-align: left; padding: 0.5rem 0.75rem; background: #fafafa; border-bottom: 1px solid #e5e5e5; font-weight: 600; color: #444; }
+        .table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #f3f3f3; vertical-align: top; }
+        .table .mono { font-family: ui-monospace, SFMono-Regular, monospace; }
+        .table .empty-row td { padding: 1.5rem; text-align: center; color: #888; font-style: italic; }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <main class="explorer">
+        <header>
+            <div>
+                <a href="{{ path('app_tenant_show', {slug: tenant.slug}) }}" style="font-size: 0.85em; color: #666;">← {{ tenant.name }}</a>
+                <h1>Explore · {{ signal }}</h1>
+            </div>
+            <nav class="explorer__tabs" aria-label="Signal">
+                {% for s in ['logs', 'traces', 'metrics'] %}
+                    <a class="explorer__tab {% if s == signal %}explorer__tab--active{% endif %}"
+                       href="{{ path('app_explorer_index', {slug: tenant.slug, signal: s}) }}">{{ s }}</a>
+                {% endfor %}
+            </nav>
+        </header>
+
+        {# KPI row — five tiles #}
+        <section class="explorer__row" aria-label="KPI strip">
+            <div class="kpi-strip">
+                {% for kpi in profile.kpis %}
+                    <twig:Explorer:KpiTile :spec="kpi" state="{{ kpi_state }}"/>
+                {% endfor %}
+            </div>
+        </section>
+
+        {# Chart row #}
+        <section class="explorer__row" aria-label="Chart">
+            <div class="explorer__row-label">Chart</div>
+            <div class="chart" data-controller="chart"
+                 data-chart-endpoint-value="{{ path('app_explorer_index', {slug: tenant.slug, signal: signal}) }}/_chart.json"
+                 data-chart-empty-message-value="No data in this window — try a wider time range.">
+                {% if chart_state == 'empty' %}
+                    <span>No data in this window — try a wider time range.</span>
+                {% elseif chart_state == 'loading' %}
+                    <span aria-busy="true">Loading…</span>
+                {% else %}
+                    <canvas></canvas>
+                {% endif %}
+            </div>
+        </section>
+
+        {# Criteria & aggregation row — passive form for v1; turns into Live in follow-up #}
+        <section class="explorer__row" aria-label="Criteria">
+            <div class="explorer__row-label">Criteria &amp; aggregation</div>
+            <form class="form-row" method="get" action="{{ path('app_explorer_index', {slug: tenant.slug, signal: signal}) }}">
+                <div class="form-row__group">
+                    <span class="form-row__label">Filters</span>
+                    {% for filter in profile.filters %}
+                        <label class="form-row__chip">
+                            {{ filter.label }}:
+                            <input type="text" name="{{ filter.key }}" value="{{ app.request.query.get(filter.key, '') }}" style="border: none; background: transparent; outline: none; font: inherit; width: 8ch;">
+                        </label>
+                    {% endfor %}
+                </div>
+                <div class="form-row__group">
+                    <span class="form-row__label">Time</span>
+                    <label>since <input type="text" name="since" value="{{ app.request.query.get('since', '1h') }}" placeholder="1h or RFC3339" style="font: inherit; padding: 0.2rem 0.4rem;"></label>
+                    <label>until <input type="text" name="until" value="{{ app.request.query.get('until', '') }}" placeholder="(now)" style="font: inherit; padding: 0.2rem 0.4rem;"></label>
+                </div>
+                <div class="form-row__group">
+                    <span class="form-row__label">Aggregation</span>
+                    <label>fn
+                        <select name="function" style="font: inherit; padding: 0.2rem 0.4rem;">
+                            {% for fn in ['count', 'sum', 'avg', 'min', 'max'] %}
+                                <option value="{{ fn }}" {% if fn == app.request.query.get('function', 'count') %}selected{% endif %}>{{ fn }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <label>column
+                        <input type="text" name="column" value="{{ app.request.query.get('column', profile.defaultColumn ?? '') }}" placeholder="—" style="font: inherit; padding: 0.2rem 0.4rem; width: 14ch;">
+                    </label>
+                    <label>groupBy
+                        <input type="text" name="groupBy" value="{{ app.request.query.get('groupBy', profile.defaultGroupBy) }}" style="font: inherit; padding: 0.2rem 0.4rem; width: 14ch;">
+                    </label>
+                    <label>interval
+                        <input type="text" name="interval" value="{{ app.request.query.get('interval', '1m') }}" style="font: inherit; padding: 0.2rem 0.4rem; width: 6ch;">
+                    </label>
+                    <button type="submit" class="form-row__action">Run</button>
+                </div>
+            </form>
+        </section>
+
+        {# Results table row #}
+        <section class="explorer__row" aria-label="Results">
+            <div class="explorer__row-label">Results</div>
+            <table class="table" data-controller="table"
+                   data-table-rows-endpoint-value="{{ path('app_explorer_index', {slug: tenant.slug, signal: signal}) }}/_rows">
+                <thead>
+                    <tr>
+                        {% for col in profile.tableColumns %}
+                            <th style="{% if col.cssWidth %}width: {{ col.cssWidth }};{% endif %}">{{ col.label }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if table_state == 'empty' %}
+                        <tr class="empty-row"><td colspan="{{ profile.tableColumns|length }}">No rows match. Try widening the time range or removing filters.</td></tr>
+                    {% elseif table_state == 'loading' %}
+                        {% for _ in 1..5 %}
+                            <tr aria-busy="true"><td colspan="{{ profile.tableColumns|length }}" style="background: #f7f7f7; height: 1.5rem;">&nbsp;</td></tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </section>
+    </main>
+{% endblock %}

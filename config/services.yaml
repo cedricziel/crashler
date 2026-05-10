@@ -299,6 +299,16 @@ services:
             $writer: '@crashler.parquet_writer.metrics'
             $extractor: '@crashler.attribute_extractor.metrics'
 
+    # Tag every SignalProfile so the explorer registry can iterate them.
+    # _instanceof scopes the tag to implementations of the interface.
+    _instanceof:
+        App\Explorer\SignalProfile:
+            tags: ['crashler.explorer.signal_profile']
+
+    App\Explorer\SignalProfileRegistry:
+        arguments:
+            $profiles: !tagged_iterator crashler.explorer.signal_profile
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 

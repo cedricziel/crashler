@@ -1,0 +1,39 @@
+{% set badArrow = spec.errorIsBad and deltaPercent is not null and deltaPercent > 0 %}
+{% set goodArrow = spec.errorIsBad and deltaPercent is not null and deltaPercent < 0 %}
+
+<div class="kpi-tile kpi-tile--{{ state }}"
+     style="background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 0.75rem 0.9rem; min-height: 5rem; display: flex; flex-direction: column; justify-content: space-between;{% if state == 'loading' %} animation: kpi-pulse 1.4s ease-in-out infinite;{% endif %}"
+     {% if state == 'loading' %}aria-busy="true"{% endif %}
+     data-testid="kpi-tile-{{ spec.id }}">
+
+    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #777;">{{ spec.label }}</div>
+
+    {% if state == 'loading' %}
+        <div style="height: 1.4rem; width: 70%; background: #e5e5e5; border-radius: 3px;"></div>
+        <div style="height: 0.7rem; width: 40%; background: #ececec; border-radius: 3px; margin-top: 0.4rem;"></div>
+    {% elseif state == 'empty' %}
+        <div style="font-size: 1.4rem; font-weight: 600; color: #aaa;">—</div>
+        <div style="font-size: 0.75rem; color: #999;">no data</div>
+    {% elseif state == 'error' %}
+        <div style="font-size: 1.4rem; font-weight: 600; color: #c33;" title="{{ errorMessage|default('Failed to load') }}">?</div>
+        <div style="font-size: 0.75rem; color: #c33;">load failed</div>
+    {% else %}
+        <div style="font-size: 1.4rem; font-weight: 600;">
+            {% if value is null %}—{% else %}
+                {% if value is same as(value|round) %}{{ value|number_format(0, '.', ' ') }}
+                {% else %}{{ value|number_format(2, '.', ' ') }}{% endif %}
+                {% if spec.unit %}<span style="font-size: 0.75rem; font-weight: 400; color: #888;">{{ spec.unit }}</span>{% endif %}
+            {% endif %}
+        </div>
+        <div style="font-size: 0.75rem; color: {% if badArrow %}#c33{% elseif goodArrow %}#3a7{% else %}#888{% endif %};">
+            {% if deltaPercent is null %}
+                —
+            {% else %}
+                {% if deltaPercent > 0 %}▲{% elseif deltaPercent < 0 %}▼{% else %}─{% endif %}
+                {{ (deltaPercent|abs)|number_format(1, '.', '') }} %
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<style>@keyframes kpi-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }</style>
