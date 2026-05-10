@@ -4,11 +4,19 @@ declare(strict_types=1);
 
 namespace DoctrineMigrations;
 
+use Doctrine\DBAL\Platforms\MariaDBPlatform;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
- * Auto-generated Migration: Please modify to your needs!
+ * Initial identity & tenancy schema: user, org, tenant, memberships,
+ * tenant_token, plus messenger_messages.
+ *
+ * Crashler runs Postgres in dev/test and MariaDB in (some) prod
+ * deployments, so each migration carries SQL for both platforms.
+ * Pick the right path via $this->connection->getDatabasePlatform();
+ * abort fast on anything else.
  */
 final class Version20260509223424 extends AbstractMigration
 {
@@ -18,6 +26,44 @@ final class Version20260509223424 extends AbstractMigration
     }
 
     public function up(Schema $schema): void
+    {
+        $platform = $this->connection->getDatabasePlatform();
+
+        if ($platform instanceof PostgreSQLPlatform) {
+            $this->upPostgres();
+
+            return;
+        }
+
+        if ($platform instanceof MariaDBPlatform) {
+            $this->upMariaDb();
+
+            return;
+        }
+
+        $this->abortIf(true, \sprintf('Unsupported database platform for this migration: %s', $platform::class));
+    }
+
+    public function down(Schema $schema): void
+    {
+        $platform = $this->connection->getDatabasePlatform();
+
+        if ($platform instanceof PostgreSQLPlatform) {
+            $this->downPostgres();
+
+            return;
+        }
+
+        if ($platform instanceof MariaDBPlatform) {
+            $this->downMariaDb();
+
+            return;
+        }
+
+        $this->abortIf(true, \sprintf('Unsupported database platform for this migration: %s', $platform::class));
+    }
+
+    private function upPostgres(): void
     {
         $this->addSql(<<<'SQL'
             CREATE TABLE org (
@@ -161,7 +207,7 @@ final class Version20260509223424 extends AbstractMigration
         SQL);
     }
 
-    public function down(Schema $schema): void
+    private function downPostgres(): void
     {
         $this->addSql('ALTER TABLE org_membership DROP CONSTRAINT FK_3A39D41A76ED395');
         $this->addSql('ALTER TABLE org_membership DROP CONSTRAINT FK_3A39D41F4837C1B');
@@ -176,6 +222,138 @@ final class Version20260509223424 extends AbstractMigration
         $this->addSql('DROP TABLE tenant_membership');
         $this->addSql('DROP TABLE tenant_token');
         $this->addSql('DROP TABLE "user"');
+        $this->addSql('DROP TABLE messenger_messages');
+    }
+
+    private function upMariaDb(): void
+    {
+        $this->addSql(<<<'SQL'
+            CREATE TABLE org (
+              id INT AUTO_INCREMENT NOT NULL,
+              slug VARCHAR(32) NOT NULL,
+              name VARCHAR(128) NOT NULL,
+              created_at DATETIME NOT NULL,
+              UNIQUE INDEX uniq_org_slug (slug),
+              PRIMARY KEY (id)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`
+        SQL);
+        $this->addSql(<<<'SQL'
+            CREATE TABLE org_membership (
+              id INT AUTO_INCREMENT NOT NULL,
+              role VARCHAR(16) NOT NULL,
+              created_at DATETIME NOT NULL,
+              user_id INT NOT NULL,
+              org_id INT NOT NULL,
+              INDEX IDX_3A39D41A76ED395 (user_id),
+              INDEX IDX_3A39D41F4837C1B (org_id),
+              UNIQUE INDEX uniq_org_membership_user_org (user_id, org_id),
+              PRIMARY KEY (id)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`
+        SQL);
+        $this->addSql(<<<'SQL'
+            CREATE TABLE tenant (
+              id INT AUTO_INCREMENT NOT NULL,
+              slug VARCHAR(32) NOT NULL,
+              name VARCHAR(128) NOT NULL,
+              created_at DATETIME NOT NULL,
+              org_id INT NOT NULL,
+              INDEX IDX_4E59C462F4837C1B (org_id),
+              UNIQUE INDEX uniq_tenant_slug (slug),
+              PRIMARY KEY (id)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`
+        SQL);
+        $this->addSql(<<<'SQL'
+            CREATE TABLE tenant_membership (
+              id INT AUTO_INCREMENT NOT NULL,
+              role VARCHAR(16) NOT NULL,
+              created_at DATETIME NOT NULL,
+              user_id INT NOT NULL,
+              tenant_id INT NOT NULL,
+              INDEX IDX_7EBE842DA76ED395 (user_id),
+              INDEX IDX_7EBE842D9033212A (tenant_id),
+              UNIQUE INDEX uniq_tenant_membership_user_tenant (user_id, tenant_id),
+              PRIMARY KEY (id)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`
+        SQL);
+        $this->addSql(<<<'SQL'
+            CREATE TABLE tenant_token (
+              id INT AUTO_INCREMENT NOT NULL,
+              name VARCHAR(128) NOT NULL,
+              hash VARCHAR(64) NOT NULL,
+              expires_at DATETIME DEFAULT NULL,
+              last_used_at DATETIME DEFAULT NULL,
+              created_at DATETIME NOT NULL,
+              tenant_id INT NOT NULL,
+              created_by_user_id INT DEFAULT NULL,
+              INDEX IDX_40A74D0F9033212A (tenant_id),
+              INDEX IDX_40A74D0F7D182D95 (created_by_user_id),
+              UNIQUE INDEX uniq_tenant_token_hash (hash),
+              PRIMARY KEY (id)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`
+        SQL);
+        $this->addSql(<<<'SQL'
+            CREATE TABLE `user` (
+              id INT AUTO_INCREMENT NOT NULL,
+              email VARCHAR(180) NOT NULL,
+              email_lower VARCHAR(180) NOT NULL,
+              roles JSON NOT NULL,
+              password VARCHAR(255) NOT NULL,
+              created_at DATETIME NOT NULL,
+              UNIQUE INDEX uniq_user_email_lower (email_lower),
+              PRIMARY KEY (id)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`
+        SQL);
+        $this->addSql(<<<'SQL'
+            CREATE TABLE messenger_messages (
+              id BIGINT AUTO_INCREMENT NOT NULL,
+              body LONGTEXT NOT NULL,
+              headers LONGTEXT NOT NULL,
+              queue_name VARCHAR(190) NOT NULL,
+              created_at DATETIME NOT NULL,
+              available_at DATETIME NOT NULL,
+              delivered_at DATETIME DEFAULT NULL,
+              INDEX IDX_75EA56E0FB7336F0E3BD61CE16BA31DBBF396750 (queue_name, available_at, delivered_at, id),
+              PRIMARY KEY (id)
+            ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci`
+        SQL);
+        $this->addSql(<<<'SQL'
+            ALTER TABLE org_membership ADD CONSTRAINT FK_3A39D41A76ED395 FOREIGN KEY (user_id) REFERENCES `user` (id) ON DELETE CASCADE
+        SQL);
+        $this->addSql(<<<'SQL'
+            ALTER TABLE org_membership ADD CONSTRAINT FK_3A39D41F4837C1B FOREIGN KEY (org_id) REFERENCES org (id) ON DELETE RESTRICT
+        SQL);
+        $this->addSql(<<<'SQL'
+            ALTER TABLE tenant ADD CONSTRAINT FK_4E59C462F4837C1B FOREIGN KEY (org_id) REFERENCES org (id) ON DELETE RESTRICT
+        SQL);
+        $this->addSql(<<<'SQL'
+            ALTER TABLE tenant_membership ADD CONSTRAINT FK_7EBE842DA76ED395 FOREIGN KEY (user_id) REFERENCES `user` (id) ON DELETE CASCADE
+        SQL);
+        $this->addSql(<<<'SQL'
+            ALTER TABLE tenant_membership ADD CONSTRAINT FK_7EBE842D9033212A FOREIGN KEY (tenant_id) REFERENCES tenant (id) ON DELETE RESTRICT
+        SQL);
+        $this->addSql(<<<'SQL'
+            ALTER TABLE tenant_token ADD CONSTRAINT FK_40A74D0F9033212A FOREIGN KEY (tenant_id) REFERENCES tenant (id) ON DELETE CASCADE
+        SQL);
+        $this->addSql(<<<'SQL'
+            ALTER TABLE tenant_token ADD CONSTRAINT FK_40A74D0F7D182D95 FOREIGN KEY (created_by_user_id) REFERENCES `user` (id) ON DELETE SET NULL
+        SQL);
+    }
+
+    private function downMariaDb(): void
+    {
+        $this->addSql('ALTER TABLE org_membership DROP FOREIGN KEY FK_3A39D41A76ED395');
+        $this->addSql('ALTER TABLE org_membership DROP FOREIGN KEY FK_3A39D41F4837C1B');
+        $this->addSql('ALTER TABLE tenant DROP FOREIGN KEY FK_4E59C462F4837C1B');
+        $this->addSql('ALTER TABLE tenant_membership DROP FOREIGN KEY FK_7EBE842DA76ED395');
+        $this->addSql('ALTER TABLE tenant_membership DROP FOREIGN KEY FK_7EBE842D9033212A');
+        $this->addSql('ALTER TABLE tenant_token DROP FOREIGN KEY FK_40A74D0F9033212A');
+        $this->addSql('ALTER TABLE tenant_token DROP FOREIGN KEY FK_40A74D0F7D182D95');
+        $this->addSql('DROP TABLE org');
+        $this->addSql('DROP TABLE org_membership');
+        $this->addSql('DROP TABLE tenant');
+        $this->addSql('DROP TABLE tenant_membership');
+        $this->addSql('DROP TABLE tenant_token');
+        $this->addSql('DROP TABLE `user`');
         $this->addSql('DROP TABLE messenger_messages');
     }
 }
