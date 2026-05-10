@@ -1,6 +1,6 @@
 ## MODIFIED Requirements
 
-### Requirement: Tenant configuration source
+### Requirement: Tenant configuration file
 
 The system SHALL load tenant identities and authorized token hashes from **two sources**: the `tenant` and `tenant_token` tables (primary), and the `crashler.tenants` Symfony configuration tree (fallback). Both sources SHALL be assembled at request time into a single in-memory `TenantRegistry`. On hash collision between the two sources, the database entry SHALL win and a WARNING SHALL be logged naming both tenants. Within a single source, duplicate hashes SHALL still hard-fail at boot or at request-assembly time. The system SHALL NOT store plaintext tokens at rest in any form (hashed-only persistence applies equally to YAML and DB).
 
