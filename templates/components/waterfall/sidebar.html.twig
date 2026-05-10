@@ -1,0 +1,86 @@
+{# Live Component: Waterfall:Sidebar.
+   Initial render: empty state. Once the user clicks a span row the
+   selectSpan LiveAction fires, this template re-renders with the
+   selected span's detail. #}
+<aside {{ attributes }} style="padding: 1rem; background: #fafafa; border-left: 1px solid #e5e5e5; height: 100%; overflow-y: auto;">
+    {% set span = this.span %}
+    {% if span is null %}
+        <div style="font-size: 0.85rem; color: #888; padding: 1rem; text-align: center; line-height: 1.5;">
+            ← select a span to see attributes, status, events, resource.
+        </div>
+    {% else %}
+        <header style="margin-bottom: 1rem;">
+            <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 0.25rem;">{{ span.service|default('—') }}</div>
+            <h2 style="font-size: 1rem; margin: 0; font-weight: 600; word-break: break-all;">{{ span.name|default('(no name)') }}</h2>
+            <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #444;">
+                {% set isError = span.statusCode == 2 %}
+                {% if isError %}
+                    <span style="color: #c33; font-weight: 600;">⚠ ERROR</span>
+                {% elseif span.statusText %}
+                    <span style="color: #666;">{{ span.statusText }}</span>
+                {% else %}
+                    <span style="color: #aaa;">UNSET</span>
+                {% endif %}
+                <span style="margin-left: 0.5rem; color: #666;">· {{ span.durationMs|number_format(2, '.', '') }} ms</span>
+            </div>
+        </header>
+
+        <section style="margin-bottom: 1rem;">
+            <h3 style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin: 0 0 0.4rem 0;">Span attributes</h3>
+            {% if span.attributes|length == 0 %}
+                <div style="font-size: 0.8rem; color: #aaa; font-style: italic;">No attributes.</div>
+            {% else %}
+                <dl style="margin: 0; font-size: 0.8rem; line-height: 1.6;">
+                    {% for k, v in span.attributes %}
+                        <dt style="color: #666; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.75rem;">{{ k }}</dt>
+                        <dd style="margin: 0 0 0.5rem 0; color: #1a1a1a; word-break: break-all;">{{ v|length > 80 ? v|slice(0, 80) ~ '…' : v }}</dd>
+                    {% endfor %}
+                </dl>
+            {% endif %}
+        </section>
+
+        {% if span.statusMessage %}
+            <section style="margin-bottom: 1rem;">
+                <h3 style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin: 0 0 0.4rem 0;">Status message</h3>
+                <div style="font-size: 0.8rem; color: #c33; word-break: break-all;">{{ span.statusMessage }}</div>
+            </section>
+        {% endif %}
+
+        {% if span.events|length > 0 %}
+            <section style="margin-bottom: 1rem;">
+                <h3 style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin: 0 0 0.4rem 0;">Events ({{ span.events|length }})</h3>
+                <ul style="margin: 0; padding: 0; list-style: none; font-size: 0.78rem;">
+                    {% for ev in span.events|slice(0, 5) %}
+                        <li style="margin-bottom: 0.5rem; padding: 0.4rem; background: #fff; border: 1px solid #e5e5e5; border-radius: 3px;">
+                            <code style="display: block; word-break: break-all; line-height: 1.4;">{{ ev|json_encode|slice(0, 200) }}</code>
+                        </li>
+                    {% endfor %}
+                    {% if span.events|length > 5 %}
+                        <li style="font-size: 0.75rem; color: #888; font-style: italic;">+{{ span.events|length - 5 }} more</li>
+                    {% endif %}
+                </ul>
+            </section>
+        {% endif %}
+
+        <section style="margin-bottom: 1rem;">
+            <h3 style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin: 0 0 0.4rem 0;">Resource</h3>
+            {% if span.resourceAttributes|length == 0 %}
+                <div style="font-size: 0.8rem; color: #aaa; font-style: italic;">No resource attributes.</div>
+            {% else %}
+                <dl style="margin: 0; font-size: 0.8rem; line-height: 1.6;">
+                    {% for k, v in span.resourceAttributes %}
+                        <dt style="color: #666; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.75rem;">{{ k }}</dt>
+                        <dd style="margin: 0 0 0.5rem 0; color: #1a1a1a; word-break: break-all;">{{ v }}</dd>
+                    {% endfor %}
+                </dl>
+            {% endif %}
+        </section>
+
+        <section>
+            <h3 style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin: 0 0 0.4rem 0;">Links</h3>
+            {% if this.logsDrillUrl %}
+                <a href="{{ this.logsDrillUrl }}" style="display: inline-block; padding: 0.3rem 0.6rem; background: #fff; border: 1px solid #d4d4d4; border-radius: 4px; font-size: 0.8rem; color: #06c; text-decoration: none;">→ logs (this trace, ±5s)</a>
+            {% endif %}
+        </section>
+    {% endif %}
+</aside>

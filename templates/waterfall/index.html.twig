@@ -1,0 +1,77 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Trace · {{ trace.rootName|default(trace.traceId) }} · {{ tenant.name }}{% endblock %}
+
+{% block stylesheets %}
+    <style>
+        .waterfall-page { max-width: 100rem; margin: 1.5rem auto; padding: 0 1rem; font-family: -apple-system, system-ui, sans-serif; color: #1a1a1a; }
+        .waterfall-page header { margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #e5e5e5; }
+        .waterfall-page h1 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+        .waterfall-layout { display: grid; grid-template-columns: 80% 20%; gap: 0; min-height: 30rem; border: 1px solid #e5e5e5; border-radius: 8px; background: #fff; }
+        .waterfall-tree { padding: 0.5rem 0; overflow-x: auto; }
+        .axis { display: flex; justify-content: space-between; padding: 0.25rem 1rem 0.5rem; font-size: 0.7rem; color: #888; border-bottom: 1px solid #f0f0f0; margin-bottom: 0.5rem; font-family: ui-monospace, SFMono-Regular, monospace; }
+        .span-row { display: flex; align-items: center; padding: 0.2rem 0.5rem; border-bottom: 1px solid #f6f6f6; gap: 0.5rem; cursor: pointer; }
+        .span-row:hover { background: #f8f9fa; }
+        .span-row[aria-selected="true"] { background: #fef3c7; }
+        .span-row__label { flex: 0 0 28%; min-width: 14rem; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: ui-monospace, SFMono-Regular, monospace; }
+        .span-row__service { color: #666; font-size: 0.72rem; margin-right: 0.25rem; }
+        .span-row__bar-track { flex: 1; position: relative; height: 1.2rem; background: #f7f7f7; border-radius: 2px; overflow: hidden; }
+        .span-row__bar { position: absolute; top: 2px; bottom: 2px; background: #4f46e5; border-radius: 2px; min-width: 2px; }
+        .span-row__bar--error { background: #c33; }
+        .span-row__duration { flex: 0 0 6rem; text-align: right; font-size: 0.78rem; color: #444; font-family: ui-monospace, SFMono-Regular, monospace; }
+    </style>
+{% endblock %}
+
+{% block body %}
+    <main class="waterfall-page">
+        <header>
+            <a href="{{ path('app_explorer_index', {slug: tenant.slug, signal: 'traces'}) }}" style="font-size: 0.85em; color: #666;">← traces explorer · {{ tenant.name }}</a>
+            <h1 style="margin-top: 0.5rem;">{{ trace.rootName|default('(unnamed)') }}</h1>
+            <div style="margin-top: 0.25rem; font-size: 0.85rem; color: #666;">
+                <code>{{ trace.traceId }}</code> ·
+                {{ trace.service|default('—') }} ·
+                {{ trace.spans|length }} span{{ trace.spans|length == 1 ? '' : 's' }}
+                {% if trace.truncatedCount > 0 %}
+                    <span style="color: #c33;">· +{{ trace.truncatedCount }} more (truncated; only first {{ trace.spans|length }} rendered)</span>
+                {% endif %}
+                · {{ trace.durationMs|number_format(2, '.', '') }} ms
+            </div>
+        </header>
+
+        <div class="waterfall-layout">
+            <section class="waterfall-tree">
+                <div class="axis">
+                    <span>0 ms</span>
+                    <span>{{ (trace.durationMs / 4)|number_format(2, '.', '') }} ms</span>
+                    <span>{{ (trace.durationMs / 2)|number_format(2, '.', '') }} ms</span>
+                    <span>{{ (trace.durationMs * 3 / 4)|number_format(2, '.', '') }} ms</span>
+                    <span>{{ trace.durationMs|number_format(2, '.', '') }} ms</span>
+                </div>
+                {% for span in trace.spans %}
+                    {% set isError = span.statusCode == 2 %}
+                    <div class="span-row"
+                         data-span-id="{{ span.spanId }}"
+                         data-action="live#action"
+                         data-live-action-param="selectSpan"
+                         data-live-span-id-param="{{ span.spanId }}"
+                         data-live-target="#waterfall-sidebar">
+                        <div class="span-row__label" style="padding-left: {{ span.depth * 1.2 }}rem;">
+                            {% if span.depth > 0 %}<span style="color: #ccc;">↳ </span>{% endif %}<span class="span-row__service">{{ span.service }}</span>{{ span.name }}
+                        </div>
+                        <div class="span-row__bar-track">
+                            <div class="span-row__bar {% if isError %}span-row__bar--error{% endif %}"
+                                 style="left: {{ span.leftPct }}%; width: {{ span.widthPct }}%;"
+                                 title="{{ span.name }} · {{ span.durationMs|number_format(2, '.', '') }} ms"></div>
+                        </div>
+                        <div class="span-row__duration">{{ span.durationMs|number_format(2, '.', '') }} ms</div>
+                    </div>
+                {% endfor %}
+            </section>
+
+            <twig:Waterfall:Sidebar
+                tenantSlug="{{ tenant.slug }}"
+                traceId="{{ trace.traceId }}"
+                id="waterfall-sidebar"/>
+        </div>
+    </main>
+{% endblock %}

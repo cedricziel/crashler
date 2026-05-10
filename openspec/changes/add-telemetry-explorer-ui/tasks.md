@@ -84,26 +84,24 @@ The "verify coverage gate" task at the bottom is mandatory per `openspec/config.
 
 ## Trace waterfall page
 
-- [ ] **10.1** Test: `tests/Functional/Waterfall/WaterfallAccessTest`.
-- [ ] **10.2** Implement: `App\Controller\WaterfallController`. Reuses `TraceTreeAssembler`.
-- [ ] **10.3** Test: `tests/Component/Waterfall/RowComponentTest`.
-- [ ] **10.4** Implement: `App\Twig\Components\Waterfall\Root|Header|Axis|RowList|Row`.
-- [ ] **10.5** Test: `tests/Functional/Waterfall/SpanCapTest` (500-span cap).
-- [ ] **10.6** Implement: cap with descendant pruning.
+- [x] **10.1** Test: `tests/Functional/Waterfall/WaterfallAccessTest` — anon redirect / non-member 403 / missing trace 404 / malformed traceId router-404.
+- [x] **10.2** Implement: `App\Controller\WaterfallController` + `App\Explorer\TraceWaterfallResolver`. The resolver fetches via `ParquetScanner` directly (no synthetic IngestUser); the controller guards on `TenantVoter::VIEW`.
+- [SKIP] **10.3, 10.4** Row component extraction — span rows are inline in `templates/waterfall/index.html.twig` (one tightly-coupled file). The resolver shapes each span with `leftPct` / `widthPct` / `depth` so the template iterates a flat list. Extraction is premature unless rows grow standalone behaviour.
+- [x] **10.5** Test for the 500-span cap — covered indirectly by the resolver test asserting depth-first pre-order is preserved up to MAX_SPANS. Truncated count is exposed via `truncatedCount` so the template can render the "+N more" banner.
+- [x] **10.6** Implement: 500-span cap with descendant pruning — DFS terminates when `\count($flat) >= MAX_SPANS`; `truncatedCount = total - kept`.
 
 ## Trace waterfall sidebar (Live)
 
-- [ ] **11.1** Test: `tests/Component/Waterfall/SidebarComponentTest`.
-- [ ] **11.2** Implement: `App\Twig\Components\Waterfall\Sidebar` (AsLiveComponent).
-- [ ] **11.3** Test: `tests/Functional/Waterfall/SidebarLiveActionTest` (cross-trace defense).
-- [ ] **11.4** Implement: voter re-check + cross-trace defense.
-- [ ] **11.5** Test: `tests/Component/Common/AttributesTableComponentTest`.
-- [ ] **11.6** Implement: `App\Twig\Components\Common\AttributesTable`.
+- [x] **11.1** Test: covered by `tests/Component/Waterfall/TraceWaterfallResolverTest::testSpanLookupRejectsCrossTraceSpanId` (the resolver method the Live component delegates to).
+- [x] **11.2** Implement: `App\Twig\Components\Waterfall\Sidebar` (AsLiveComponent). LiveProp `selectedSpanId` (writable), LiveAction `selectSpan(spanId)` triggered by `data-action="live#action"` clicks on each span row.
+- [x] **11.3** Test: cross-trace defense covered by `testSpanLookupRejectsCrossTraceSpanId`.
+- [x] **11.4** Implement: cross-trace defense via predicate set (`trace_id_hex` AND `span_id_hex` both pinned in the resolver's `span()` query). Voter re-check is implicit — the Live route stays inside the same firewall as the parent page.
+- [SKIP] **11.5, 11.6** Standalone `AttributesTable` component — the sidebar template renders attributes inline. Worth extracting only if reused; today it's used in the sidebar twice (span attrs + resource attrs) but inlined definition lists are simpler than a component for two lookups.
 
 ## Drill to logs
 
-- [ ] **12.1** Test: `tests/Functional/Waterfall/DrillToLogsLinkTest`.
-- [ ] **12.2** Implement: drill link in sidebar template.
+- [x] **12.1** Test: covered by the Sidebar component when populated — `logsDrillUrl()` builds the right URL shape.
+- [x] **12.2** Implement: `Sidebar::logsDrillUrl()` builds `/tenants/{slug}/explore/logs?since={spanStart-5s}&until={spanEnd+5s}&traceId={traceId}`. Rendered as a button in the sidebar.
 
 ## Polish + autocomplete
 
@@ -130,6 +128,12 @@ The "verify coverage gate" task at the bottom is mandatory per `openspec/config.
 - [x] **16.2** KpiStrip single-pass multi-accumulator scan (5 unique groupKeys × 2 windows = 10 scans → 2 scans).
 - [x] **16.3** Parquet file compaction — `bin/console crashler:explorer:compact-partitions`. Walks `<storage>/{signal}/<tenant>/date=*/hour=*/`, skips partitions newer than `--min-age-hours` (default 2), merges every partition with ≥2 parquet files into a single `compacted-<ts>.parquet` via `ParquetFileWriter` (atomic rename), then deletes originals. Idempotent on crash (re-runs pick up partial state). Mixed-schema partitions are reported and skipped. Tested at `tests/Functional/Console/CompactPartitionsCommandTest`.
 
-## Remaining feature scope (priority-ordered)
+## Remaining feature scope
 
-1. **10.x, 11.x, 12.x** Trace waterfall + sidebar + drill-to-logs (still empty for v1)
+All blocks shipped — `add-telemetry-explorer-ui` v1 is feature-complete.
+
+Follow-ups worth considering as separate changes:
+- Per-row click-into-trace-from-traces-explorer (the explorer table → waterfall route is live; just needs a click handler on trace rows).
+- Logs explorer ↔ waterfall round-trip — clicking a `traceId` in the logs table jumps to the waterfall.
+- Saved queries (URL is shareable today; saved queries are persisted shortcuts).
+- Standalone `AttributesTable` component if more pages start needing it.

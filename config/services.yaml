@@ -319,6 +319,15 @@ services:
             $storageRoot: '%crashler.storage_root%'
             $configuredCompressionName: '%crashler.compression%'
 
+    App\Explorer\TraceWaterfallResolver:
+        arguments:
+            $spanLookupWindowHours: '%crashler.read.span_lookup_window_hours%'
+
+    App\Controller\WaterfallController:
+        arguments:
+            $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
+        tags: ['controller.service_arguments']
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
