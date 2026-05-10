@@ -40,8 +40,13 @@ when@prod:
                 channels: ["!deprecation"]
                 buffer_size: 50 # How many messages should be saved? Prevent memory leaks
             nested:
+                # Shared hosts (All-Inkl) have no accessible stderr/apache log;
+                # write a JSON-formatted prod log to %kernel.logs_dir% so the
+                # operator can tail it via SSH. Symfony rotates by default
+                # via the monolog cookbook's recipe; we'll add log-rotate
+                # later if size becomes an issue.
                 type: stream
-                path: php://stderr
+                path: "%kernel.logs_dir%/%kernel.environment%.log"
                 level: debug
                 formatter: monolog.formatter.json
             console:
@@ -51,5 +56,5 @@ when@prod:
             deprecation:
                 type: stream
                 channels: [deprecation]
-                path: php://stderr
+                path: "%kernel.logs_dir%/deprecation.log"
                 formatter: monolog.formatter.json
