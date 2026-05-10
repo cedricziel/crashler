@@ -25,15 +25,16 @@ final readonly class LogsProfile implements SignalProfile
     public function filters(): array
     {
         return [
-            new FilterDefinition('service', 'Service', FilterDefinition::KIND_TEXT),
-            new FilterDefinition('environment', 'Environment', FilterDefinition::KIND_TEXT),
-            new FilterDefinition('host', 'Host', FilterDefinition::KIND_TEXT),
+            new FilterDefinition('service', 'Service', FilterDefinition::KIND_TEXT, parquetColumn: 'resource_service_name'),
+            new FilterDefinition('environment', 'Environment', FilterDefinition::KIND_TEXT, parquetColumn: 'resource_deployment_environment'),
+            new FilterDefinition('host', 'Host', FilterDefinition::KIND_TEXT, parquetColumn: 'resource_host_name'),
             new FilterDefinition(
                 'severity',
                 'Severity',
                 FilterDefinition::KIND_ENUM,
                 ['TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],
             ),
+            // trace_id is high-cardinality (≈1 per request) — no autocomplete.
             new FilterDefinition('traceId', 'Trace ID', FilterDefinition::KIND_TEXT),
         ];
     }

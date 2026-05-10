@@ -25,15 +25,16 @@ final readonly class TracesProfile implements SignalProfile
     public function filters(): array
     {
         return [
-            new FilterDefinition('service', 'Service', FilterDefinition::KIND_TEXT),
-            new FilterDefinition('environment', 'Environment', FilterDefinition::KIND_TEXT),
-            new FilterDefinition('span_name', 'Span name', FilterDefinition::KIND_TEXT),
+            new FilterDefinition('service', 'Service', FilterDefinition::KIND_TEXT, parquetColumn: 'resource_service_name'),
+            new FilterDefinition('environment', 'Environment', FilterDefinition::KIND_TEXT, parquetColumn: 'resource_deployment_environment'),
+            new FilterDefinition('span_name', 'Span name', FilterDefinition::KIND_TEXT, parquetColumn: 'span_name'),
             new FilterDefinition(
                 'status',
                 'Status',
                 FilterDefinition::KIND_ENUM,
                 ['UNSET', 'OK', 'ERROR'],
             ),
+            // trace_id is per-request unique — autocomplete would be useless.
             new FilterDefinition('trace_id', 'Trace ID', FilterDefinition::KIND_TEXT),
         ];
     }

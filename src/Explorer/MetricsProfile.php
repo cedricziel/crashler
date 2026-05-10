@@ -25,9 +25,9 @@ final readonly class MetricsProfile implements SignalProfile
     public function filters(): array
     {
         return [
-            new FilterDefinition('service', 'Service', FilterDefinition::KIND_TEXT),
-            new FilterDefinition('environment', 'Environment', FilterDefinition::KIND_TEXT),
-            new FilterDefinition('metric_name', 'Metric', FilterDefinition::KIND_TEXT),
+            new FilterDefinition('service', 'Service', FilterDefinition::KIND_TEXT, parquetColumn: 'resource_service_name'),
+            new FilterDefinition('environment', 'Environment', FilterDefinition::KIND_TEXT, parquetColumn: 'resource_deployment_environment'),
+            new FilterDefinition('metric_name', 'Metric', FilterDefinition::KIND_TEXT, parquetColumn: 'metric_name'),
             new FilterDefinition(
                 'metric_type',
                 'Type',

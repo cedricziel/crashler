@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Explorer\AutocompleteResolver;
 use App\Explorer\KpiBundleResolver;
 use App\Explorer\KpiValue;
 use App\Explorer\SignalProfileRegistry;
@@ -25,6 +26,7 @@ final class ExplorerController extends AbstractController
         private readonly SignalProfileRegistry $profiles,
         private readonly KpiBundleResolver $kpiResolver,
         private readonly TableResultResolver $tableResolver,
+        private readonly AutocompleteResolver $autocomplete,
         private readonly ClockInterface $clock,
         private readonly int $maxTimeWindowDays,
     ) {
@@ -87,6 +89,22 @@ final class ExplorerController extends AbstractController
             ? 'error'
             : ([] === $rows ? 'empty' : 'populated');
 
+        // Filter autocomplete: per-text-filter top-N distinct values from
+        // the same time window. Scans are cheap (groupBy + count) and
+        // fail-soft to []. Each scan is at most cardinality-cap rows.
+        $filterSuggestions = [];
+        if (null !== $window) {
+            foreach ($profile->filters() as $filter) {
+                if (!$filter->shouldAutocomplete()) {
+                    continue;
+                }
+                $values = $this->autocomplete->topValues($tenant->getSlug(), $signal, $filter->parquetColumn, $window);
+                if ([] !== $values) {
+                    $filterSuggestions[$filter->key] = $values;
+                }
+            }
+        }
+
         // Chart endpoint lands in a follow-up; until then we render its
         // empty-state copy. The data shape passed to the template is
         // contract-stable.
@@ -99,6 +117,7 @@ final class ExplorerController extends AbstractController
             'chart_state' => 'empty',
             'rows' => $rows,
             'table_state' => $tableState,
+            'filter_suggestions' => $filterSuggestions,
             'window_error' => $windowError,
         ]);
     }

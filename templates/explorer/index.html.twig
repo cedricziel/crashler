@@ -80,10 +80,21 @@
                 <div class="form-row__group">
                     <span class="form-row__label">Filters</span>
                     {% for filter in profile.filters %}
+                        {% set listId = 'filter-options-' ~ filter.key %}
+                        {% set options = filter.suggestions|merge(filter_suggestions[filter.key]|default([])) %}
                         <label class="form-row__chip">
                             {{ filter.label }}:
-                            <input type="text" name="{{ filter.key }}" value="{{ app.request.query.get(filter.key, '') }}" style="border: none; background: transparent; outline: none; font: inherit; width: 8ch;">
+                            <input type="text" name="{{ filter.key }}"
+                                   value="{{ app.request.query.get(filter.key, '') }}"
+                                   {% if options|length > 0 %}list="{{ listId }}"{% endif %}
+                                   placeholder="{% if options|length > 0 %}{{ options|first }}…{% endif %}"
+                                   style="border: none; background: transparent; outline: none; font: inherit; width: 12ch;">
                         </label>
+                        {% if options|length > 0 %}
+                            <datalist id="{{ listId }}">
+                                {% for v in options %}<option value="{{ v }}">{% endfor %}
+                            </datalist>
+                        {% endif %}
                     {% endfor %}
                 </div>
                 <div class="form-row__group">
