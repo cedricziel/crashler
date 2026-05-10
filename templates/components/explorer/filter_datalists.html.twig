@@ -1,0 +1,12 @@
+{# Live Component: FilterDatalists.
+   Renders nothing visible — emits one <datalist> per filter that has
+   options, keyed by `filter-options-{key}`. The form's <input list="…">
+   references find these by id even when the datalists are elsewhere in
+   the document. #}
+<div {{ attributes }} hidden>
+    {% for key, options in this.suggestions %}
+        <datalist id="filter-options-{{ key }}">
+            {% for v in options %}<option value="{{ v }}">{% endfor %}
+        </datalist>
+    {% endfor %}
+</div>

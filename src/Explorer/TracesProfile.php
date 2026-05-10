@@ -15,10 +15,10 @@ final readonly class TracesProfile implements SignalProfile
     {
         return [
             new KpiSpec('total', 'Spans', 'count'),
-            new KpiSpec('avg_dur', 'Avg dur', 'avg', 'duration_ns', 'ms'),
-            new KpiSpec('p95_dur', 'p95 dur', 'max', 'duration_ns', 'ms'),
+            new KpiSpec('avg_dur', 'Avg dur', 'avg', 'duration_nano', 'ms'),
+            new KpiSpec('p95_dur', 'p95 dur', 'max', 'duration_nano', 'ms'),
             new KpiSpec('errors', 'Errors', 'count', 'status_code', null, errorIsBad: true),
-            new KpiSpec('uniq_routes', 'Routes', 'count', 'span_name'),
+            new KpiSpec('uniq_routes', 'Routes', 'count', 'name'),
         ];
     }
 
@@ -27,7 +27,7 @@ final readonly class TracesProfile implements SignalProfile
         return [
             new FilterDefinition('service', 'Service', FilterDefinition::KIND_TEXT, parquetColumn: 'resource_service_name'),
             new FilterDefinition('environment', 'Environment', FilterDefinition::KIND_TEXT, parquetColumn: 'resource_deployment_environment'),
-            new FilterDefinition('span_name', 'Span name', FilterDefinition::KIND_TEXT, parquetColumn: 'span_name'),
+            new FilterDefinition('span_name', 'Span name', FilterDefinition::KIND_TEXT, parquetColumn: 'name'),
             new FilterDefinition(
                 'status',
                 'Status',
@@ -44,20 +44,20 @@ final readonly class TracesProfile implements SignalProfile
         return [
             new TableColumn('time', 'Time', '14ch', monospace: true),
             new TableColumn('resource_service_name', 'Service', '12ch'),
-            new TableColumn('span_name', 'Root span'),
-            new TableColumn('status_code_text', 'Status', '8ch'),
-            new TableColumn('duration_ns', 'Duration', '10ch', monospace: true),
+            new TableColumn('name', 'Span', null),
+            new TableColumn('status_text', 'Status', '8ch'),
+            new TableColumn('duration_nano', 'Duration', '10ch', monospace: true),
         ];
     }
 
     public function defaultGroupBy(): string
     {
-        return 'span_name';
+        return 'name';
     }
 
     public function defaultColumn(): string
     {
-        return 'duration_ns';
+        return 'duration_nano';
     }
 
     public function rowClickRoute(): string

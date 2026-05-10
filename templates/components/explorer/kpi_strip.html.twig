@@ -1,0 +1,17 @@
+{# Live Component: KpiStrip #}
+{# Initial deferred render shows five skeleton tiles. Once the browser
+   hydrates this component, $values is populated and tiles flip to
+   their populated state. #}
+<div {{ attributes }} class="kpi-strip" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem;">
+    {% if this.tenantSlug == '' or this.windowUntilNs == 0 %}
+        {# pre-hydration: skeleton tiles #}
+        {% for spec in this.kpis %}
+            <twig:Explorer:KpiTile :spec="spec" state="loading"/>
+        {% endfor %}
+    {% else %}
+        {% for kv in this.values %}
+            {% set state = kv.value is not null ? 'populated' : 'empty' %}
+            <twig:Explorer:KpiTile :spec="kv.spec" state="{{ state }}" :value="kv.value" :deltaPercent="kv.deltaPercent"/>
+        {% endfor %}
+    {% endif %}
+</div>

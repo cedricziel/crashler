@@ -14,7 +14,6 @@
         .explorer__row { margin-bottom: 1.25rem; }
         .explorer__row-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 0.4rem; }
 
-        .kpi-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.75rem; }
         .chart { height: 16rem; background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 1rem; display: flex; align-items: center; justify-content: center; color: #999; font-size: 0.85rem; }
         .form-row { background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 0.85rem 1rem; }
         .form-row__group { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
@@ -44,36 +43,36 @@
             </nav>
         </header>
 
-        {# KPI row — five tiles #}
+        {# KPI row — deferred. Initial paint shows skeleton tiles, the
+           browser then hydrates this Live Component in parallel with
+           the chart and result table below. #}
         <section class="explorer__row" aria-label="KPI strip">
             {% if window_error %}
                 <div role="alert" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 0.5rem 0.75rem; color: #991b1b; font-size: 0.85rem; margin-bottom: 0.5rem;">{{ window_error }}</div>
             {% endif %}
-            <div class="kpi-strip">
-                {% for kv in kpi_values %}
-                    {% set tileState = kv.value is not null ? 'populated' : kpi_state %}
-                    <twig:Explorer:KpiTile :spec="kv.spec" state="{{ tileState }}" :value="kv.value" :deltaPercent="kv.deltaPercent"/>
-                {% endfor %}
-            </div>
+            <twig:Explorer:KpiStrip
+                tenantSlug="{{ tenant.slug }}"
+                signal="{{ signal }}"
+                :windowSinceNs="window_since_ns"
+                :windowUntilNs="window_until_ns"
+                defer/>
         </section>
 
-        {# Chart row #}
+        {# Chart row — uPlot canvas. Stimulus chart_controller fetches
+           /…/_chart.json on connect and renders. The controller emits
+           explorer:time-range-selected on brush so the QueryForm can
+           rewrite since/until. #}
         <section class="explorer__row" aria-label="Chart">
             <div class="explorer__row-label">Chart</div>
             <div class="chart" data-controller="chart"
                  data-chart-endpoint-value="{{ path('app_explorer_index', {slug: tenant.slug, signal: signal}) }}/_chart.json"
                  data-chart-empty-message-value="No data in this window — try a wider time range.">
-                {% if chart_state == 'empty' %}
-                    <span>No data in this window — try a wider time range.</span>
-                {% elseif chart_state == 'loading' %}
-                    <span aria-busy="true">Loading…</span>
-                {% else %}
-                    <canvas></canvas>
-                {% endif %}
+                <canvas></canvas>
             </div>
         </section>
 
-        {# Criteria & aggregation row — passive form for v1; turns into Live in follow-up #}
+        {# Criteria & aggregation row — passive form. Filter chip datalists
+           are populated by the deferred FilterDatalists component below. #}
         <section class="explorer__row" aria-label="Criteria">
             <div class="explorer__row-label">Criteria &amp; aggregation</div>
             <form class="form-row" method="get" action="{{ path('app_explorer_index', {slug: tenant.slug, signal: signal}) }}">
@@ -81,20 +80,13 @@
                     <span class="form-row__label">Filters</span>
                     {% for filter in profile.filters %}
                         {% set listId = 'filter-options-' ~ filter.key %}
-                        {% set options = filter.suggestions|merge(filter_suggestions[filter.key]|default([])) %}
                         <label class="form-row__chip">
                             {{ filter.label }}:
                             <input type="text" name="{{ filter.key }}"
                                    value="{{ app.request.query.get(filter.key, '') }}"
-                                   {% if options|length > 0 %}list="{{ listId }}"{% endif %}
-                                   placeholder="{% if options|length > 0 %}{{ options|first }}…{% endif %}"
+                                   list="{{ listId }}"
                                    style="border: none; background: transparent; outline: none; font: inherit; width: 12ch;">
                         </label>
-                        {% if options|length > 0 %}
-                            <datalist id="{{ listId }}">
-                                {% for v in options %}<option value="{{ v }}">{% endfor %}
-                            </datalist>
-                        {% endif %}
                     {% endfor %}
                 </div>
                 <div class="form-row__group">
@@ -125,55 +117,25 @@
             </form>
         </section>
 
-        {# Results table row #}
+        {# Results table row — deferred Live Component. #}
         <section class="explorer__row" aria-label="Results">
             <div class="explorer__row-label">Results</div>
-            <table class="table" data-controller="table"
-                   data-table-rows-endpoint-value="{{ path('app_explorer_index', {slug: tenant.slug, signal: signal}) }}/_rows">
-                <thead>
-                    <tr>
-                        {% for col in profile.tableColumns %}
-                            <th style="{% if col.cssWidth %}width: {{ col.cssWidth }};{% endif %}">{{ col.label }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% if table_state == 'empty' or table_state == 'error' %}
-                        <tr class="empty-row"><td colspan="{{ profile.tableColumns|length }}">No rows match. Try widening the time range or removing filters.</td></tr>
-                    {% elseif table_state == 'loading' %}
-                        {% for _ in 1..5 %}
-                            <tr aria-busy="true"><td colspan="{{ profile.tableColumns|length }}" style="background: #f7f7f7; height: 1.5rem;">&nbsp;</td></tr>
-                        {% endfor %}
-                    {% else %}
-                        {% for row in rows %}
-                            <tr>
-                                {% for col in profile.tableColumns %}
-                                    {% set raw = row[col.key] ?? null %}
-                                    <td class="{% if col.monospace %}mono{% endif %}">
-                                        {% if col.key == 'time' or col.key ends with 'time_unix_nano' %}
-                                            {# normalise nanosecond timestamps to HH:MM:SS.mmm without
-                                               handing twig's |date a float (it can't parse those). #}
-                                            {% set ns = row.time_unix_nano|default(row.start_time_unix_nano|default(null)) %}
-                                            {% if ns %}
-                                                {%- set s = (ns // 1000000000) -%}
-                                                {%- set ms = ((ns // 1000000) % 1000) -%}
-                                                {{- s|date('H:i:s') -}}.{{- '%03d'|format(ms) -}}
-                                            {% else %}—{% endif %}
-                                        {% elseif raw is null %}
-                                            <span style="color: #bbb;">—</span>
-                                        {% elseif raw is iterable %}
-                                            <code style="font-size: 0.78rem;">{{ raw|json_encode|slice(0, 60) }}</code>
-                                        {% else %}
-                                            {% set str = raw|default('—')|e %}
-                                            {{ str|length > 80 ? str|slice(0, 80) ~ '…' : str }}
-                                        {% endif %}
-                                    </td>
-                                {% endfor %}
-                            </tr>
-                        {% endfor %}
-                    {% endif %}
-                </tbody>
-            </table>
+            <twig:Explorer:ResultTable
+                tenantSlug="{{ tenant.slug }}"
+                signal="{{ signal }}"
+                :windowSinceNs="window_since_ns"
+                :windowUntilNs="window_until_ns"
+                defer/>
         </section>
+
+        {# Filter datalists — deferred, invisible. Populates the form's
+           <input list="…"> dropdowns once the autocomplete scans complete.
+           Defers all 3-4 scans off the critical path. #}
+        <twig:Explorer:FilterDatalists
+            tenantSlug="{{ tenant.slug }}"
+            signal="{{ signal }}"
+            :windowSinceNs="window_since_ns"
+            :windowUntilNs="window_until_ns"
+            defer/>
     </main>
 {% endblock %}

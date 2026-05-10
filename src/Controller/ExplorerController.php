@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Explorer\AutocompleteResolver;
-use App\Explorer\KpiBundleResolver;
-use App\Explorer\KpiValue;
 use App\Explorer\SignalProfileRegistry;
-use App\Explorer\TableResultResolver;
 use App\Explorer\UnknownSignalException;
 use App\Read\Criteria\TimeWindow;
 use App\Repository\TenantRepository;
@@ -24,9 +20,6 @@ final class ExplorerController extends AbstractController
 {
     public function __construct(
         private readonly SignalProfileRegistry $profiles,
-        private readonly KpiBundleResolver $kpiResolver,
-        private readonly TableResultResolver $tableResolver,
-        private readonly AutocompleteResolver $autocomplete,
         private readonly ClockInterface $clock,
         private readonly int $maxTimeWindowDays,
     ) {
@@ -53,11 +46,9 @@ final class ExplorerController extends AbstractController
             throw new NotFoundHttpException(\sprintf('Unknown signal "%s".', $signal));
         }
 
-        // Resolve the time window. Same parser the read API uses, so a
-        // window > the configured cap surfaces the same 400 error.
-        // HTML forms always submit the field even when empty — coerce the
-        // empty string to null so TimeWindow::parse doesn't treat it as
-        // an explicit absolute boundary clashing with `since=<duration>`.
+        // Resolve the time window only — the heavyweight scans (KPI bundle,
+        // result table, autocomplete) are pushed into deferred Live Components
+        // so the browser parallelises them and the initial paint is fast.
         try {
             $window = TimeWindow::parse(
                 [
@@ -73,67 +64,14 @@ final class ExplorerController extends AbstractController
             $windowError = $e->getMessage();
         }
 
-        $kpiValues = null === $window
-            ? array_map(static fn ($spec) => KpiValue::empty($spec), $profile->kpis())
-            : $this->kpiResolver->resolve($tenant->getSlug(), $signal, $profile->kpis(), $window);
-
-        $kpiState = null === $window
-            ? 'error'
-            : (self::anyKpiPopulated($kpiValues) ? 'populated' : 'empty');
-
-        $rows = null === $window
-            ? []
-            : $this->tableResolver->firstPage($tenant->getSlug(), $signal, $window);
-
-        $tableState = null === $window
-            ? 'error'
-            : ([] === $rows ? 'empty' : 'populated');
-
-        // Filter autocomplete: per-text-filter top-N distinct values from
-        // the same time window. Scans are cheap (groupBy + count) and
-        // fail-soft to []. Each scan is at most cardinality-cap rows.
-        $filterSuggestions = [];
-        if (null !== $window) {
-            foreach ($profile->filters() as $filter) {
-                if (!$filter->shouldAutocomplete()) {
-                    continue;
-                }
-                $values = $this->autocomplete->topValues($tenant->getSlug(), $signal, $filter->parquetColumn, $window);
-                if ([] !== $values) {
-                    $filterSuggestions[$filter->key] = $values;
-                }
-            }
-        }
-
-        // Chart endpoint lands in a follow-up; until then we render its
-        // empty-state copy. The data shape passed to the template is
-        // contract-stable.
         return $this->render('explorer/index.html.twig', [
             'tenant' => $tenant,
             'profile' => $profile,
             'signal' => $signal,
-            'kpi_values' => $kpiValues,
-            'kpi_state' => $kpiState,
-            'chart_state' => 'empty',
-            'rows' => $rows,
-            'table_state' => $tableState,
-            'filter_suggestions' => $filterSuggestions,
+            'window_since_ns' => null === $window ? 0 : $window->sinceUnixNano,
+            'window_until_ns' => null === $window ? 0 : $window->untilUnixNano,
             'window_error' => $windowError,
         ]);
-    }
-
-    /**
-     * @param list<KpiValue> $values
-     */
-    private static function anyKpiPopulated(array $values): bool
-    {
-        foreach ($values as $v) {
-            if (null !== $v->value) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static function nullIfBlank(mixed $value): ?string

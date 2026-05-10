@@ -18,7 +18,7 @@ final readonly class LogsProfile implements SignalProfile
             new KpiSpec('rate', 'Rate /min', 'count', null, '/min'),
             new KpiSpec('errors', 'Errors', 'count', null, null, errorIsBad: true),
             new KpiSpec('avg_severity', 'Avg severity', 'avg', 'severity_number'),
-            new KpiSpec('uniq_traces', 'Unique traces', 'count', 'trace_id'),
+            new KpiSpec('uniq_traces', 'Unique traces', 'count', 'trace_id_hex'),
         ];
     }
 
@@ -45,8 +45,8 @@ final readonly class LogsProfile implements SignalProfile
             new TableColumn('time', 'Time', '14ch', monospace: true),
             new TableColumn('resource_service_name', 'Service', '12ch'),
             new TableColumn('severity_text', 'Severity', '8ch'),
-            new TableColumn('trace_id', 'Trace', '10ch', monospace: true),
-            new TableColumn('body', 'Body'),
+            new TableColumn('trace_id_hex', 'Trace', '10ch', monospace: true),
+            new TableColumn('body_json', 'Body'),
         ];
     }
 
