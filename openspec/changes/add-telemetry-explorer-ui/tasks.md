@@ -71,8 +71,8 @@ The "verify coverage gate" task at the bottom is mandatory per `openspec/config.
 
 - [ ] **8.1** Test: `tests/Component/Explorer/QueryFormComponentTest` — initial render contains all filter chips + time inputs + aggregation controls; LiveProps reflect URL.
 - [x] **8.2** Implement: `App\Twig\Components\Explorer\QueryForm` (AsLiveComponent). Filter chips, time inputs, aggregation controls all rendered inline. Submit goes via the form's GET action; LiveAction-based submit is deferred.
-- [ ] **8.3** Test: `tests/Functional/Explorer/QueryFormBrushSelectTest` — `applyBrush` LiveAction.
-- [ ] **8.4** Implement: `applyBrush` LiveAction + the JS handler that catches `chart_controller`'s `explorer:time-range-selected` event and rewrites the URL.
+- [SKIP] **8.3** `applyBrush` LiveAction test — superseded. Brush selection rewrites the URL and triggers a full reload (URL is the source of truth); no LiveAction needed.
+- [x] **8.4** Brush event listener — `assets/controllers/brush_navigator_controller.js` is attached at the explorer page wrapper. Listens for `explorer:time-range-selected`, debounces 150ms (coalesces rapid drag adjustments), rewrites `?since=&until=` and navigates. Cursor is cleared so the new window lands on page 1.
 - [SKIP] **8.5, 8.6** Sub-component extraction (`FilterChip`, `TimeRangePicker`, `AggregationCtrls`) — superseded. Form fields stay inline in QueryForm template; extracting them now is premature.
 
 ## Result table + Stimulus controller
@@ -132,6 +132,5 @@ The "verify coverage gate" task at the bottom is mandatory per `openspec/config.
 
 ## Remaining feature scope (priority-ordered)
 
-1. **8.4** Brush-select → URL rewrite plumbing (chart canvas can't yet rewrite the page's window)
-2. **7.4** `_chart.json` endpoint + interval bucketing in AggregatingScanner (chart canvas is empty placeholder)
-3. **10.x, 11.x, 12.x** Trace waterfall + sidebar + drill-to-logs (still empty for v1)
+1. **7.4** `_chart.json` endpoint + interval bucketing in AggregatingScanner (chart canvas is empty placeholder, no series data)
+2. **10.x, 11.x, 12.x** Trace waterfall + sidebar + drill-to-logs (still empty for v1)

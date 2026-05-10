@@ -29,7 +29,7 @@
 {% endblock %}
 
 {% block body %}
-    <main class="explorer">
+    <main class="explorer" data-controller="brush-navigator">
         <header>
             <div>
                 <a href="{{ path('app_tenant_show', {slug: tenant.slug}) }}" style="font-size: 0.85em; color: #666;">← {{ tenant.name }}</a>
