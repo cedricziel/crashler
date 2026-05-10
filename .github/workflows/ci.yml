@@ -101,8 +101,6 @@ jobs:
             memory_limit=512M
             error_reporting=-1
             display_errors=On
-            opcache.enable_cli=0
-            pcov.enabled=1
 
       - name: Validate composer.json
         run: composer validate --strict --no-check-publish

@@ -13,15 +13,12 @@ use App\Entity\TenantMembership;
 use App\Tests\Support\DatabaseTestCase;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
-use PHPUnit\Framework\Attributes\CoversNothing;
-
 /**
  * Locks in the fix for the bug where the membership "new" form 500ed because
  * ChoiceField with both setChoices() and a 'class' form-option targeted
  * ChoiceType (which doesn't accept 'class'). The fix switches to Symfony's
  * EnumType so the backed-enum ↔ string conversion is handled natively.
  */
-#[CoversNothing]
 final class MembershipCrudTest extends DatabaseTestCase
 {
     public function testOrgMembershipNewFormRenders(): void

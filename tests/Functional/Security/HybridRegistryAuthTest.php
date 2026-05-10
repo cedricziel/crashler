@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Security;
 
 use App\Tests\Support\DatabaseTestCase;
-use PHPUnit\Framework\Attributes\CoversNothing;
 
 /**
  * Verifies that the hybrid TenantRegistry resolves both DB-stored and
  * YAML-configured tokens against the authcheck endpoint.
  */
-#[CoversNothing]
 final class HybridRegistryAuthTest extends DatabaseTestCase
 {
     /** Plaintext that hashes to f97cb…507e — already configured in test/crashler.yaml under tenant 'test-tenant'. */

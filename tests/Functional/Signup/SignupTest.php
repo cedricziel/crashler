@@ -6,9 +6,7 @@ namespace App\Tests\Functional\Signup;
 
 use App\Repository\UserRepository;
 use App\Tests\Support\DatabaseTestCase;
-use PHPUnit\Framework\Attributes\CoversNothing;
 
-#[CoversNothing]
 final class SignupTest extends DatabaseTestCase
 {
     public function testSignupReturns404WhenDisabled(): void

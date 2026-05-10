@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Security;
 
 use App\Tests\Support\DatabaseTestCase;
-use PHPUnit\Framework\Attributes\CoversNothing;
 
-#[CoversNothing]
 final class SecurityFlowTest extends DatabaseTestCase
 {
     public function testAnonymousAdminRequestRedirectsToLogin(): void

@@ -11,9 +11,7 @@ use App\Entity\Tenant;
 use App\Entity\TenantMembership;
 use App\Entity\TenantToken;
 use App\Tests\Support\DatabaseTestCase;
-use PHPUnit\Framework\Attributes\CoversNothing;
 
-#[CoversNothing]
 final class TokenIssuanceTest extends DatabaseTestCase
 {
     public function testTenantOwnerIssuesTokenAndPlaintextShownOnce(): void

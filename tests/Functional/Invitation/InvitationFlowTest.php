@@ -13,10 +13,8 @@ use App\Entity\User;
 use App\Repository\InvitationRepository;
 use App\Repository\TenantMembershipRepository;
 use App\Tests\Support\DatabaseTestCase;
-use PHPUnit\Framework\Attributes\CoversNothing;
 use Symfony\Component\Mime\Email;
 
-#[CoversNothing]
 final class InvitationFlowTest extends DatabaseTestCase
 {
     private const FROM = 'noreply@crashler.test';
