@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Explorer\ChartSeriesResolver;
 use App\Explorer\SignalProfileRegistry;
 use App\Read\Criteria\TimeWindow;
 use App\Repository\TenantRepository;
 use App\Security\Voter\TenantVoter;
 use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -19,6 +21,7 @@ final class ExplorerController extends AbstractController
 {
     public function __construct(
         private readonly SignalProfileRegistry $profiles,
+        private readonly ChartSeriesResolver $chartResolver,
         private readonly ClockInterface $clock,
         private readonly int $maxTimeWindowDays,
     ) {
@@ -70,6 +73,48 @@ final class ExplorerController extends AbstractController
             'window_until_ns' => null === $window ? 0 : $window->untilUnixNano,
             'window_error' => $windowError,
         ]);
+    }
+
+    #[Route(
+        path: '/tenants/{slug}/explore/{signal}/_chart.json',
+        name: 'app_explorer_chart_data',
+        requirements: ['signal' => '[a-z]+'],
+        methods: ['GET'],
+    )]
+    public function chartData(
+        string $slug,
+        string $signal,
+        Request $request,
+        TenantRepository $tenants,
+    ): Response {
+        $tenant = $tenants->findOneBySlug($slug) ?? throw new NotFoundHttpException();
+        $this->denyAccessUnlessGranted(TenantVoter::VIEW, $tenant);
+
+        if (!$this->profiles->has($signal)) {
+            throw new NotFoundHttpException(\sprintf('Unknown signal "%s".', $signal));
+        }
+        $profile = $this->profiles->get($signal);
+
+        try {
+            $window = TimeWindow::parse(
+                [
+                    'since' => self::nullIfBlank($request->query->get('since')),
+                    'until' => self::nullIfBlank($request->query->get('until')),
+                ],
+                $this->clock,
+                $this->maxTimeWindowDays,
+            );
+        } catch (\InvalidArgumentException|\OutOfRangeException $e) {
+            return new JsonResponse(['message' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+
+        // groupBy follows the URL when set, else the profile's default.
+        $rawGroupBy = self::nullIfBlank($request->query->get('groupBy'));
+        $groupBy = $rawGroupBy ?? $profile->defaultGroupBy();
+
+        $payload = $this->chartResolver->series($tenant->getSlug(), $signal, $window, $groupBy);
+
+        return new JsonResponse($payload);
     }
 
     private static function nullIfBlank(mixed $value): ?string

@@ -61,10 +61,10 @@ The "verify coverage gate" task at the bottom is mandatory per `openspec/config.
 
 ## Chart shell + Stimulus controller
 
-- [ ] **7.1** Test: `tests/Component/Explorer/ChartComponentTest` — chart canvas rendered with `data-chart-endpoint-value` set.
-- [SKIP] **7.2** Chart component extraction — chart canvas is inline in `templates/explorer/index.html.twig`. Not yet worth extracting to its own component until interval bucketing lands in the AggregatingScanner.
-- [ ] **7.3** Test: `tests/Functional/Explorer/ChartDataEndpointTest` — `_chart.json` endpoint returns expected shape.
-- [ ] **7.4** Implement: `ExplorerController::chartData` route. Blocked on the AggregatingScanner growing interval bucketing (today it can't time-bucket).
+- [SKIP] **7.1** Dedicated ChartComponentTest — chart canvas is inline in the page template, not a separate Twig component. The data-controller wiring is pinned by the existing functional access tests + the new ChartDataEndpointTest.
+- [SKIP] **7.2** Chart component extraction — chart canvas is inline in `templates/explorer/index.html.twig`. Not worth extracting until/unless the chart grows configurability.
+- [x] **7.3** Test: `tests/Functional/Explorer/ChartDataEndpointTest` — auth (anon/non-member/unknown signal) + happy-path empty response + bad-window 400.
+- [x] **7.4** Implement: `ExplorerController::chartData` route + `App\Explorer\ChartSeriesResolver`. Time bucketing happens in PHP (single ParquetScanner pass; bucket each row into a window-aligned grid; cap at MAX_SERIES=8 by frequency). Cache layer reuses the WindowBucket pattern (60s TTL).
 - [x] **7.5** Implement: `assets/controllers/chart_controller.js` (uPlot init, brush dispatch). Lazy-imports uPlot.
 
 ## Query form (Live)
@@ -132,5 +132,4 @@ The "verify coverage gate" task at the bottom is mandatory per `openspec/config.
 
 ## Remaining feature scope (priority-ordered)
 
-1. **7.4** `_chart.json` endpoint + interval bucketing in AggregatingScanner (chart canvas is empty placeholder, no series data)
-2. **10.x, 11.x, 12.x** Trace waterfall + sidebar + drill-to-logs (still empty for v1)
+1. **10.x, 11.x, 12.x** Trace waterfall + sidebar + drill-to-logs (still empty for v1)
