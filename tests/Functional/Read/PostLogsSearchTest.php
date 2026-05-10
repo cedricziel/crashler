@@ -12,7 +12,6 @@ use App\Otlp\Dto\KeyValueDto;
 use App\Otlp\Dto\LogRecordDto;
 use App\Otlp\Dto\ResourceLogsDto;
 use App\Otlp\Dto\ScopeLogsDto;
-use App\Read\Controller\PostLogsSearchController;
 use App\Schema\SchemaCatalog;
 use App\Storage\ParquetFileWriter;
 use App\Storage\PartitionPathResolver;
@@ -20,12 +19,10 @@ use App\Tenancy\Tenant;
 use App\Tests\Support\StubFilenameGenerator;
 use App\Tests\Support\TempStorageRoot;
 use Flow\Parquet\ParquetFile\Compressions;
-use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Clock\MockClock;
 use Zenstruck\Browser\Test\HasBrowser;
 
-#[CoversClass(PostLogsSearchController::class)]
 final class PostLogsSearchTest extends KernelTestCase
 {
     use HasBrowser;

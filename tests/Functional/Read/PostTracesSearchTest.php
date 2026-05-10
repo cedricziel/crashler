@@ -12,7 +12,6 @@ use App\Otlp\Dto\ResourceSpansDto;
 use App\Otlp\Dto\ScopeSpansDto;
 use App\Otlp\Dto\SpanDto;
 use App\Otlp\Dto\SpanStatusDto;
-use App\Read\Controller\PostTracesSearchController;
 use App\Schema\SchemaCatalog;
 use App\Storage\ParquetFileWriter;
 use App\Storage\PartitionPathResolver;
@@ -21,12 +20,10 @@ use App\Tests\Support\StubFilenameGenerator;
 use App\Tests\Support\TempStorageRoot;
 use App\Traces\TracesIngestService;
 use Flow\Parquet\ParquetFile\Compressions;
-use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Clock\MockClock;
 use Zenstruck\Browser\Test\HasBrowser;
 
-#[CoversClass(PostTracesSearchController::class)]
 final class PostTracesSearchTest extends KernelTestCase
 {
     use HasBrowser;

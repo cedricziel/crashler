@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Read;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Zenstruck\Browser\Test\HasBrowser;
 
@@ -13,7 +12,6 @@ use Zenstruck\Browser\Test\HasBrowser;
  * Per-resource routes (/v1/logs etc.) come up as the Resource declarations
  * land in later sections.
  */
-#[CoversNothing]
 final class ApiPlatformInstallTest extends KernelTestCase
 {
     use HasBrowser;

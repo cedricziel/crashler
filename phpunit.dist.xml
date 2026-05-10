@@ -52,6 +52,11 @@
         <exclude>
             <directory>src/Story</directory>
             <file>src/Kernel.php</file>
+            <!-- Composer\Hooks is a ~30-line post-install hint that runs
+                 in composer's runtime; its dependencies (Composer\IO,
+                 Composer\Script\Event) aren't autoloadable from PHPUnit
+                 scope. Excluded from coverage tracking. -->
+            <directory>src/Composer</directory>
         </exclude>
 
         <deprecationTrigger>

@@ -32,7 +32,6 @@ use App\Tests\Support\StubFilenameGenerator;
 use App\Tests\Support\TempStorageRoot;
 use App\Traces\TracesIngestService;
 use Flow\Parquet\ParquetFile\Compressions;
-use PHPUnit\Framework\Attributes\CoversNothing;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Clock\MockClock;
 use Zenstruck\Browser\Test\HasBrowser;
@@ -43,7 +42,6 @@ use Zenstruck\Browser\Test\HasBrowser;
  * HATEOAS links from the trace-by-id response and verify the follow-up
  * GETs land on the right data.
  */
-#[CoversNothing]
 final class CrossSignalNavigationTest extends KernelTestCase
 {
     use HasBrowser;

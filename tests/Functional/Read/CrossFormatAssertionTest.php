@@ -19,7 +19,6 @@ use App\Tenancy\Tenant;
 use App\Tests\Support\StubFilenameGenerator;
 use App\Tests\Support\TempStorageRoot;
 use Flow\Parquet\ParquetFile\Compressions;
-use PHPUnit\Framework\Attributes\CoversNothing;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Clock\MockClock;
 use Zenstruck\Browser\Test\HasBrowser;
@@ -37,7 +36,6 @@ use Zenstruck\Browser\Test\HasBrowser;
  *                    when NextCursorInjector wraps
  *   JSON:API       → top-level data[]
  */
-#[CoversNothing]
 final class CrossFormatAssertionTest extends KernelTestCase
 {
     use HasBrowser;

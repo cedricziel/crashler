@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Read;
 
-use PHPUnit\Framework\Attributes\CoversNothing;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Zenstruck\Browser\Test\HasBrowser;
 
@@ -15,7 +14,6 @@ use Zenstruck\Browser\Test\HasBrowser;
  * controllers so they don't show up in this spec — they're documented in
  * the README instead (see design.md D7 alternative ③).
  */
-#[CoversNothing]
 final class OpenApiSpecTest extends KernelTestCase
 {
     use HasBrowser;
