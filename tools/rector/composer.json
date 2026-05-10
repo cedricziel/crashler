@@ -1,0 +1,14 @@
+{
+    "name": "crashler/tool-rector",
+    "description": "Isolated Rector toolchain for the crashler project. See ../../openspec/specs/developer-tooling/.",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.5",
+        "rector/rector": "^2.0"
+    },
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist"
+    }
+}

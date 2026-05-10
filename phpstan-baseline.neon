@@ -1,0 +1,1069 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to method getIO\(\) on an unknown class Composer\\Script\\Event\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Composer/Hooks.php
+
+		-
+			message: '#^Parameter \$event of method App\\Composer\\Hooks\:\:printDevHints\(\) has invalid type Composer\\Script\\Event\.$#'
+			identifier: class.notFound
+			count: 1
+			path: src/Composer/Hooks.php
+
+		-
+			message: '#^Call to an undefined method Symfony\\Component\\Console\\Helper\\HelperInterface\:\:ask\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: src/Console/CreateUserCommand.php
+
+		-
+			message: '#^Class App\\Controller\\Admin\\OrgCrudController extends generic class EasyCorp\\Bundle\\EasyAdminBundle\\Controller\\AbstractCrudController but does not specify its types\: TEntity$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Controller/Admin/OrgCrudController.php
+
+		-
+			message: '#^Class App\\Controller\\Admin\\OrgMembershipCrudController extends generic class EasyCorp\\Bundle\\EasyAdminBundle\\Controller\\AbstractCrudController but does not specify its types\: TEntity$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Controller/Admin/OrgMembershipCrudController.php
+
+		-
+			message: '#^Class App\\Controller\\Admin\\TenantCrudController extends generic class EasyCorp\\Bundle\\EasyAdminBundle\\Controller\\AbstractCrudController but does not specify its types\: TEntity$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Controller/Admin/TenantCrudController.php
+
+		-
+			message: '#^Class App\\Controller\\Admin\\TenantMembershipCrudController extends generic class EasyCorp\\Bundle\\EasyAdminBundle\\Controller\\AbstractCrudController but does not specify its types\: TEntity$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Controller/Admin/TenantMembershipCrudController.php
+
+		-
+			message: '#^Class App\\Controller\\Admin\\TenantTokenCrudController extends generic class EasyCorp\\Bundle\\EasyAdminBundle\\Controller\\AbstractCrudController but does not specify its types\: TEntity$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Controller/Admin/TenantTokenCrudController.php
+
+		-
+			message: '#^Method App\\Controller\\Admin\\TenantTokenCrudController\:\:reveal\(\) has parameter \$context with generic class EasyCorp\\Bundle\\EasyAdminBundle\\Context\\AdminContext but does not specify its types\: TEntity$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Controller/Admin/TenantTokenCrudController.php
+
+		-
+			message: '#^Class App\\Controller\\Admin\\UserCrudController extends generic class EasyCorp\\Bundle\\EasyAdminBundle\\Controller\\AbstractCrudController but does not specify its types\: TEntity$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Controller/Admin/UserCrudController.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 1
+			path: src/Controller/DashboardController.php
+
+		-
+			message: '#^Instanceof between DateTimeImmutable and DateTimeImmutable will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: src/Controller/InvitationController.php
+
+		-
+			message: '#^Method App\\Controller\\InvitationController\:\:renderClaim\(\) has parameter \$context with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Controller/InvitationController.php
+
+		-
+			message: '#^Method App\\CrashlerBundle\:\:getContainerExtension\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: src/CrashlerBundle.php
+
+		-
+			message: '#^Method App\\DependencyInjection\\CrashlerExtension\:\:getConfiguration\(\) has parameter \$config with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/DependencyInjection/CrashlerExtension.php
+
+		-
+			message: '#^Property App\\Entity\\Invitation\:\:\$createdAt type mapping mismatch\: property can contain DateTimeImmutable\|null but database expects DateTimeImmutable\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/Invitation.php
+
+		-
+			message: '#^Property App\\Entity\\Invitation\:\:\$createdBy type mapping mismatch\: property can contain App\\Entity\\User\|null but database expects App\\Entity\\User\.$#'
+			identifier: doctrine.associationType
+			count: 1
+			path: src/Entity/Invitation.php
+
+		-
+			message: '#^Property App\\Entity\\Invitation\:\:\$email type mapping mismatch\: property can contain string\|null but database expects string\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/Invitation.php
+
+		-
+			message: '#^Property App\\Entity\\Invitation\:\:\$expiresAt type mapping mismatch\: property can contain DateTimeImmutable\|null but database expects DateTimeImmutable\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/Invitation.php
+
+		-
+			message: '#^Property App\\Entity\\Invitation\:\:\$tenant type mapping mismatch\: property can contain App\\Entity\\Tenant\|null but database expects App\\Entity\\Tenant\.$#'
+			identifier: doctrine.associationType
+			count: 1
+			path: src/Entity/Invitation.php
+
+		-
+			message: '#^Property App\\Entity\\Invitation\:\:\$token type mapping mismatch\: property can contain string\|null but database expects string\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/Invitation.php
+
+		-
+			message: '#^Property App\\Entity\\Org\:\:\$createdAt type mapping mismatch\: property can contain DateTimeImmutable\|null but database expects DateTimeImmutable\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/Org.php
+
+		-
+			message: '#^Property App\\Entity\\Org\:\:\$name type mapping mismatch\: property can contain string\|null but database expects string\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/Org.php
+
+		-
+			message: '#^Property App\\Entity\\Org\:\:\$slug type mapping mismatch\: property can contain string\|null but database expects string\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/Org.php
+
+		-
+			message: '#^Property App\\Entity\\OrgMembership\:\:\$createdAt type mapping mismatch\: property can contain DateTimeImmutable\|null but database expects DateTimeImmutable\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/OrgMembership.php
+
+		-
+			message: '#^Property App\\Entity\\OrgMembership\:\:\$org type mapping mismatch\: property can contain App\\Entity\\Org\|null but database expects App\\Entity\\Org\.$#'
+			identifier: doctrine.associationType
+			count: 1
+			path: src/Entity/OrgMembership.php
+
+		-
+			message: '#^Property App\\Entity\\OrgMembership\:\:\$user type mapping mismatch\: property can contain App\\Entity\\User\|null but database expects App\\Entity\\User\.$#'
+			identifier: doctrine.associationType
+			count: 1
+			path: src/Entity/OrgMembership.php
+
+		-
+			message: '#^Property App\\Entity\\Tenant\:\:\$createdAt type mapping mismatch\: property can contain DateTimeImmutable\|null but database expects DateTimeImmutable\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/Tenant.php
+
+		-
+			message: '#^Property App\\Entity\\Tenant\:\:\$name type mapping mismatch\: property can contain string\|null but database expects string\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/Tenant.php
+
+		-
+			message: '#^Property App\\Entity\\Tenant\:\:\$org type mapping mismatch\: property can contain App\\Entity\\Org\|null but database expects App\\Entity\\Org\.$#'
+			identifier: doctrine.associationType
+			count: 1
+			path: src/Entity/Tenant.php
+
+		-
+			message: '#^Property App\\Entity\\Tenant\:\:\$slug type mapping mismatch\: property can contain string\|null but database expects string\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/Tenant.php
+
+		-
+			message: '#^Property App\\Entity\\TenantMembership\:\:\$createdAt type mapping mismatch\: property can contain DateTimeImmutable\|null but database expects DateTimeImmutable\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/TenantMembership.php
+
+		-
+			message: '#^Property App\\Entity\\TenantMembership\:\:\$tenant type mapping mismatch\: property can contain App\\Entity\\Tenant\|null but database expects App\\Entity\\Tenant\.$#'
+			identifier: doctrine.associationType
+			count: 1
+			path: src/Entity/TenantMembership.php
+
+		-
+			message: '#^Property App\\Entity\\TenantMembership\:\:\$user type mapping mismatch\: property can contain App\\Entity\\User\|null but database expects App\\Entity\\User\.$#'
+			identifier: doctrine.associationType
+			count: 1
+			path: src/Entity/TenantMembership.php
+
+		-
+			message: '#^Property App\\Entity\\TenantToken\:\:\$createdAt type mapping mismatch\: property can contain DateTimeImmutable\|null but database expects DateTimeImmutable\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/TenantToken.php
+
+		-
+			message: '#^Property App\\Entity\\TenantToken\:\:\$hash type mapping mismatch\: property can contain string\|null but database expects string\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/TenantToken.php
+
+		-
+			message: '#^Property App\\Entity\\TenantToken\:\:\$name type mapping mismatch\: property can contain string\|null but database expects string\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/TenantToken.php
+
+		-
+			message: '#^Property App\\Entity\\TenantToken\:\:\$tenant type mapping mismatch\: property can contain App\\Entity\\Tenant\|null but database expects App\\Entity\\Tenant\.$#'
+			identifier: doctrine.associationType
+			count: 1
+			path: src/Entity/TenantToken.php
+
+		-
+			message: '#^Property App\\Entity\\User\:\:\$createdAt type mapping mismatch\: property can contain DateTimeImmutable\|null but database expects DateTimeImmutable\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/User.php
+
+		-
+			message: '#^Property App\\Entity\\User\:\:\$email type mapping mismatch\: property can contain string\|null but database expects string\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/User.php
+
+		-
+			message: '#^Property App\\Entity\\User\:\:\$emailLower type mapping mismatch\: property can contain string\|null but database expects string\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/User.php
+
+		-
+			message: '#^Property App\\Entity\\User\:\:\$password type mapping mismatch\: property can contain string\|null but database expects string\.$#'
+			identifier: doctrine.columnType
+			count: 1
+			path: src/Entity/User.php
+
+		-
+			message: '#^Class App\\Form\\OnboardingType extends generic class Symfony\\Component\\Form\\AbstractType but does not specify its types\: TData$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Form/OnboardingType.php
+
+		-
+			message: '#^Class App\\Form\\SignupType extends generic class Symfony\\Component\\Form\\AbstractType but does not specify its types\: TData$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Form/SignupType.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Otlp/LogsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\LogsJsonDecoder\:\:decodeAnyValue\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/LogsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\LogsJsonDecoder\:\:decodeKeyValue\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/LogsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\LogsJsonDecoder\:\:decodeLogRecord\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/LogsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\LogsJsonDecoder\:\:decodeResourceLogs\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/LogsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\LogsJsonDecoder\:\:decodeScopeLogs\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/LogsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\LogsJsonDecoder\:\:hexBytesOrNull\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/LogsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\LogsJsonDecoder\:\:int32\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/LogsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\LogsJsonDecoder\:\:int64\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/LogsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\LogsJsonDecoder\:\:stringOrNull\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/LogsJsonDecoder.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:bool\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:decodeAnyValue\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:decodeAttributesArray\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:decodeBuckets\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:decodeExemplar\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:decodeExemplars\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:decodeExponentialHistogramDataPoint\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:decodeHistogramDataPoint\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:decodeKeyValue\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:decodeMetric\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:decodeNumberDataPoint\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:decodeResourceMetrics\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:decodeScopeMetrics\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:decodeSummaryDataPoint\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:float\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:hexBytesOrNull\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:int32\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:int64\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\MetricsJsonDecoder\:\:stringOrNull\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/MetricsJsonDecoder.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Otlp/TracesJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\TracesJsonDecoder\:\:decodeAnyValue\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/TracesJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\TracesJsonDecoder\:\:decodeEvent\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/TracesJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\TracesJsonDecoder\:\:decodeKeyValue\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/TracesJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\TracesJsonDecoder\:\:decodeLink\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/TracesJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\TracesJsonDecoder\:\:decodeResourceSpans\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/TracesJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\TracesJsonDecoder\:\:decodeScopeSpans\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/TracesJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\TracesJsonDecoder\:\:decodeSpan\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/TracesJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\TracesJsonDecoder\:\:hexBytes\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/TracesJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\TracesJsonDecoder\:\:hexBytesOrNull\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/TracesJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\TracesJsonDecoder\:\:int32\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/TracesJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\TracesJsonDecoder\:\:int64\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/TracesJsonDecoder.php
+
+		-
+			message: '#^Method App\\Otlp\\TracesJsonDecoder\:\:stringOrNull\(\) has parameter \$raw with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: src/Otlp/TracesJsonDecoder.php
+
+		-
+			message: '#^Method App\\Read\\Compute\\Combinators\\AllOf\:\:evaluate\(\) has parameter \$row with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Read/Compute/Combinators/AllOf.php
+
+		-
+			message: '#^Method App\\Read\\Compute\\Combinators\\AnyOf\:\:evaluate\(\) has parameter \$row with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Read/Compute/Combinators/AnyOf.php
+
+		-
+			message: '#^Method App\\Read\\Compute\\Combinators\\Negation\:\:evaluate\(\) has parameter \$row with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Read/Compute/Combinators/Negation.php
+
+		-
+			message: '#^Method App\\Read\\Compute\\Predicates\\ColumnEquals\:\:evaluate\(\) has parameter \$row with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Read/Compute/Predicates/ColumnEquals.php
+
+		-
+			message: '#^Method App\\Read\\Compute\\Predicates\\ColumnGreaterEqual\:\:evaluate\(\) has parameter \$row with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Read/Compute/Predicates/ColumnGreaterEqual.php
+
+		-
+			message: '#^Method App\\Read\\Compute\\Predicates\\ColumnInRange\:\:evaluate\(\) has parameter \$row with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Read/Compute/Predicates/ColumnInRange.php
+
+		-
+			message: '#^Method App\\Read\\Compute\\Predicates\\ColumnLikePrefix\:\:evaluate\(\) has parameter \$row with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Read/Compute/Predicates/ColumnLikePrefix.php
+
+		-
+			message: '#^Method App\\Read\\Compute\\Predicates\\ColumnLikeSuffix\:\:evaluate\(\) has parameter \$row with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Read/Compute/Predicates/ColumnLikeSuffix.php
+
+		-
+			message: '#^Method App\\Read\\Compute\\Predicates\\ColumnLowerEqual\:\:evaluate\(\) has parameter \$row with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Read/Compute/Predicates/ColumnLowerEqual.php
+
+		-
+			message: '#^Method App\\Read\\Compute\\Predicates\\JsonAttributeEquals\:\:evaluate\(\) has parameter \$row with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Read/Compute/Predicates/JsonAttributeEquals.php
+
+		-
+			message: '#^Method App\\Read\\Compute\\Predicates\\JsonStringContains\:\:evaluate\(\) has parameter \$row with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Read/Compute/Predicates/JsonStringContains.php
+
+		-
+			message: '#^Method App\\Read\\Compute\\Predicates\\Predicate\:\:evaluate\(\) has parameter \$row with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Read/Compute/Predicates/Predicate.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between null and mixed will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: src/Read/Controller/TraceTreeAssembler.php
+
+		-
+			message: '#^Class App\\Read\\State\\BaseSearchStateProvider implements generic interface ApiPlatform\\State\\ProviderInterface but does not specify its types\: T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Read/State/BaseSearchStateProvider.php
+
+		-
+			message: '#^Call to function is_array\(\) with array\<string, mixed\> will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Schema/SchemaDefinition.php
+
+		-
+			message: '#^Call to function is_string\(\) with string will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: src/Schema/SchemaDefinition.php
+
+		-
+			message: '#^Method App\\Security\\IngestTokenAuthenticator\:\:onAuthenticationFailure\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: src/Security/IngestTokenAuthenticator.php
+
+		-
+			message: '#^Class App\\Security\\Voter\\OrgVoter extends generic class Symfony\\Component\\Security\\Core\\Authorization\\Voter\\Voter but does not specify its types\: TAttribute, TSubject$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Security/Voter/OrgVoter.php
+
+		-
+			message: '#^Class App\\Security\\Voter\\TenantVoter extends generic class Symfony\\Component\\Security\\Core\\Authorization\\Voter\\Voter but does not specify its types\: TAttribute, TSubject$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Security/Voter/TenantVoter.php
+
+		-
+			message: '#^Instanceof between DateTimeImmutable and DateTimeImmutable will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: src/Tenancy/Source/DbTenantSource.php
+
+		-
+			message: '#^Method App\\Tenancy\\TenantRegistry\:\:__construct\(\) has parameter \$sources with no value type specified in iterable type iterable\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: src/Tenancy/TenantRegistry.php
+
+		-
+			message: '#^Instanceof between DateTimeImmutable and DateTimeImmutable will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: src/Tenancy/Token/LastUsedRecorder.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Collector\\Logs\\V1\\ExportLogsServiceRequest\:\:setResourceLogs\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Logs\\V1\\ResourceLogs\>, array\<int, Opentelemetry\\Proto\\Logs\\V1\\ResourceLogs\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/Controller/OtlpLogsControllerTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Logs\\V1\\ResourceLogs\:\:setScopeLogs\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Logs\\V1\\ScopeLogs\>, array\<int, Opentelemetry\\Proto\\Logs\\V1\\ScopeLogs\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/Controller/OtlpLogsControllerTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Logs\\V1\\ScopeLogs\:\:setLogRecords\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Logs\\V1\\LogRecord\>, array\<int, Opentelemetry\\Proto\\Logs\\V1\\LogRecord\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/Controller/OtlpLogsControllerTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Resource\\V1\\Resource\:\:setAttributes\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Common\\V1\\KeyValue\>, array\<int, Opentelemetry\\Proto\\Common\\V1\\KeyValue\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/Controller/OtlpLogsControllerTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Collector\\Metrics\\V1\\ExportMetricsServiceRequest\:\:setResourceMetrics\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Metrics\\V1\\ResourceMetrics\>, array\<int, Opentelemetry\\Proto\\Metrics\\V1\\ResourceMetrics\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/Controller/OtlpMetricsControllerTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\ResourceMetrics\:\:setScopeMetrics\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Metrics\\V1\\ScopeMetrics\>, array\<int, Opentelemetry\\Proto\\Metrics\\V1\\ScopeMetrics\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/Controller/OtlpMetricsControllerTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\ScopeMetrics\:\:setMetrics\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Metrics\\V1\\Metric\>, array\<int, Opentelemetry\\Proto\\Metrics\\V1\\Metric\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/Controller/OtlpMetricsControllerTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\Sum\:\:setDataPoints\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Metrics\\V1\\NumberDataPoint\>, array\<int, Opentelemetry\\Proto\\Metrics\\V1\\NumberDataPoint\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/Controller/OtlpMetricsControllerTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Resource\\V1\\Resource\:\:setAttributes\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Common\\V1\\KeyValue\>, array\<int, Opentelemetry\\Proto\\Common\\V1\\KeyValue\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/Controller/OtlpMetricsControllerTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Collector\\Trace\\V1\\ExportTraceServiceRequest\:\:setResourceSpans\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Trace\\V1\\ResourceSpans\>, array\<int, Opentelemetry\\Proto\\Trace\\V1\\ResourceSpans\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/Controller/OtlpTracesControllerTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Resource\\V1\\Resource\:\:setAttributes\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Common\\V1\\KeyValue\>, array\<int, Opentelemetry\\Proto\\Common\\V1\\KeyValue\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/Controller/OtlpTracesControllerTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Trace\\V1\\ResourceSpans\:\:setScopeSpans\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Trace\\V1\\ScopeSpans\>, array\<int, Opentelemetry\\Proto\\Trace\\V1\\ScopeSpans\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/Controller/OtlpTracesControllerTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Trace\\V1\\ScopeSpans\:\:setSpans\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Trace\\V1\\Span\>, array\<int, Opentelemetry\\Proto\\Trace\\V1\\Span\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Functional/Controller/OtlpTracesControllerTest.php
+
+		-
+			message: '#^PHPDoc tag @var with type Symfony\\Component\\Mime\\Email is not subtype of native type Symfony\\Bridge\\Twig\\Mime\\TemplatedEmail\.$#'
+			identifier: varTag.nativeType
+			count: 1
+			path: tests/Functional/Mailer/InvitationMailerTest.php
+
+		-
+			message: '#^Property Symfony\\Component\\Mailer\\MailerInterface@anonymous/tests/Functional/Mailer/InvitationMailerTest\.php\:27\:\:\$captured is never read, only written\.$#'
+			identifier: property.onlyWritten
+			count: 1
+			path: tests/Functional/Mailer/InvitationMailerTest.php
+
+		-
+			message: '#^Call to function array_is_list\(\) with array\<string, mixed\> will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 2
+			path: tests/Functional/Read/CrossFormatAssertionTest.php
+
+		-
+			message: '#^Call to function array_is_list\(\) with non\-empty\-array\<string, mixed\> will always evaluate to false\.$#'
+			identifier: function.impossibleType
+			count: 1
+			path: tests/Functional/Read/CrossFormatAssertionTest.php
+
+		-
+			message: '#^Method App\\Tests\\Functional\\Read\\OpenApiSpecTest\:\:fetchSpec\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Functional/Read/OpenApiSpecTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\) with 0 and 0 will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Otlp/Dto/MetricDtosTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\) with 1 and 1 will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Otlp/Dto/MetricDtosTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\) with 2 and 2 will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 2
+			path: tests/Unit/Otlp/Dto/MetricDtosTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\) with 3 and 3 will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Otlp/Dto/MetricDtosTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\) with 4 and 4 will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Otlp/Dto/MetricDtosTest.php
+
+		-
+			message: '#^You should use assertCount\(\$expectedCount, \$variable\) instead of assertSame\(\$expectedCount, count\(\$variable\)\)\.$#'
+			identifier: phpunit.assertCount
+			count: 1
+			path: tests/Unit/Otlp/Dto/MetricDtosTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertInstanceOf\(\) with ''App\\\\Otlp\\\\Dto\\\\ExportLogsServiceRequestDto'' and App\\Otlp\\Dto\\ExportLogsServiceRequestDto will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Otlp/LogsJsonDecoderTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertInstanceOf\(\) with ''App\\\\Otlp\\\\Dto\\\\ExportLogsServiceRequestDto'' and App\\Otlp\\Dto\\ExportLogsServiceRequestDto will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Otlp/LogsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Collector\\Logs\\V1\\ExportLogsServiceRequest\:\:setResourceLogs\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Logs\\V1\\ResourceLogs\>, array\<int, Opentelemetry\\Proto\\Logs\\V1\\ResourceLogs\> given\.$#'
+			identifier: argument.type
+			count: 7
+			path: tests/Unit/Otlp/LogsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Common\\V1\\ArrayValue\:\:setValues\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Common\\V1\\AnyValue\>, array\<int, Opentelemetry\\Proto\\Common\\V1\\AnyValue\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Otlp/LogsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Common\\V1\\KeyValueList\:\:setValues\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Common\\V1\\KeyValue\>, array\<int, Opentelemetry\\Proto\\Common\\V1\\KeyValue\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Otlp/LogsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Logs\\V1\\LogRecord\:\:setAttributes\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Common\\V1\\KeyValue\>, array\<int, Opentelemetry\\Proto\\Common\\V1\\KeyValue\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Otlp/LogsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Logs\\V1\\ResourceLogs\:\:setScopeLogs\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Logs\\V1\\ScopeLogs\>, array\<int, Opentelemetry\\Proto\\Logs\\V1\\ScopeLogs\> given\.$#'
+			identifier: argument.type
+			count: 7
+			path: tests/Unit/Otlp/LogsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Logs\\V1\\ScopeLogs\:\:setLogRecords\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Logs\\V1\\LogRecord\>, array\<int, Opentelemetry\\Proto\\Logs\\V1\\LogRecord\> given\.$#'
+			identifier: argument.type
+			count: 7
+			path: tests/Unit/Otlp/LogsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Resource\\V1\\Resource\:\:setAttributes\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Common\\V1\\KeyValue\>, array\<int, Opentelemetry\\Proto\\Common\\V1\\KeyValue\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Otlp/LogsProtobufDecoderTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertInstanceOf\(\) with ''App\\\\Otlp\\\\Dto\\\\ExportMetricsServiceRequestDto'' and App\\Otlp\\Dto\\ExportMetricsServiceRequestDto will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Otlp/MetricsJsonDecoderTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertInstanceOf\(\) with ''App\\\\Otlp\\\\Dto\\\\ExportMetricsServiceRequestDto'' and App\\Otlp\\Dto\\ExportMetricsServiceRequestDto will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Collector\\Metrics\\V1\\ExportMetricsServiceRequest\:\:setResourceMetrics\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Metrics\\V1\\ResourceMetrics\>, array\<int, Opentelemetry\\Proto\\Metrics\\V1\\ResourceMetrics\> given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\Exemplar\:\:setFilteredAttributes\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Common\\V1\\KeyValue\>, array\<int, Opentelemetry\\Proto\\Common\\V1\\KeyValue\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\ExponentialHistogram\:\:setDataPoints\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Metrics\\V1\\ExponentialHistogramDataPoint\>, array\<int, Opentelemetry\\Proto\\Metrics\\V1\\ExponentialHistogramDataPoint\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\ExponentialHistogramDataPoint\\Buckets\:\:setBucketCounts\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<int\|string\>, array\<int, int\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\Gauge\:\:setDataPoints\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Metrics\\V1\\NumberDataPoint\>, array\<int, Opentelemetry\\Proto\\Metrics\\V1\\NumberDataPoint\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\Histogram\:\:setDataPoints\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Metrics\\V1\\HistogramDataPoint\>, array\<int, Opentelemetry\\Proto\\Metrics\\V1\\HistogramDataPoint\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\HistogramDataPoint\:\:setBucketCounts\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<int\|string\>, array\<int, int\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\HistogramDataPoint\:\:setExplicitBounds\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<float\>, array\<int, float\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\NumberDataPoint\:\:setAttributes\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Common\\V1\\KeyValue\>, array\<int, Opentelemetry\\Proto\\Common\\V1\\KeyValue\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\NumberDataPoint\:\:setExemplars\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Metrics\\V1\\Exemplar\>, array\<int, Opentelemetry\\Proto\\Metrics\\V1\\Exemplar\> given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\ResourceMetrics\:\:setScopeMetrics\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Metrics\\V1\\ScopeMetrics\>, array\<int, Opentelemetry\\Proto\\Metrics\\V1\\ScopeMetrics\> given\.$#'
+			identifier: argument.type
+			count: 3
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\ScopeMetrics\:\:setMetrics\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Metrics\\V1\\Metric\>, array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\ScopeMetrics\:\:setMetrics\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Metrics\\V1\\Metric\>, array\<int, Opentelemetry\\Proto\\Metrics\\V1\\Metric\> given\.$#'
+			identifier: argument.type
+			count: 2
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\Sum\:\:setDataPoints\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Metrics\\V1\\NumberDataPoint\>, array\<int, Opentelemetry\\Proto\\Metrics\\V1\\NumberDataPoint\> given\.$#'
+			identifier: argument.type
+			count: 5
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\Summary\:\:setDataPoints\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Metrics\\V1\\SummaryDataPoint\>, array\<int, Opentelemetry\\Proto\\Metrics\\V1\\SummaryDataPoint\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Metrics\\V1\\SummaryDataPoint\:\:setQuantileValues\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Metrics\\V1\\SummaryDataPoint\\ValueAtQuantile\>, array\<int, Opentelemetry\\Proto\\Metrics\\V1\\SummaryDataPoint\\ValueAtQuantile\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Otlp/MetricsProtobufDecoderTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertInstanceOf\(\) with ''App\\\\Otlp\\\\Dto\\\\ExportTraceServiceRequestDto'' and App\\Otlp\\Dto\\ExportTraceServiceRequestDto will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Otlp/TracesJsonDecoderTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertInstanceOf\(\) with ''App\\\\Otlp\\\\Dto\\\\ExportTraceServiceRequestDto'' and App\\Otlp\\Dto\\ExportTraceServiceRequestDto will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Otlp/TracesProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Collector\\Trace\\V1\\ExportTraceServiceRequest\:\:setResourceSpans\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Trace\\V1\\ResourceSpans\>, array\<int, Opentelemetry\\Proto\\Trace\\V1\\ResourceSpans\> given\.$#'
+			identifier: argument.type
+			count: 9
+			path: tests/Unit/Otlp/TracesProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Trace\\V1\\ResourceSpans\:\:setScopeSpans\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Trace\\V1\\ScopeSpans\>, array\<int, Opentelemetry\\Proto\\Trace\\V1\\ScopeSpans\> given\.$#'
+			identifier: argument.type
+			count: 9
+			path: tests/Unit/Otlp/TracesProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Trace\\V1\\ScopeSpans\:\:setSpans\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Trace\\V1\\Span\>, array\<int, Opentelemetry\\Proto\\Trace\\V1\\Span\> given\.$#'
+			identifier: argument.type
+			count: 9
+			path: tests/Unit/Otlp/TracesProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Trace\\V1\\Span\:\:setEvents\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Trace\\V1\\Span\\Event\>, array\<int, Opentelemetry\\Proto\\Trace\\V1\\Span\\Event\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Otlp/TracesProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Trace\\V1\\Span\:\:setLinks\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Trace\\V1\\Span\\Link\>, array\<int, Opentelemetry\\Proto\\Trace\\V1\\Span\\Link\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Otlp/TracesProtobufDecoderTest.php
+
+		-
+			message: '#^Parameter \#1 \$var of method Opentelemetry\\Proto\\Trace\\V1\\Span\\Event\:\:setAttributes\(\) expects Google\\Protobuf\\Internal\\RepeatedField&iterable\<Opentelemetry\\Proto\\Common\\V1\\KeyValue\>, array\<int, Opentelemetry\\Proto\\Common\\V1\\KeyValue\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: tests/Unit/Otlp/TracesProtobufDecoderTest.php
+
+		-
+			message: '#^Access to an undefined property App\\Read\\Compute\\Predicates\\Predicate\:\:\$column\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Unit/Read/Compute/PredicateTreeCompilerTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertInstanceOf\(\) with ''App\\\\Schema\\\\SchemaDefinition'' and App\\Schema\\SchemaDefinition will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Schema/SchemaCatalogTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertInstanceOf\(\) with ''Flow\\\\Parquet\\\\ParquetFile\\\\Schema'' and Flow\\Parquet\\ParquetFile\\Schema will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Schema/SchemaCompilerTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\) with ''_schema_id'' and ''_schema_id'' will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Schema/SchemaCompilerTest.php
+
+		-
+			message: '#^Call to static method PHPUnit\\Framework\\Assert\:\:assertSame\(\) with ''_schema_version'' and ''_schema_version'' will always evaluate to true\.$#'
+			identifier: staticMethod.alreadyNarrowedType
+			count: 1
+			path: tests/Unit/Schema/SchemaCompilerTest.php
+
+		-
+			message: '#^Access to an undefined property Psr\\Log\\AbstractLogger\:\:\$records\.$#'
+			identifier: property.notFound
+			count: 2
+			path: tests/Unit/Tenancy/TenantRegistryTest.php
+
+		-
+			message: '#^Method App\\Tenancy\\Source\\TenantSourceInterface@anonymous/tests/Unit/Tenancy/TenantRegistryTest\.php\:122\:\:__construct\(\) has parameter \$hashes with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Unit/Tenancy/TenantRegistryTest.php
+
+		-
+			message: '#^Method App\\Tenancy\\Source\\TenantSourceInterface@anonymous/tests/Unit/Tenancy/TenantRegistryTest\.php\:171\:\:__construct\(\) has parameter \$entries with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: tests/Unit/Tenancy/TenantRegistryTest.php
+
+		-
+			message: '#^Access to an undefined property Psr\\Log\\AbstractLogger\:\:\$records\.$#'
+			identifier: property.notFound
+			count: 1
+			path: tests/Unit/Tenancy/Token/LastUsedRecorderTest.php
+
+		-
+			message: '#^Call to function method_exists\(\) with ''Symfony\\\\Component\\\\Dotenv\\\\Dotenv'' and ''bootEnv'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: tests/bootstrap.php

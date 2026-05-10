@@ -91,7 +91,8 @@
             "importmap:install": "symfony-cmd"
         },
         "post-install-cmd": [
-            "@auto-scripts"
+            "@auto-scripts",
+            "App\\Composer\\Hooks::printDevHints"
         ],
         "post-update-cmd": [
             "@auto-scripts"
@@ -100,7 +101,26 @@
         "test:unit": "phpunit --testsuite=unit --no-coverage",
         "test:component": "phpunit --testsuite=component --no-coverage",
         "test:functional": "phpunit --testsuite=functional --no-coverage",
-        "test:coverage": "phpunit --testsuite=unit,component,functional"
+        "test:coverage": "phpunit --testsuite=unit,component,functional",
+        "tools:install": [
+            "@composer install -d tools/phpstan --no-interaction --no-progress",
+            "@composer install -d tools/php-cs-fixer --no-interaction --no-progress",
+            "@composer install -d tools/rector --no-interaction --no-progress"
+        ],
+        "tools:update": [
+            "@composer update -d tools/phpstan --no-interaction --no-progress",
+            "@composer update -d tools/php-cs-fixer --no-interaction --no-progress",
+            "@composer update -d tools/rector --no-interaction --no-progress"
+        ],
+        "phpstan": "tools/phpstan/vendor/bin/phpstan analyse --memory-limit=1G",
+        "cs:check": "tools/php-cs-fixer/vendor/bin/php-cs-fixer check --diff",
+        "cs:fix": "tools/php-cs-fixer/vendor/bin/php-cs-fixer fix",
+        "rector": "tools/rector/vendor/bin/rector process",
+        "rector:dry": "tools/rector/vendor/bin/rector process --dry-run",
+        "quality": [
+            "@cs:check",
+            "@phpstan"
+        ]
     },
     "conflict": {
         "symfony/symfony": "*"

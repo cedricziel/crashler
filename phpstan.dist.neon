@@ -1,0 +1,38 @@
+includes:
+    - tools/phpstan/vendor/phpstan/phpstan-symfony/extension.neon
+    - tools/phpstan/vendor/phpstan/phpstan-symfony/rules.neon
+    - tools/phpstan/vendor/phpstan/phpstan-doctrine/extension.neon
+    - tools/phpstan/vendor/phpstan/phpstan-doctrine/rules.neon
+    - tools/phpstan/vendor/phpstan/phpstan-phpunit/extension.neon
+    - tools/phpstan/vendor/phpstan/phpstan-phpunit/rules.neon
+    # Pre-existing findings to whittle down in follow-up work. New code
+    # should NOT add to the baseline; remove entries as they're fixed.
+    # Regenerate with `composer phpstan -- --generate-baseline`.
+    - phpstan-baseline.neon
+
+parameters:
+    level: 6
+
+    paths:
+        - src
+        - tests
+
+    excludePaths:
+        - var/*
+        - vendor/*
+        - tools/*/vendor/*
+        - migrations/*
+
+    # PHPStan caches incremental result data here. Speeds up repeat runs
+    # within the same branch from ~10s to sub-second. Gitignored.
+    tmpDir: .phpstan.cache
+
+    # Container-aware Symfony introspection (request-resolution, service
+    # ID typing) and EntityManager-aware Doctrine introspection are
+    # available by setting `containerXmlPath` and `objectManagerLoader`
+    # respectively. Left disabled for the initial green run; enable once
+    # the baseline is stable and the team is comfortable with the longer
+    # cold-start.
+
+    # Project-specific suppressions go here as we discover them.
+    ignoreErrors: []

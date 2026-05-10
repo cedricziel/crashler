@@ -1,0 +1,14 @@
+{
+    "name": "crashler/tool-php-cs-fixer",
+    "description": "Isolated PHP-CS-Fixer toolchain for the crashler project. See ../../openspec/specs/developer-tooling/.",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.5",
+        "friendsofphp/php-cs-fixer": "^3.85"
+    },
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist"
+    }
+}

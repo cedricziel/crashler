@@ -25,3 +25,14 @@
 # Deployer host config (real hostnames/paths must never be committed).
 # See .env.deploy.example for the schema.
 /.env.deploy
+
+# Quality tools live under tools/<tool>/ with their own composer.json and
+# composer.lock (both tracked). Their vendor/ directories are gitignored
+# because they're regeneratable via `composer tools:install`.
+/tools/*/vendor/
+
+# PHPStan result cache. Speeds up incremental analysis; rebuilt on demand.
+/.phpstan.cache/
+
+# PHP-CS-Fixer cache. Skips re-checking unchanged files.
+/.php-cs-fixer.cache

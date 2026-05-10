@@ -1,0 +1,17 @@
+{
+    "name": "crashler/tool-phpstan",
+    "description": "Isolated PHPStan toolchain for the crashler project. See ../../openspec/specs/developer-tooling/.",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.5",
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-symfony": "^2.0",
+        "phpstan/phpstan-doctrine": "^2.0",
+        "phpstan/phpstan-phpunit": "^2.0"
+    },
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist"
+    }
+}

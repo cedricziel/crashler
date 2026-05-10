@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+#
+# crashler pre-commit hook.
+#
+# Steps (abort on first failure that isn't auto-fixable):
+#   1. Identify staged .php files.
+#   2. Run PHP-CS-Fixer in fix mode against just those files; re-stage
+#      anything it modified. (Style is mechanical — auto-fix is fine.)
+#   3. Run PHPStan against the whole project. Abort on non-zero exit.
+#
+# Activation: `git config core.hooksPath .githooks` once per clone.
+# Bypass:     `git commit --no-verify` (CI catches violations either way).
+#
+# See openspec/specs/developer-tooling/spec.md for the contract.
+
+set -uo pipefail
+
+# Discover the repo root from the hook's vantage point so we work even
+# when invoked from a subdirectory.
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root" || exit 1
+
+phpstan_bin="tools/phpstan/vendor/bin/phpstan"
+csfixer_bin="tools/php-cs-fixer/vendor/bin/php-cs-fixer"
+
+if [[ ! -x "$phpstan_bin" ]] || [[ ! -x "$csfixer_bin" ]]; then
+    cat >&2 <<'EOF'
+✖ pre-commit hook: missing tool binaries.
+
+  Run `composer tools:install` to populate tools/*/vendor/, then retry.
+
+  (If you really need to commit without the hook, use `git commit --no-verify`.
+   CI will still enforce the same checks.)
+EOF
+    exit 1
+fi
+
+# 1+2: PHP-CS-Fixer on staged .php files only.
+mapfile -t staged_php < <(git diff --cached --name-only --diff-filter=ACM | grep -E '\.php$' || true)
+
+if (( ${#staged_php[@]} > 0 )); then
+    echo "→ pre-commit: php-cs-fixer on ${#staged_php[@]} staged file(s)"
+    if ! "$csfixer_bin" fix --quiet "${staged_php[@]}"; then
+        echo "✖ pre-commit: php-cs-fixer reported errors that couldn't be auto-fixed; aborting commit." >&2
+        exit 1
+    fi
+
+    # Re-stage anything PHP-CS-Fixer changed so the commit captures the fixes.
+    mapfile -t modified_after_fix < <(git diff --name-only -- "${staged_php[@]}" | grep -E '\.php$' || true)
+    if (( ${#modified_after_fix[@]} > 0 )); then
+        echo "→ pre-commit: re-staging ${#modified_after_fix[@]} file(s) after auto-fix"
+        git add -- "${modified_after_fix[@]}"
+    fi
+fi
+
+# 3: PHPStan against the whole project.
+# (Static analysis benefits from the full graph — partial runs hide regressions.)
+echo "→ pre-commit: phpstan"
+if ! "$phpstan_bin" analyse --memory-limit=1G --no-progress; then
+    echo "✖ pre-commit: phpstan reported problems; aborting commit." >&2
+    echo "  Fix the findings or commit with --no-verify if you intend to land them anyway." >&2
+    exit 1
+fi
+
+echo "✓ pre-commit checks passed."
+exit 0
