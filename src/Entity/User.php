@@ -111,6 +111,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
     }
 
+    public function __toString(): string
+    {
+        return (string) $this->email;
+    }
+
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
