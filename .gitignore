@@ -36,3 +36,6 @@
 
 # PHP-CS-Fixer cache. Skips re-checking unchanged files.
 /.php-cs-fixer.cache
+
+# Infection mutation-testing cache.
+/.infection.cache/

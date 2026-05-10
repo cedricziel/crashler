@@ -1,0 +1,84 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * Reads var/coverage/clover.xml (produced by `composer test:coverage`) and
+ * fails the build if line coverage is below the configured threshold.
+ *
+ * Usage:   bin/coverage-threshold [--min=<percent>] [--report=<path>]
+ *          bin/coverage-threshold --min=70
+ *
+ * Defaults: --min=70 --report=var/coverage/clover.xml
+ *
+ * Exits 0 when coverage ≥ threshold, 1 when below, 2 on input errors.
+ */
+
+$argv = $_SERVER['argv'];
+
+$min = 70.0;
+$report = __DIR__.'/../var/coverage/clover.xml';
+
+foreach (\array_slice($argv, 1) as $arg) {
+    if (\str_starts_with($arg, '--min=')) {
+        $min = (float) substr($arg, 6);
+        continue;
+    }
+    if (\str_starts_with($arg, '--report=')) {
+        $report = substr($arg, 9);
+        continue;
+    }
+    if ('--help' === $arg || '-h' === $arg) {
+        fwrite(\STDOUT, "Usage: bin/coverage-threshold [--min=<percent>] [--report=<path>]\n");
+        exit(0);
+    }
+    fwrite(\STDERR, "Unknown argument: {$arg}\n");
+    exit(2);
+}
+
+if (!is_file($report)) {
+    fwrite(\STDERR, "Coverage report not found at {$report}.\n");
+    fwrite(\STDERR, "Run `composer test:coverage` first to generate it.\n");
+    exit(2);
+}
+
+$xml = @simplexml_load_file($report);
+if (false === $xml) {
+    fwrite(\STDERR, "Could not parse {$report} as XML.\n");
+    exit(2);
+}
+
+$metrics = $xml->project->metrics ?? null;
+if (null === $metrics) {
+    fwrite(\STDERR, "No <project><metrics> element found in {$report}.\n");
+    exit(2);
+}
+
+$statements = (int) ($metrics['statements'] ?? 0);
+$covered = (int) ($metrics['coveredstatements'] ?? 0);
+
+if (0 === $statements) {
+    fwrite(\STDERR, "Coverage report has 0 statements; nothing to check.\n");
+    exit(2);
+}
+
+$percent = ($covered / $statements) * 100.0;
+
+$summary = sprintf(
+    "Line coverage: %.2f%% (%d / %d statements). Threshold: %.2f%%.\n",
+    $percent,
+    $covered,
+    $statements,
+    $min,
+);
+
+if ($percent + 0.001 < $min) {
+    fwrite(\STDERR, $summary);
+    fwrite(\STDERR, sprintf("✖ Coverage below threshold (need at least %.2f%%, got %.2f%%).\n", $min, $percent));
+    exit(1);
+}
+
+fwrite(\STDOUT, $summary);
+fwrite(\STDOUT, "✓ Coverage threshold met.\n");
+exit(0);

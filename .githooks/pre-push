@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+#
+# crashler pre-push hook.
+#
+# Runs the unit suite before letting any commit reach the remote. The
+# unit suite is the fastest of the three suites (~0.3s on a warm cache,
+# no DB required, no kernel boot beyond plain composer autoload), so
+# the round-trip cost is negligible compared to the value of catching
+# obvious breakage.
+#
+# Component + functional suites are NOT run pre-push; they need real
+# I/O (Postgres, on-disk Parquet fixtures, the Symfony kernel) which
+# multiplies the wait time. Those run in CI on every push.
+#
+# Activation: `git config core.hooksPath .githooks` once per clone
+#             (same one-liner that activates the pre-commit hook).
+# Bypass:     `git push --no-verify` if you knowingly need to skip.
+
+set -uo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root" || exit 1
+
+phpunit_bin="vendor/bin/phpunit"
+
+if [[ ! -x "$phpunit_bin" ]]; then
+    cat >&2 <<'EOF'
+✖ pre-push hook: vendor/bin/phpunit not found.
+
+  Run `composer install` to populate vendor/, then retry.
+  (If this is somehow expected, push with `--no-verify`.)
+EOF
+    exit 1
+fi
+
+echo "→ pre-push: composer test:unit"
+if ! composer --quiet test:unit; then
+    cat >&2 <<'EOF'
+
+✖ pre-push: unit suite failed; aborting push.
+
+  Fix the failure or push with --no-verify if you intend to land it
+  anyway. CI will run the full suite (unit + component + functional)
+  regardless.
+EOF
+    exit 1
+fi
+
+echo "✓ pre-push checks passed."
+exit 0

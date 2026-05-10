@@ -1,0 +1,29 @@
+{
+    "$schema": "tools/infection/vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": [
+            "src"
+        ],
+        "excludes": [
+            "Composer/Hooks.php",
+            "Console",
+            "Kernel.php",
+            "DependencyInjection/Compiler",
+            "Story",
+            "Otlp/Dto"
+        ]
+    },
+    "timeout": 30,
+    "logs": {
+        "text": "var/coverage/infection.log",
+        "html": "var/coverage/infection.html",
+        "summary": "var/coverage/infection-summary.log"
+    },
+    "tmpDir": ".infection.cache",
+    "phpUnit": {
+        "configDir": ".",
+        "customPath": "vendor/bin/phpunit"
+    },
+    "minMsi": 60,
+    "minCoveredMsi": 70
+}

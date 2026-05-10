@@ -1,0 +1,17 @@
+{
+    "name": "crashler/tool-infection",
+    "description": "Isolated Infection toolchain for the crashler project. See ../../openspec/specs/developer-tooling/.",
+    "type": "library",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.5",
+        "infection/infection": "^0.30"
+    },
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "allow-plugins": {
+            "infection/extension-installer": true
+        }
+    }
+}
