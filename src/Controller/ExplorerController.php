@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Explorer\KpiBundleResolver;
+use App\Explorer\KpiValue;
 use App\Explorer\SignalProfileRegistry;
 use App\Explorer\UnknownSignalException;
+use App\Read\Criteria\TimeWindow;
 use App\Repository\TenantRepository;
 use App\Security\Voter\TenantVoter;
+use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,6 +22,9 @@ final class ExplorerController extends AbstractController
 {
     public function __construct(
         private readonly SignalProfileRegistry $profiles,
+        private readonly KpiBundleResolver $kpiResolver,
+        private readonly ClockInterface $clock,
+        private readonly int $maxTimeWindowDays,
     ) {
     }
 
@@ -42,20 +49,54 @@ final class ExplorerController extends AbstractController
             throw new NotFoundHttpException(\sprintf('Unknown signal "%s".', $signal));
         }
 
-        // For v1 we render the layout shell with empty-state placeholders for
-        // KPI/chart/table. The actual data resolution (KpiBundleResolver +
-        // chart aggregate + first-page search) lands in follow-up tasks; the
-        // template already speaks the SignalProfile contract so swapping in
-        // populated data is purely additive — no template churn.
+        // Resolve the time window. Same parser the read API uses, so a
+        // window > the configured cap surfaces the same 400 error.
+        try {
+            $window = TimeWindow::parse(
+                ['since' => $request->query->get('since'), 'until' => $request->query->get('until')],
+                $this->clock,
+                $this->maxTimeWindowDays,
+            );
+            $windowError = null;
+        } catch (\InvalidArgumentException|\OutOfRangeException $e) {
+            $window = null;
+            $windowError = $e->getMessage();
+        }
+
+        $kpiValues = null === $window
+            ? array_map(static fn ($spec) => KpiValue::empty($spec), $profile->kpis())
+            : $this->kpiResolver->resolve($tenant->getSlug(), $signal, $profile->kpis(), $window);
+
+        $kpiState = null === $window
+            ? 'error'
+            : (self::anyKpiPopulated($kpiValues) ? 'populated' : 'empty');
+
+        // Chart + table data resolution lands in follow-up; until then we
+        // render their empty states. The page already invests in the right
+        // shape — a populated chart/table is purely additive.
         return $this->render('explorer/index.html.twig', [
             'tenant' => $tenant,
             'profile' => $profile,
             'signal' => $signal,
-            // Per-state placeholders. State enum is duplicated as constants on
-            // the KpiTile component; a string here is enough for the v1 page.
-            'kpi_state' => 'empty',
+            'kpi_values' => $kpiValues,
+            'kpi_state' => $kpiState,
             'chart_state' => 'empty',
             'table_state' => 'empty',
+            'window_error' => $windowError,
         ]);
+    }
+
+    /**
+     * @param list<KpiValue> $values
+     */
+    private static function anyKpiPopulated(array $values): bool
+    {
+        foreach ($values as $v) {
+            if (null !== $v->value) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

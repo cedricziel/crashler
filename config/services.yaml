@@ -309,6 +309,11 @@ services:
         arguments:
             $profiles: !tagged_iterator crashler.explorer.signal_profile
 
+    App\Controller\ExplorerController:
+        arguments:
+            $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
+        tags: ['controller.service_arguments']
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 

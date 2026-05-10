@@ -46,9 +46,13 @@
 
         {# KPI row — five tiles #}
         <section class="explorer__row" aria-label="KPI strip">
+            {% if window_error %}
+                <div role="alert" style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 0.5rem 0.75rem; color: #991b1b; font-size: 0.85rem; margin-bottom: 0.5rem;">{{ window_error }}</div>
+            {% endif %}
             <div class="kpi-strip">
-                {% for kpi in profile.kpis %}
-                    <twig:Explorer:KpiTile :spec="kpi" state="{{ kpi_state }}"/>
+                {% for kv in kpi_values %}
+                    {% set tileState = kv.value is not null ? 'populated' : kpi_state %}
+                    <twig:Explorer:KpiTile :spec="kv.spec" state="{{ tileState }}" :value="kv.value" :deltaPercent="kv.deltaPercent"/>
                 {% endfor %}
             </div>
         </section>
