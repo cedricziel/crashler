@@ -314,6 +314,11 @@ services:
             $maxTimeWindowDays: '%crashler.read.max_time_window_days%'
         tags: ['controller.service_arguments']
 
+    App\Console\CompactPartitionsCommand:
+        arguments:
+            $storageRoot: '%crashler.storage_root%'
+            $configuredCompressionName: '%crashler.compression%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
