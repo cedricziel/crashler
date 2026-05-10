@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Explorer;
 
-use App\Read\Compute\AggregatingScanner;
+use App\Read\Compute\Aggregations\Accumulator;
+use App\Read\Compute\Aggregations\AccumulatorFactory;
+use App\Read\Compute\ParquetScanner;
 use App\Read\Compute\PartitionPruner;
 use App\Read\Compute\Predicates\ColumnInRange;
 use App\Read\Criteria\TimeWindow;
@@ -14,19 +16,23 @@ use Symfony\Contracts\Cache\ItemInterface;
 /**
  * Resolves the five KPI tiles for an explorer page in one pass.
  *
- * Each unique (function, column) tuple SHALL run at most ONE aggregation
- * scan per window — KPIs that share a tuple share the same scan. Two
- * windows are scanned: the current, and the immediately-prior of equal
- * width (for the ▲▼ delta).
+ * Single-pass strategy: ONE ParquetScanner.scan() per window iterates all
+ * rows in the partition globs once; multiple Accumulators (one per unique
+ * KpiSpec.groupKey()) consume the same row stream in parallel. So the
+ * trace explorer with 5 KPIs across 5 different (function, column) tuples
+ * costs exactly 2 parquet scans (current + prior window) — not 10.
  *
- * Failures in a single sub-scan SHALL NOT poison the strip; the affected
- * KPI degrades to its empty value (`—` in the rendered tile) so the rest
- * of the page renders.
+ * Two windows are scanned: the current, and the immediately-prior of
+ * equal width (for the ▲▼ delta).
+ *
+ * Failures within a single accumulator (e.g. malformed value column)
+ * SHALL NOT poison the strip; the affected KPI degrades to its empty
+ * value so the rest of the page renders.
  */
 final readonly class KpiBundleResolver
 {
     public function __construct(
-        private AggregatingScanner $scanner,
+        private ParquetScanner $scanner,
         private PartitionPruner $pruner,
         private PriorWindowCalculator $priorCalc,
         private CacheInterface $cache,
@@ -87,37 +93,64 @@ final readonly class KpiBundleResolver
             $timeColumn = 'traces' === $signal ? 'start_time_unix_nano' : 'time_unix_nano';
             $predicates = [new ColumnInRange($timeColumn, $window->sinceUnixNano, $window->untilUnixNano)];
 
+            // Build one accumulator per unique groupKey. Multiple KpiSpecs
+            // sharing a (function, column) tuple share the accumulator.
+            /** @var array<string, Accumulator> $accumulators */
+            $accumulators = [];
             /** @var array<string, KpiSpec> $byKey */
             $byKey = [];
             foreach ($specs as $spec) {
-                $byKey[$spec->groupKey()] = $spec;
+                $key = $spec->groupKey();
+                if (isset($accumulators[$key])) {
+                    continue;
+                }
+                try {
+                    $accumulators[$key] = AccumulatorFactory::for($spec->function);
+                    $byKey[$key] = $spec;
+                } catch (\Throwable) {
+                    // Unknown function — skip this KPI; the strip renders
+                    // it as empty.
+                }
+            }
+
+            try {
+                $scan = $this->scanner->scan($globs, $predicates, limit: \PHP_INT_MAX);
+            } catch (\Throwable) {
+                return array_fill_keys(array_keys($accumulators), null);
+            }
+
+            // Single pass — feed every accumulator from each row.
+            $rowCount = 0;
+            foreach ($scan->rows as $row) {
+                ++$rowCount;
+                foreach ($byKey as $key => $spec) {
+                    $cellValue = null;
+                    if (null !== $spec->column) {
+                        $raw = $row[$spec->column] ?? null;
+                        if (\is_int($raw) || \is_float($raw)) {
+                            $cellValue = $raw;
+                        } elseif (\is_string($raw) && is_numeric($raw)) {
+                            $cellValue = str_contains($raw, '.') ? (float) $raw : (int) $raw;
+                        }
+                    }
+                    $accumulators[$key]->feed($cellValue);
+                }
+            }
+
+            // Empty window → all KPIs degrade to "no data" rather than
+            // confidently reporting "0 of everything"; matches the UX
+            // contract documented in the explorer-ui spec.
+            if (0 === $rowCount) {
+                return array_fill_keys(array_keys($accumulators), null);
             }
 
             $values = [];
-            foreach ($byKey as $key => $spec) {
-                try {
-                    $result = $this->scanner->aggregate($globs, $predicates, $spec->function, $spec->column, null);
-                    $values[$key] = self::firstRowValue($result->rows);
-                } catch (\Throwable) {
-                    $values[$key] = null;
-                }
+            foreach ($accumulators as $key => $acc) {
+                $values[$key] = $acc->value();
             }
 
             return $values;
         });
-    }
-
-    /**
-     * @param list<array<string, mixed>> $rows
-     */
-    private static function firstRowValue(array $rows): int|float|null
-    {
-        if ([] === $rows) {
-            return null;
-        }
-        $value = $rows[0]['value'] ?? null;
-
-        return \is_int($value) || \is_float($value) ? $value : null;
     }
 
     private static function deltaPercent(int|float|null $now, int|float|null $then): ?float
