@@ -1,52 +1,70 @@
 {# Live Component: ResultTable.
    Pre-hydration: skeleton rows. Post-hydration: populated rows or
-   empty-state copy. Cursor pagination is wired through table_controller.js
-   on the populated path (Path 1 of the explorer follow-up). #}
-<table {{ attributes }} class="table"
-       data-controller="table"
-       data-table-rows-endpoint-value="">
-    <thead>
-        <tr>
-            {% for col in this.columns %}
-                <th style="{% if col.cssWidth %}width: {{ col.cssWidth }};{% endif %}">{{ col.label }}</th>
-            {% endfor %}
-        </tr>
-    </thead>
-    <tbody>
-        {% if this.tenantSlug == '' or this.windowUntilNs == 0 %}
-            {% for _ in 1..5 %}
-                <tr aria-busy="true"><td colspan="{{ this.columns|length }}" style="background: #f7f7f7; height: 1.5rem;">&nbsp;</td></tr>
-            {% endfor %}
-        {% else %}
-            {% set rows = this.rows %}
-            {% if rows|length == 0 %}
-                <tr class="empty-row"><td colspan="{{ this.columns|length }}">No rows match. Try widening the time range or removing filters.</td></tr>
-            {% else %}
-                {% for row in rows %}
-                    <tr>
-                        {% for col in this.columns %}
-                            {% set raw = row[col.key] ?? null %}
-                            <td class="{% if col.monospace %}mono{% endif %}">
-                                {% if col.key == 'time' or col.key ends with 'time_unix_nano' %}
-                                    {% set ns = row.time_unix_nano|default(row.start_time_unix_nano|default(null)) %}
-                                    {% if ns %}
-                                        {%- set s = (ns // 1000000000) -%}
-                                        {%- set ms = ((ns // 1000000) % 1000) -%}
-                                        {{- s|date('H:i:s') -}}.{{- '%03d'|format(ms) -}}
-                                    {% else %}—{% endif %}
-                                {% elseif raw is null %}
-                                    <span style="color: #bbb;">—</span>
-                                {% elseif raw is iterable %}
-                                    <code style="font-size: 0.78rem;">{{ raw|json_encode|slice(0, 60) }}</code>
-                                {% else %}
-                                    {% set str = raw|default('—')|e %}
-                                    {{ str|length > 80 ? str|slice(0, 80) ~ '…' : str }}
-                                {% endif %}
-                            </td>
-                        {% endfor %}
-                    </tr>
+   empty-state copy. Cursor pagination via the prev/next LiveActions
+   below. #}
+{% set hydrated = this.tenantSlug != '' and this.windowUntilNs != 0 %}
+{% set page = hydrated ? this.page : null %}
+<div {{ attributes }}>
+    <table class="table">
+        <thead>
+            <tr>
+                {% for col in this.columns %}
+                    <th style="{% if col.cssWidth %}width: {{ col.cssWidth }};{% endif %}">{{ col.label }}</th>
                 {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% if not hydrated %}
+                {% for _ in 1..5 %}
+                    <tr aria-busy="true"><td colspan="{{ this.columns|length }}" style="background: #f7f7f7; height: 1.5rem;">&nbsp;</td></tr>
+                {% endfor %}
+            {% else %}
+                {% set rows = page.rows %}
+                {% if rows|length == 0 %}
+                    <tr class="empty-row"><td colspan="{{ this.columns|length }}">No rows match. Try widening the time range or removing filters.</td></tr>
+                {% else %}
+                    {% for row in rows %}
+                        <tr>
+                            {% for col in this.columns %}
+                                {% set raw = row[col.key] ?? null %}
+                                <td class="{% if col.monospace %}mono{% endif %}">
+                                    {% if col.key == 'time' or col.key ends with 'time_unix_nano' %}
+                                        {% set ns = row.time_unix_nano|default(row.start_time_unix_nano|default(null)) %}
+                                        {% if ns %}
+                                            {%- set s = (ns // 1000000000) -%}
+                                            {%- set ms = ((ns // 1000000) % 1000) -%}
+                                            {{- s|date('H:i:s') -}}.{{- '%03d'|format(ms) -}}
+                                        {% else %}—{% endif %}
+                                    {% elseif raw is null %}
+                                        <span style="color: #bbb;">—</span>
+                                    {% elseif raw is iterable %}
+                                        <code style="font-size: 0.78rem;">{{ raw|json_encode|slice(0, 60) }}</code>
+                                    {% else %}
+                                        {% set str = raw|default('—')|e %}
+                                        {{ str|length > 80 ? str|slice(0, 80) ~ '…' : str }}
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                {% endif %}
             {% endif %}
-        {% endif %}
-    </tbody>
-</table>
+        </tbody>
+    </table>
+
+    {% if hydrated %}
+        <nav class="paginator" aria-label="Result pagination" style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; font-size: 0.85rem; color: #666;">
+            <button type="button"
+                    data-action="live#action"
+                    data-live-action-param="prevPage"
+                    {% if not this.hasPrev %}disabled{% endif %}
+                    style="padding: 0.3rem 0.8rem; border: 1px solid #d4d4d4; background: #fff; border-radius: 4px; cursor: pointer;{% if not this.hasPrev %} opacity: 0.4; cursor: not-allowed;{% endif %}">‹ prev</button>
+            <span>page {{ this.pageNumber }}</span>
+            <button type="button"
+                    data-action="live#action"
+                    data-live-action-param="nextPage"
+                    {% if page.nextCursor is null %}disabled{% endif %}
+                    style="padding: 0.3rem 0.8rem; border: 1px solid #d4d4d4; background: #fff; border-radius: 4px; cursor: pointer;{% if page.nextCursor is null %} opacity: 0.4; cursor: not-allowed;{% endif %}">next ›</button>
+        </nav>
+    {% endif %}
+</div>

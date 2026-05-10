@@ -33,34 +33,58 @@ final readonly class TableResultResolver
     }
 
     /**
+     * Returns the first page of rows for the explorer's results table.
+     *
      * @return list<array<string, mixed>>
      */
     public function firstPage(string $tenantSlug, string $signal, TimeWindow $window): array
+    {
+        return $this->page($tenantSlug, $signal, $window, null)['rows'];
+    }
+
+    /**
+     * Returns one page of rows + the cursor for the next page (or null
+     * if no more rows exist beyond this page).
+     *
+     * The cursor is the raw `{lastTimeUnixNano, lastRowId}` position
+     * array from ParquetScanner — opaque-ish, but used in-process only.
+     * No HMAC signing here (the read API's cursor signing is for
+     * external clients).
+     *
+     * @param ?array{lastTimeUnixNano: int, lastRowId: int} $cursor
+     *
+     * @return array{rows: list<array<string, mixed>>, nextCursor: ?array{lastTimeUnixNano: int, lastRowId: int}}
+     */
+    public function page(string $tenantSlug, string $signal, TimeWindow $window, ?array $cursor): array
     {
         $window = $this->bucket->snap($window);
         $globs = $this->pruner->globsFor($tenantSlug, $signal, $window);
 
         $cacheKey = \sprintf(
-            'explorer.table.%s.%s.%d.%d',
+            'explorer.table.%s.%s.%d.%d.%s',
             $tenantSlug,
             $signal,
             $window->sinceUnixNano,
             $window->untilUnixNano,
+            null === $cursor ? '0' : $cursor['lastTimeUnixNano'].'-'.$cursor['lastRowId'],
         );
 
-        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($globs, $signal, $window): array {
+        return $this->cache->get($cacheKey, function (ItemInterface $item) use ($globs, $signal, $window, $cursor): array {
             $item->expiresAfter($this->cacheTtlSeconds);
 
             $timeColumn = 'traces' === $signal ? 'start_time_unix_nano' : 'time_unix_nano';
             $predicates = [new ColumnInRange($timeColumn, $window->sinceUnixNano, $window->untilUnixNano)];
 
             try {
-                $result = $this->scanner->scan($globs, $predicates, $this->defaultPageSize);
+                $result = $this->scanner->scan($globs, $predicates, $this->defaultPageSize, $cursor);
             } catch (\Throwable) {
-                return [];
+                return ['rows' => [], 'nextCursor' => null];
             }
 
-            return $result->rows;
+            return [
+                'rows' => $result->rows,
+                'nextCursor' => $result->hasMore ? $result->position : null,
+            ];
         });
     }
 }

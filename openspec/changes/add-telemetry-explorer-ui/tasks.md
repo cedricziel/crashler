@@ -77,11 +77,10 @@ The "verify coverage gate" task at the bottom is mandatory per `openspec/config.
 
 ## Result table + Stimulus controller
 
-- [x] **9.1** Test: `tests/Component/Explorer/ResultTableComponentTest` — populated, empty, loading, ns-timestamp regression.
+- [x] **9.1** Test: `tests/Component/Explorer/ResultTableComponentTest` — populated, empty, loading, ns-timestamp regression, paginator on first page, next/prev navigation.
 - [x] **9.2** Implement: `App\Twig\Components\Explorer\ResultTable` (Live Component, deferred). State-aware template.
-- [ ] **9.3** Test: `tests/Functional/Explorer/RowsFragmentEndpointTest`.
-- [ ] **9.4** Implement: `ExplorerController::tableFragment` route — `_rows` HTML fragment for cursor pagination.
-- [x] **9.5** Implement: `assets/controllers/table_controller.js` (paginator UI is the missing half — the controller exists, the next/prev buttons don't yet).
+- [SKIP] **9.3, 9.4** `_rows` fragment endpoint — superseded. Cursor pagination is implemented in-component via `nextPage` / `prevPage` LiveActions; the Live Component handles the partial re-render. No separate route needed.
+- [x] **9.5** `table_controller.js` exists for fetch-based pagination but is not used; the LiveAction-based paginator replaces it. Worth removing the file in a cleanup pass.
 
 ## Trace waterfall page
 
@@ -111,7 +110,7 @@ The "verify coverage gate" task at the bottom is mandatory per `openspec/config.
 - [x] **13.0** (added) `App\Twig\Components\Explorer\FilterDatalists` Live Component — autocomplete for filter chips. Tests at `tests/Component/Explorer/FilterDatalistsComponentTest`.
 - [x] **13.1** Test: empty-state copy on the result table (covered by `testHydratedWindowWithNoDataRendersEmptyStateCopy`).
 - [SKIP] **13.2** Implement: any missing copy — done inline.
-- [ ] **13.3** Test: `tests/Functional/Explorer/CursorPaginationStaysOnPageTest`. Blocked on 9.4 (the `_rows` endpoint) being implemented first.
+- [SKIP] **13.3** Cursor-pagination-stays-on-page test — superseded by the architecture pivot. Each Live Component renders independently; clicking next/prev on ResultTable doesn't trigger a re-render of KpiStrip/Chart/QueryForm. No cross-section coupling exists to test.
 - [SKIP] **13.4** Implement: any missing wiring — covered by 9.5.
 - [SKIP] **13.5** Manual smoke test — done multiple times during the iterative deploy cycle.
 
@@ -133,7 +132,6 @@ The "verify coverage gate" task at the bottom is mandatory per `openspec/config.
 
 ## Remaining feature scope (priority-ordered)
 
-1. **9.3, 9.4** `_rows` cursor-pagination endpoint + paginator UI (table currently shows first page only)
-2. **8.4** Brush-select → URL rewrite plumbing (chart canvas can't yet rewrite the page's window)
-3. **7.4** `_chart.json` endpoint + interval bucketing in AggregatingScanner (chart canvas is empty placeholder)
-4. **10.x, 11.x, 12.x** Trace waterfall + sidebar + drill-to-logs (still empty for v1)
+1. **8.4** Brush-select → URL rewrite plumbing (chart canvas can't yet rewrite the page's window)
+2. **7.4** `_chart.json` endpoint + interval bucketing in AggregatingScanner (chart canvas is empty placeholder)
+3. **10.x, 11.x, 12.x** Trace waterfall + sidebar + drill-to-logs (still empty for v1)

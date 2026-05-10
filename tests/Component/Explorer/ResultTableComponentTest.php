@@ -109,4 +109,53 @@ final class ResultTableComponentTest extends KernelTestCase
         // The Time column should match HH:MM:SS.mmm somewhere in the row.
         self::assertMatchesRegularExpression('/\d{2}:\d{2}:\d{2}\.\d{3}/', $rendered);
     }
+
+    public function testHydratedRenderShowsPaginatorOnFirstPage(): void
+    {
+        $window = $this->seedLogs('test-pager', ['hello']);
+
+        $component = $this->createLiveComponent('Explorer:ResultTable', [
+            'tenantSlug' => 'test-pager',
+            'signal' => 'logs',
+            'windowSinceNs' => $window['since_ns'],
+            'windowUntilNs' => $window['until_ns'],
+        ]);
+
+        $rendered = (string) $component->render();
+
+        // Paginator visible. First page → prev disabled.
+        self::assertStringContainsString('aria-label="Result pagination"', $rendered);
+        self::assertStringContainsString('page 1', $rendered);
+        self::assertMatchesRegularExpression('/data-live-action-param="prevPage"[^>]*disabled/', $rendered);
+    }
+
+    public function testNextPageActionAdvancesCursor(): void
+    {
+        // Seed enough rows that one page (50) is exceeded. Page size is
+        // 50 by default; seed 60 rows so a next cursor exists.
+        $window = $this->seedLogs('test-pager-next', array_map(static fn ($i) => 'row '.$i, range(1, 60)));
+
+        $component = $this->createLiveComponent('Explorer:ResultTable', [
+            'tenantSlug' => 'test-pager-next',
+            'signal' => 'logs',
+            'windowSinceNs' => $window['since_ns'],
+            'windowUntilNs' => $window['until_ns'],
+        ]);
+
+        // First render — page 1, prev disabled.
+        $first = (string) $component->render();
+        self::assertStringContainsString('page 1', $first);
+
+        // Trigger nextPage LiveAction.
+        $component->call('nextPage');
+        $second = (string) $component->render();
+        self::assertStringContainsString('page 2', $second);
+        // After advancing, prev is no longer disabled.
+        self::assertDoesNotMatchRegularExpression('/data-live-action-param="prevPage"[^>]*disabled/', $second);
+
+        // prevPage walks back to page 1.
+        $component->call('prevPage');
+        $third = (string) $component->render();
+        self::assertStringContainsString('page 1', $third);
+    }
 }
