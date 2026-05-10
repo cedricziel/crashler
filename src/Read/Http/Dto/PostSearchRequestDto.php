@@ -16,10 +16,10 @@ namespace App\Read\Http\Dto;
 final class PostSearchRequestDto
 {
     /**
-     * @param mixed $since RFC3339 string, unix-nano numeric string, duration shorthand (`1h`), or null
-     * @param mixed $until same shapes as `$since`, or null
-     * @param mixed $limit integer, integer-as-string, or null
-     * @param mixed $cursor opaque cursor string, or null
+     * @param mixed                            $since    RFC3339 string, unix-nano numeric string, duration shorthand (`1h`), or null
+     * @param mixed                            $until    same shapes as `$since`, or null
+     * @param mixed                            $limit    integer, integer-as-string, or null
+     * @param mixed                            $cursor   opaque cursor string, or null
      * @param array<string, mixed>|list<mixed> $criteria parsed JSON tree
      */
     public function __construct(

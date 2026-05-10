@@ -78,7 +78,7 @@ final class PostLogsSearchTest extends KernelTestCase
             ],
         ]);
 
-        $services = array_map(fn (array $r): string => $r['resourceServiceName'], $body['member']);
+        $services = array_map(static fn (array $r): string => $r['resourceServiceName'], $body['member']);
         sort($services);
         self::assertSame(['checkout', 'payments'], $services);
     }
@@ -96,7 +96,7 @@ final class PostLogsSearchTest extends KernelTestCase
             ],
         ]);
 
-        $services = array_map(fn (array $r): string => $r['resourceServiceName'], $body['member']);
+        $services = array_map(static fn (array $r): string => $r['resourceServiceName'], $body['member']);
         self::assertSame(['checkout'], $services);
     }
 
@@ -114,7 +114,7 @@ final class PostLogsSearchTest extends KernelTestCase
             ],
         ]);
 
-        $events = array_map(fn (array $r): string => $r['eventName'], $body['member']);
+        $events = array_map(static fn (array $r): string => $r['eventName'], $body['member']);
         sort($events);
         self::assertSame(['login', 'signup'], $events);
     }
@@ -175,7 +175,7 @@ final class PostLogsSearchTest extends KernelTestCase
 
     public function testCursorWithMutatedCriteriaRejected(): void
     {
-        $this->writeLogs('test-tenant', array_map(fn ($i) => "x-$i", range(1, 25)));
+        $this->writeLogs('test-tenant', array_map(static fn ($i) => "x-$i", range(1, 25)));
 
         $page1 = $this->postSearch([
             'since' => '2026-05-09T13:00:00Z',
@@ -204,7 +204,7 @@ final class PostLogsSearchTest extends KernelTestCase
 
     public function testGetCursorRejectedOnPostSearch(): void
     {
-        $this->writeLogs('test-tenant', array_map(fn ($i) => "x-$i", range(1, 25)));
+        $this->writeLogs('test-tenant', array_map(static fn ($i) => "x-$i", range(1, 25)));
 
         // Mint a GET cursor first.
         $getPage1 = $this->browser()

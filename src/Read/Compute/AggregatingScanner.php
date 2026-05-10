@@ -36,8 +36,8 @@ final readonly class AggregatingScanner
     /**
      * @param list<string>    $partitionGlobs
      * @param list<Predicate> $predicates
-     * @param ?string         $groupByColumn snake_case column name; null = no grouping (single result row)
-     * @param ?string         $valueColumn   snake_case column whose values feed the accumulator (null only for `count`)
+     * @param ?string         $groupByColumn  snake_case column name; null = no grouping (single result row)
+     * @param ?string         $valueColumn    snake_case column whose values feed the accumulator (null only for `count`)
      */
     public function aggregate(
         array $partitionGlobs,

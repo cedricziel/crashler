@@ -7,7 +7,6 @@ namespace App\Read\Controller;
 use App\Read\Compute\InvalidPredicateTreeException;
 use App\Read\Compute\ParquetScanner;
 use App\Read\Compute\PartitionPruner;
-use App\Read\Compute\Predicates\ColumnEquals;
 use App\Read\Compute\Predicates\ColumnInRange;
 use App\Read\Compute\Predicates\Predicate;
 use App\Read\Compute\PredicateTreeCompiler;

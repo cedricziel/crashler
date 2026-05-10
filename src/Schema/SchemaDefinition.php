@@ -14,10 +14,10 @@ final readonly class SchemaDefinition
     public const string RESERVED_COLUMN_PREFIX = '_schema_';
 
     /**
-     * @param list<SchemaColumn>             $columns
-     * @param array<string, list<string>>    $resourcePromotions   column-name → list of fallback semconv keys
-     * @param array<string, list<string>>    $scopePromotions
-     * @param array<string, list<string>>    $recordPromotions
+     * @param list<SchemaColumn>          $columns
+     * @param array<string, list<string>> $resourcePromotions column-name → list of fallback semconv keys
+     * @param array<string, list<string>> $scopePromotions
+     * @param array<string, list<string>> $recordPromotions
      */
     public function __construct(
         public string $signal,
@@ -111,7 +111,7 @@ final readonly class SchemaDefinition
                 throw new \InvalidArgumentException(\sprintf(
                     'Column "%s" has invalid type "%s"; expected one of: %s.',
                     $name,
-                    \is_string($type) ? $type : (string) gettype($type),
+                    \is_string($type) ? $type : (string) \gettype($type),
                     implode(', ', self::ALLOWED_TYPES),
                 ));
             }
@@ -121,7 +121,7 @@ final readonly class SchemaDefinition
                 throw new \InvalidArgumentException(\sprintf(
                     'Column "%s" has invalid repetition "%s"; expected one of: %s.',
                     $name,
-                    \is_string($rep) ? $rep : (string) gettype($rep),
+                    \is_string($rep) ? $rep : (string) \gettype($rep),
                     implode(', ', self::ALLOWED_REPETITIONS),
                 ));
             }
@@ -146,7 +146,7 @@ final readonly class SchemaDefinition
                         'promotions.%s entry "%s" maps to column "%s" which is not declared in "columns".',
                         $level,
                         $semconvKey,
-                        \is_string($columnName) ? $columnName : (string) gettype($columnName),
+                        \is_string($columnName) ? $columnName : (string) \gettype($columnName),
                     ));
                 }
             }
@@ -195,10 +195,10 @@ final readonly class SchemaDefinition
      * extraction code can look up by column and iterate keys in the order
      * they were declared (legacy fallback semantics).
      *
-     * @param array<string, string> $raw  YAML form, key → column
-     * @param list<SchemaColumn>    $columns  unused at runtime; param kept for clarity
+     * @param array<string, string> $raw     YAML form, key → column
+     * @param list<SchemaColumn>    $columns unused at runtime; param kept for clarity
      *
-     * @return array<string, list<string>>  internal form, column → ordered keys
+     * @return array<string, list<string>> internal form, column → ordered keys
      */
     private static function normalisePromotions(array $raw, array $columns): array
     {

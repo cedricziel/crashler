@@ -104,7 +104,7 @@ final class DashboardController extends AbstractController
 
             if ($form->isValid()) {
                 $issued = $em->wrapInTransaction(
-                    function () use ($form, $user, $em, $tokenIssuer): \App\Tenancy\Token\IssuedToken {
+                    static function () use ($form, $user, $em, $tokenIssuer): \App\Tenancy\Token\IssuedToken {
                         $org = new Org();
                         $org->setSlug((string) $form->get('orgSlug')->getData());
                         $org->setName((string) $form->get('orgName')->getData());

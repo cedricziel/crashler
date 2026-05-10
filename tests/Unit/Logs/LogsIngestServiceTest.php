@@ -14,8 +14,8 @@ use App\Otlp\Dto\ScopeLogsDto;
 use App\Storage\PartitionPathResolver;
 use App\Tenancy\Tenant;
 use App\Tests\Support\CapturingParquetWriter;
-use App\Tests\Support\StubFilenameGenerator;
 use App\Tests\Support\LogsSchemaFixture;
+use App\Tests\Support\StubFilenameGenerator;
 use App\Tests\Support\TempStorageRoot;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -116,7 +116,7 @@ final class LogsIngestServiceTest extends TestCase
 
     public function testCreatesPartitionDirectoryBeforeWriting(): void
     {
-        $writer = new class() implements \App\Storage\WritesParquetFiles {
+        $writer = new class implements \App\Storage\WritesParquetFiles {
             public ?string $observedDir = null;
 
             public function writeAndCommit(string $finalPath, iterable $rows): void

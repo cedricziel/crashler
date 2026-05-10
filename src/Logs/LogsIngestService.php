@@ -11,7 +11,6 @@ use App\Otlp\Dto\AnyValueDto;
 use App\Otlp\Dto\ExportLogsServiceRequestDto;
 use App\Otlp\Dto\KeyValueDto;
 use App\Otlp\Dto\LogRecordDto;
-use App\Otlp\Dto\ResourceLogsDto;
 use App\Otlp\Dto\ScopeLogsDto;
 use App\Storage\PartitionPathResolver;
 use App\Storage\WritesParquetFiles;

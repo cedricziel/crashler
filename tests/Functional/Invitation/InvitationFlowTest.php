@@ -9,7 +9,6 @@ use App\Entity\Invitation;
 use App\Entity\Org;
 use App\Entity\Tenant;
 use App\Entity\TenantMembership;
-use App\Entity\TenantMembership as TenantMembershipEntity;
 use App\Entity\User;
 use App\Repository\InvitationRepository;
 use App\Repository\TenantMembershipRepository;

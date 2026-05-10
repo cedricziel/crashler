@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace App\Tests\Component\Logs;
 
 use App\Logs\LogsIngestService;
+use App\Otlp\AttributeColumnExtractor;
 use App\Otlp\Dto\AnyValueDto;
 use App\Otlp\Dto\ExportLogsServiceRequestDto;
 use App\Otlp\Dto\KeyValueDto;
 use App\Otlp\Dto\LogRecordDto;
 use App\Otlp\Dto\ResourceLogsDto;
 use App\Otlp\Dto\ScopeLogsDto;
-use App\Otlp\AttributeColumnExtractor;
 use App\Schema\SchemaCatalog;
 use App\Storage\ParquetFileWriter;
 use App\Storage\PartitionPathResolver;

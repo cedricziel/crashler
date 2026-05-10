@@ -62,9 +62,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         return new ExportMetricsServiceRequestDto($resourceMetrics);
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeResourceMetrics($raw, string $path): ResourceMetricsDto
     {
         if (!\is_array($raw)) {
@@ -97,9 +94,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         return new ResourceMetricsDto($resourceAttrs, $scopeMetrics, $schemaUrl);
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeScopeMetrics($raw, string $path): ScopeMetricsDto
     {
         if (!\is_array($raw)) {
@@ -128,9 +122,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         return new ScopeMetricsDto($scopeName, $scopeVersion, $metrics, $schemaUrl);
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeMetric($raw, string $path): MetricDto
     {
         if (!\is_array($raw)) {
@@ -242,9 +233,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         return $dps;
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeNumberDataPoint($raw, string $path): NumberDataPointDto
     {
         if (!\is_array($raw)) {
@@ -286,9 +274,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         return $dps;
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeHistogramDataPoint($raw, string $path): HistogramDataPointDto
     {
         if (!\is_array($raw)) {
@@ -353,9 +338,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         return $dps;
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeExponentialHistogramDataPoint($raw, string $path): ExponentialHistogramDataPointDto
     {
         if (!\is_array($raw)) {
@@ -389,9 +371,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         );
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeBuckets($raw, string $path): ExponentialHistogramBucketsDto
     {
         if (!\is_array($raw)) {
@@ -429,9 +408,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         return $dps;
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeSummaryDataPoint($raw, string $path): SummaryDataPointDto
     {
         if (!\is_array($raw)) {
@@ -492,8 +468,6 @@ final class MetricsJsonDecoder implements SignalDecoder
     }
 
     /**
-     * @param mixed $raw
-     *
      * @return list<KeyValueDto>
      */
     private function decodeAttributesArray($raw, string $path): array
@@ -510,8 +484,6 @@ final class MetricsJsonDecoder implements SignalDecoder
     }
 
     /**
-     * @param mixed $raw
-     *
      * @return list<ExemplarDto>
      */
     private function decodeExemplars($raw, string $path): array
@@ -527,9 +499,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         return $items;
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeExemplar($raw, string $path): ExemplarDto
     {
         if (!\is_array($raw)) {
@@ -555,9 +524,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         );
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeKeyValue($raw, string $path): KeyValueDto
     {
         if (!\is_array($raw)) {
@@ -571,9 +537,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         return new KeyValueDto($raw['key'], $value);
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeAnyValue($raw, string $path): AnyValueDto
     {
         if (!\is_array($raw)) {
@@ -632,9 +595,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         return new AnyValueDto();
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function int64($raw, string $path): int
     {
         if (\is_int($raw)) {
@@ -646,9 +606,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         throw OtlpDecodeException::schemaMismatch("$path must be an integer or numeric string.");
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function int32($raw, string $path): int
     {
         if (\is_int($raw)) {
@@ -660,9 +617,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         throw OtlpDecodeException::schemaMismatch("$path must be an integer.");
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function float($raw, string $path): float
     {
         if (\is_float($raw) || \is_int($raw)) {
@@ -674,9 +628,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         throw OtlpDecodeException::schemaMismatch("$path must be a number.");
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function bool($raw, string $path): bool
     {
         if (\is_bool($raw)) {
@@ -685,9 +636,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         throw OtlpDecodeException::schemaMismatch("$path must be a boolean.");
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function stringOrNull($raw, string $path): ?string
     {
         if (null === $raw) {
@@ -700,9 +648,6 @@ final class MetricsJsonDecoder implements SignalDecoder
         return $raw;
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function hexBytesOrNull($raw, int $expectedLengthChars, string $path): ?string
     {
         if (null === $raw || '' === $raw) {

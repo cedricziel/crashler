@@ -75,7 +75,7 @@ final class SchemaCatalogWiringTest extends TestCase
     public function testMalformedYamlFailsCompilationWithFilePath(): void
     {
         $schemaDir = $this->seedSchemas([
-            'logs/v1.yaml' => "not: valid: yaml: at: all: !!!: [",
+            'logs/v1.yaml' => 'not: valid: yaml: at: all: !!!: [',
         ]);
 
         $this->expectException(InvalidConfigurationException::class);

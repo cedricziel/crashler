@@ -120,7 +120,9 @@ final class TenantRegistryTest extends TestCase
     {
         $hash = str_repeat('e', 64);
         $sourceWithDup = new class([$hash]) implements TenantSourceInterface {
-            public function __construct(private readonly array $hashes) {}
+            public function __construct(private readonly array $hashes)
+            {
+            }
 
             public function entries(): iterable
             {
@@ -167,7 +169,9 @@ final class TenantRegistryTest extends TestCase
     private function stubSource(array $entries): TenantSourceInterface
     {
         return new class($entries) implements TenantSourceInterface {
-            public function __construct(private readonly array $entries) {}
+            public function __construct(private readonly array $entries)
+            {
+            }
 
             public function entries(): iterable
             {

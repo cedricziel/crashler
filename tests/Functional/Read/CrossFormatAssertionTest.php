@@ -31,7 +31,7 @@ use Zenstruck\Browser\Test\HasBrowser;
  * Format containers per AP4 (after our PerRowLinksListener +
  * NextCursorInjector run):
  *
- *   Hydra (jsonld) → top-level @context, @id, @type=Collection, member[]
+ *   Hydra (jsonld) → top-level @context, @id, @var=Collection, member[]
  *   HAL            → top-level _embedded.<resource>[], _links
  *   compact JSON   → top-level array (no envelope) OR {rows, _links}
  *                    when NextCursorInjector wraps

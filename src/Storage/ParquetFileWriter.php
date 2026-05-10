@@ -96,7 +96,7 @@ final class ParquetFileWriter implements WritesParquetFiles
 
     private function fsyncFile(string $path): void
     {
-        $fh = @fopen($path, 'r+b');
+        $fh = @fopen($path, 'r+');
         if (false === $fh) {
             return; // best effort; rename will still attempt
         }

@@ -27,7 +27,7 @@ final readonly class JsonStringContains implements Predicate
             return false;
         }
 
-        return false !== strpos($cellValue, $this->needle);
+        return str_contains($cellValue, $this->needle);
     }
 
     public function tier(): int

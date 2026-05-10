@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Deployer;
 
 use Symfony\Component\Dotenv\Dotenv;
@@ -120,7 +122,7 @@ configure_stage('staging');
 // After every successful deploy, ensure the Parquet storage root exists
 // and has the right permissions. The shared dir is preserved across
 // releases, but a fresh server needs the directory created.
-task('crashler:ensure_storage', function () {
+task('crashler:ensure_storage', static function () {
     run('mkdir -p {{deploy_path}}/shared/var/share/logs');
 });
 after('deploy:shared', 'crashler:ensure_storage');
@@ -131,7 +133,7 @@ after('deploy:shared', 'crashler:ensure_storage');
 // — which --no-dev excluded. Bootstrap the file once with sane prod
 // defaults and a freshly generated APP_SECRET (created on the host so
 // it never leaves it). Subsequent deploys are no-ops.
-task('crashler:bootstrap_env_local', function () {
+task('crashler:bootstrap_env_local', static function () {
     $path = '{{deploy_path}}/shared/.env.local';
     if (test("[ -s $path ]")) {
         return;
@@ -157,7 +159,7 @@ before('deploy:vendors', 'crashler:bootstrap_env_local');
 //      (e.g. /assets/bundles/apiplatform/style-3GfETb1.css), so without
 //      this step the Swagger UI page renders but its assets 404.
 //      Idempotent — re-running rewrites the manifest deterministically.
-task('crashler:assets_install', function () {
+task('crashler:assets_install', static function () {
     run('cd {{release_path}} && {{bin/php}} bin/console assets:install public --env=prod --no-debug');
     run(<<<'BASH'
         cd {{release_path}}/public/bundles 2>/dev/null || exit 0
@@ -179,7 +181,7 @@ after('deploy:vendors', 'crashler:assets_install');
 // credentials never reach the repo). Appends only when the line is not
 // already present in shared/.env.local — operators rotating credentials
 // edit shared/.env.local directly on the host without re-running this.
-task('crashler:bootstrap_database_url', function () {
+task('crashler:bootstrap_database_url', static function () {
     $url = (string) (getenv('PRODUCTION_DATABASE_URL') ?: '');
     if ('' === $url) {
         info('PRODUCTION_DATABASE_URL is not set in .env.deploy; skipping DATABASE_URL bootstrap (assuming shared/.env.local already carries it).');
@@ -208,7 +210,7 @@ before('deploy:vendors', 'crashler:bootstrap_database_url');
 // flow; we wire it explicitly so a fresh release that introduces a new
 // migration is applied automatically. `--allow-no-migration` keeps deploys
 // idempotent when there is nothing to apply.
-task('crashler:migrate', function () {
+task('crashler:migrate', static function () {
     run('cd {{release_path}} && {{bin/php}} bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=prod --no-debug');
 });
 after('deploy:vendors', 'crashler:migrate');

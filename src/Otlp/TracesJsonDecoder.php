@@ -52,9 +52,6 @@ final class TracesJsonDecoder implements SignalDecoder
         return new ExportTraceServiceRequestDto($resourceSpans);
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeResourceSpans($raw, string $path): ResourceSpansDto
     {
         if (!\is_array($raw)) {
@@ -87,9 +84,6 @@ final class TracesJsonDecoder implements SignalDecoder
         return new ResourceSpansDto($resourceAttrs, $scopeSpans, $schemaUrl);
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeScopeSpans($raw, string $path): ScopeSpansDto
     {
         if (!\is_array($raw)) {
@@ -118,9 +112,6 @@ final class TracesJsonDecoder implements SignalDecoder
         return new ScopeSpansDto($scopeName, $scopeVersion, $spans, $schemaUrl);
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeSpan($raw, string $path): SpanDto
     {
         if (!\is_array($raw)) {
@@ -208,9 +199,6 @@ final class TracesJsonDecoder implements SignalDecoder
         );
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeEvent($raw, string $path): SpanEventDto
     {
         if (!\is_array($raw)) {
@@ -231,9 +219,6 @@ final class TracesJsonDecoder implements SignalDecoder
         return new SpanEventDto($time, $name, $attributes, $dropped);
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeLink($raw, string $path): SpanLinkDto
     {
         if (!\is_array($raw)) {
@@ -256,9 +241,6 @@ final class TracesJsonDecoder implements SignalDecoder
         return new SpanLinkDto($traceId, $spanId, $traceState, $attributes, $dropped, $flags);
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeKeyValue($raw, string $path): KeyValueDto
     {
         if (!\is_array($raw)) {
@@ -272,9 +254,6 @@ final class TracesJsonDecoder implements SignalDecoder
         return new KeyValueDto($raw['key'], $value);
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeAnyValue($raw, string $path): AnyValueDto
     {
         if (!\is_array($raw)) {
@@ -343,9 +322,6 @@ final class TracesJsonDecoder implements SignalDecoder
         return new AnyValueDto();
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function int64($raw, string $path): int
     {
         if (\is_int($raw)) {
@@ -357,9 +333,6 @@ final class TracesJsonDecoder implements SignalDecoder
         throw OtlpDecodeException::schemaMismatch("$path must be an integer or numeric string.");
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function int32($raw, string $path): int
     {
         if (\is_int($raw)) {
@@ -371,9 +344,6 @@ final class TracesJsonDecoder implements SignalDecoder
         throw OtlpDecodeException::schemaMismatch("$path must be an integer.");
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function stringOrNull($raw, string $path): ?string
     {
         if (null === $raw) {
@@ -387,8 +357,6 @@ final class TracesJsonDecoder implements SignalDecoder
     }
 
     /**
-     * @param mixed $raw
-     *
      * @return non-empty-string
      */
     private function hexBytes($raw, int $expectedLengthChars, string $path): string
@@ -411,9 +379,6 @@ final class TracesJsonDecoder implements SignalDecoder
         return $bytes;
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function hexBytesOrNull($raw, int $expectedLengthChars, string $path): ?string
     {
         if (null === $raw || '' === $raw) {

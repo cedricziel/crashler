@@ -32,9 +32,9 @@ namespace App\Read\Cursor;
 final readonly class Cursor
 {
     /**
-     * @param array<string, mixed> $criteria
+     * @param array<string, mixed>                         $criteria
      * @param array{lastTimeUnixNano: int, lastRowId: int} $position
-     * @param ?string $criteriaDigest SHA-256 hex of the canonicalised POST-search criteria; null for GET cursors
+     * @param ?string                                      $criteriaDigest SHA-256 hex of the canonicalised POST-search criteria; null for GET cursors
      */
     public function __construct(
         public array $criteria,
@@ -45,7 +45,7 @@ final readonly class Cursor
     }
 
     /**
-     * @param array<string, mixed> $criteria
+     * @param array<string, mixed>                         $criteria
      * @param array{lastTimeUnixNano: int, lastRowId: int} $position
      */
     public static function mint(

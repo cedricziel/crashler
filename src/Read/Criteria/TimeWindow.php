@@ -44,7 +44,7 @@ final readonly class TimeWindow
 
         if ($sinceIsShorthand && null !== $until) {
             throw new \InvalidArgumentException(
-                'Cannot combine `since=<duration>` shorthand with explicit `until` (mixed time semantics). Use both absolute or just `since=<duration>`.'
+                'Cannot combine `since=<duration>` shorthand with explicit `until` (mixed time semantics). Use both absolute or just `since=<duration>`.',
             );
         }
 

@@ -239,9 +239,9 @@ final class LogsJsonDecoderTest extends TestCase
         $json = json_encode([
             'resourceLogs' => [
                 ['resource' => ['attributes' => [['key' => 'a', 'value' => ['stringValue' => '1']]]],
-                 'scopeLogs' => [['logRecords' => [['timeUnixNano' => '1']]]]],
+                    'scopeLogs' => [['logRecords' => [['timeUnixNano' => '1']]]]],
                 ['resource' => ['attributes' => [['key' => 'b', 'value' => ['stringValue' => '2']]]],
-                 'scopeLogs' => [['logRecords' => [['timeUnixNano' => '2']]]]],
+                    'scopeLogs' => [['logRecords' => [['timeUnixNano' => '2']]]]],
             ],
         ], \JSON_THROW_ON_ERROR);
 

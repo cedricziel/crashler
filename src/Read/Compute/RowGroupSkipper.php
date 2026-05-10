@@ -106,20 +106,20 @@ final readonly class RowGroupSkipper
         return $predicate->value < $min || $predicate->value > $max;
     }
 
-    private static function flatColumn(Schema $schema, string $columnName): ?\Flow\Parquet\ParquetFile\Schema\FlatColumn
+    private static function flatColumn(Schema $schema, string $columnName): ?Schema\FlatColumn
     {
         if (!$schema->has($columnName)) {
             return null;
         }
         $column = $schema->get($columnName);
-        if ($column instanceof \Flow\Parquet\ParquetFile\Schema\FlatColumn) {
+        if ($column instanceof Schema\FlatColumn) {
             return $column;
         }
 
         return null;
     }
 
-    private static function columnChunkOrNull(RowGroup $group, \Flow\Parquet\ParquetFile\Schema\FlatColumn $column): ?\Flow\Parquet\ParquetFile\RowGroup\ColumnChunk
+    private static function columnChunkOrNull(RowGroup $group, Schema\FlatColumn $column): ?RowGroup\ColumnChunk
     {
         try {
             return $group->getColumnChunk($column);

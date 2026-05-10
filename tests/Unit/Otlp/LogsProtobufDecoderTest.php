@@ -8,7 +8,6 @@ use App\Otlp\Dto\AnyValueDto;
 use App\Otlp\Dto\ExportLogsServiceRequestDto;
 use App\Otlp\Exception\OtlpDecodeException;
 use App\Otlp\LogsProtobufDecoder;
-use Google\Protobuf\Internal\RepeatedField;
 use Opentelemetry\Proto\Collector\Logs\V1\ExportLogsServiceRequest;
 use Opentelemetry\Proto\Common\V1\AnyValue;
 use Opentelemetry\Proto\Common\V1\ArrayValue;

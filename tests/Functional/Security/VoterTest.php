@@ -16,7 +16,6 @@ use App\Tests\Support\DatabaseTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\Authorization\AccessDecisionManagerInterface;
-use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 
 #[CoversClass(TenantVoter::class)]
 #[CoversClass(OrgVoter::class)]

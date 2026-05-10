@@ -13,8 +13,8 @@ namespace App\Otlp\Dto;
 final readonly class AnyValueDto
 {
     /**
-     * @param list<AnyValueDto>|null  $arrayValue
-     * @param list<KeyValueDto>|null  $kvlistValue
+     * @param list<AnyValueDto>|null $arrayValue
+     * @param list<KeyValueDto>|null $kvlistValue
      */
     public function __construct(
         public ?string $stringValue = null,

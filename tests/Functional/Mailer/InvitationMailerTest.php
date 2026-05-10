@@ -25,7 +25,9 @@ final class InvitationMailerTest extends DatabaseTestCase
 
         $captured = null;
         $stubMailer = new class($captured) implements MailerInterface {
-            public function __construct(private mixed &$captured) {}
+            public function __construct(private mixed &$captured)
+            {
+            }
 
             public function send(RawMessage $message, ?Envelope $envelope = null): void
             {

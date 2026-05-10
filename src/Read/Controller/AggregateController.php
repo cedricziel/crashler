@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Read\Controller;
 
-use App\Read\Compute\Aggregations\AccumulatorFactory;
 use App\Read\Compute\AggregatingScanner;
 use App\Read\Compute\AggregationCardinalityExceededException;
+use App\Read\Compute\Aggregations\AccumulatorFactory;
 use App\Read\Compute\PartitionPruner;
 use App\Read\Compute\Predicates\ColumnInRange;
 use App\Read\Compute\Predicates\Predicate;

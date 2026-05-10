@@ -34,6 +34,6 @@ final class CapturingParquetWriter implements WritesParquetFiles
         }
 
         $this->capturedPath = $finalPath;
-        $this->capturedRows = is_array($rows) ? $rows : iterator_to_array($rows, false);
+        $this->capturedRows = \is_array($rows) ? $rows : iterator_to_array($rows, false);
     }
 }

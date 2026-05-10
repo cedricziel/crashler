@@ -36,11 +36,11 @@ final readonly class PostSearchResponseShaper
     }
 
     /**
-     * @param list<object> $resources resource DTOs to serialise
-     * @param string $shortName resource short-name (`Log`, `Trace`, `Metric`) used in HAL/JSON:API envelopes
-     * @param string $collectionPath canonical collection URL (`/v1/logs`, `/v1/traces`, `/v1/metrics`) used in Hydra `@id`
-     * @param ?string $cursor opaque next-page cursor; clients echo it back in the next POST body
-     * @param string $signal `logs` / `traces` / `metrics` — drives per-row cross-signal `_links`
+     * @param list<object> $resources      resource DTOs to serialise
+     * @param string       $shortName      resource short-name (`Log`, `Trace`, `Metric`) used in HAL/JSON:API envelopes
+     * @param string       $collectionPath canonical collection URL (`/v1/logs`, `/v1/traces`, `/v1/metrics`) used in Hydra `@id`
+     * @param ?string      $cursor         opaque next-page cursor; clients echo it back in the next POST body
+     * @param string       $signal         `logs` / `traces` / `metrics` — drives per-row cross-signal `_links`
      */
     public function shape(
         Request $request,
@@ -160,6 +160,7 @@ final readonly class PostSearchResponseShaper
 
     /**
      * @param list<array<string, mixed>> $rows
+     *
      * @return array<string, mixed>
      */
     private function renderHydra(array $rows, string $shortName, string $collectionPath, ?string $cursor): array
@@ -180,6 +181,7 @@ final readonly class PostSearchResponseShaper
 
     /**
      * @param list<array<string, mixed>> $rows
+     *
      * @return array<string, mixed>
      */
     private function renderHal(array $rows, string $shortName, string $collectionPath, ?string $cursor): array
@@ -202,6 +204,7 @@ final readonly class PostSearchResponseShaper
 
     /**
      * @param list<array<string, mixed>> $rows
+     *
      * @return array<string, mixed>
      */
     private function renderJsonApi(array $rows, string $shortName, string $collectionPath, ?string $cursor): array
@@ -228,6 +231,7 @@ final readonly class PostSearchResponseShaper
 
     /**
      * @param list<array<string, mixed>> $rows
+     *
      * @return array<string, mixed>|list<array<string, mixed>>
      */
     private function renderCompactJson(array $rows, ?string $cursor): array

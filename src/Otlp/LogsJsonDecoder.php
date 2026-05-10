@@ -51,9 +51,6 @@ final class LogsJsonDecoder implements SignalDecoder
         return new ExportLogsServiceRequestDto($resourceLogs);
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeResourceLogs($raw, string $path): ResourceLogsDto
     {
         if (!\is_array($raw)) {
@@ -84,9 +81,6 @@ final class LogsJsonDecoder implements SignalDecoder
         return new ResourceLogsDto($resourceAttrs, $scopeLogs);
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeScopeLogs($raw, string $path): ScopeLogsDto
     {
         if (!\is_array($raw)) {
@@ -118,9 +112,6 @@ final class LogsJsonDecoder implements SignalDecoder
         return new ScopeLogsDto($scopeName, $scopeVersion, $logRecords, $schemaUrl);
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeLogRecord($raw, string $path): LogRecordDto
     {
         if (!\is_array($raw)) {
@@ -164,9 +155,6 @@ final class LogsJsonDecoder implements SignalDecoder
         );
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeKeyValue($raw, string $path): KeyValueDto
     {
         if (!\is_array($raw)) {
@@ -180,9 +168,6 @@ final class LogsJsonDecoder implements SignalDecoder
         return new KeyValueDto($raw['key'], $value);
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function decodeAnyValue($raw, string $path): AnyValueDto
     {
         if (!\is_array($raw)) {
@@ -252,9 +237,6 @@ final class LogsJsonDecoder implements SignalDecoder
         return new AnyValueDto();
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function int64($raw, string $path): int
     {
         if (\is_int($raw)) {
@@ -266,9 +248,6 @@ final class LogsJsonDecoder implements SignalDecoder
         throw OtlpDecodeException::schemaMismatch("$path must be an integer or numeric string.");
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function int32($raw, string $path): int
     {
         if (\is_int($raw)) {
@@ -280,9 +259,6 @@ final class LogsJsonDecoder implements SignalDecoder
         throw OtlpDecodeException::schemaMismatch("$path must be an integer.");
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function stringOrNull($raw, string $path): ?string
     {
         if (null === $raw) {
@@ -295,9 +271,6 @@ final class LogsJsonDecoder implements SignalDecoder
         return $raw;
     }
 
-    /**
-     * @param mixed $raw
-     */
     private function hexBytesOrNull($raw, int $expectedLengthChars, string $path): ?string
     {
         if (null === $raw || '' === $raw) {

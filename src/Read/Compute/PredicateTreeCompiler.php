@@ -37,8 +37,8 @@ final readonly class PredicateTreeCompiler
     public const int DEFAULT_MAX_IN_LIST = 256;
 
     /**
-     * @param list<string> $allowedColumns snake_case Parquet column names the signal accepts in `column` leaves
-     * @param array<string, string> $aliases optional camelCase → snake_case lookup so the DSL accepts either form
+     * @param list<string>          $allowedColumns snake_case Parquet column names the signal accepts in `column` leaves
+     * @param array<string, string> $aliases        optional camelCase → snake_case lookup so the DSL accepts either form
      */
     public function __construct(
         public array $allowedColumns,
@@ -77,7 +77,7 @@ final readonly class PredicateTreeCompiler
 
     /**
      * @param array<string, mixed> $node
-     * @param array<string, true> $attributeKeys distinct attribute keys seen so far (mutated)
+     * @param array<string, true>  $attributeKeys distinct attribute keys seen so far (mutated)
      */
     private function compileNode(array $node, int $depth, array &$attributeKeys): Predicate
     {
@@ -114,7 +114,7 @@ final readonly class PredicateTreeCompiler
 
     /**
      * @param array<string, mixed> $node
-     * @param array<string, true> $attributeKeys
+     * @param array<string, true>  $attributeKeys
      */
     private function compileAll(array $node, int $depth, array &$attributeKeys): Predicate
     {
@@ -135,7 +135,7 @@ final readonly class PredicateTreeCompiler
 
     /**
      * @param array<string, mixed> $node
-     * @param array<string, true> $attributeKeys
+     * @param array<string, true>  $attributeKeys
      */
     private function compileAny(array $node, int $depth, array &$attributeKeys): Predicate
     {
@@ -156,7 +156,7 @@ final readonly class PredicateTreeCompiler
 
     /**
      * @param array<string, mixed> $node
-     * @param array<string, true> $attributeKeys
+     * @param array<string, true>  $attributeKeys
      */
     private function compileNot(array $node, int $depth, array &$attributeKeys): Predicate
     {
@@ -236,7 +236,7 @@ final readonly class PredicateTreeCompiler
 
     /**
      * @param array<string, mixed> $node
-     * @param array<string, true> $attributeKeys
+     * @param array<string, true>  $attributeKeys
      */
     private function compileAttributeLeaf(array $node, array &$attributeKeys): Predicate
     {

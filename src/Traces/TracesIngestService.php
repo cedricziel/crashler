@@ -10,7 +10,6 @@ use App\Otlp\Contract\IngestsSignal;
 use App\Otlp\Dto\AnyValueDto;
 use App\Otlp\Dto\ExportTraceServiceRequestDto;
 use App\Otlp\Dto\KeyValueDto;
-use App\Otlp\Dto\ResourceSpansDto;
 use App\Otlp\Dto\ScopeSpansDto;
 use App\Otlp\Dto\SpanDto;
 use App\Otlp\SpanEventJsonEncoder;

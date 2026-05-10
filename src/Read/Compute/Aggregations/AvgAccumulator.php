@@ -18,7 +18,7 @@ final class AvgAccumulator implements Accumulator
         ++$this->samples;
     }
 
-    public function value(): float|null
+    public function value(): ?float
     {
         return 0 === $this->samples ? null : ($this->sum / $this->samples);
     }

@@ -63,7 +63,7 @@ final class PostTracesSearchTest extends KernelTestCase
             ],
         ]);
 
-        $kinds = array_map(fn (array $r): string => $r['kindText'], $body['member']);
+        $kinds = array_map(static fn (array $r): string => $r['kindText'], $body['member']);
         sort($kinds);
         self::assertSame(['CLIENT', 'SERVER'], $kinds);
     }

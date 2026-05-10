@@ -63,7 +63,7 @@ final class PostMetricsSearchTest extends KernelTestCase
             ],
         ]);
 
-        $types = array_map(fn (array $r): string => $r['metricType'], $body['member']);
+        $types = array_map(static fn (array $r): string => $r['metricType'], $body['member']);
         sort($types);
         self::assertSame(['GAUGE', 'SUM'], $types);
     }
@@ -84,7 +84,7 @@ final class PostMetricsSearchTest extends KernelTestCase
             ],
         ]);
 
-        $names = array_map(fn (array $r): string => $r['metricName'], $body['member']);
+        $names = array_map(static fn (array $r): string => $r['metricName'], $body['member']);
         sort($names);
         self::assertSame(['http.client.duration', 'http.server.duration'], $names);
     }
@@ -153,7 +153,7 @@ final class PostMetricsSearchTest extends KernelTestCase
                         description: null,
                         type: $type,
                         aggregationTemporality: 2,
-                        isMonotonic: $type === MetricType::Sum,
+                        isMonotonic: MetricType::Sum === $type,
                         numberDataPoints: [new NumberDataPointDto(
                             startTimeUnixNano: $clockUnixNano,
                             timeUnixNano: $clockUnixNano + 1_000_000,

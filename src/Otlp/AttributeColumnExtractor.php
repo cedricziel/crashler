@@ -55,7 +55,7 @@ final class AttributeColumnExtractor
     }
 
     /**
-     * @param array<string, list<string>> $promotions  column → ordered semconv keys
+     * @param array<string, list<string>> $promotions column → ordered semconv keys
      * @param list<KeyValueDto>           $attributes
      *
      * @return array<string, scalar|null>

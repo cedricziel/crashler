@@ -40,9 +40,9 @@ final readonly class ParquetScanner
     }
 
     /**
-     * @param list<string>    $partitionGlobs glob patterns produced by {@see PartitionPruner}
-     * @param list<Predicate> $predicates     evaluated in tier order; ALL must pass for a row to match
-     * @param ?array{lastTimeUnixNano: int, lastRowId: int} $resumeFrom resume position from a previous cursor; rows at or before this position are skipped
+     * @param list<string>                                  $partitionGlobs glob patterns produced by {@see PartitionPruner}
+     * @param list<Predicate>                               $predicates     evaluated in tier order; ALL must pass for a row to match
+     * @param ?array{lastTimeUnixNano: int, lastRowId: int} $resumeFrom     resume position from a previous cursor; rows at or before this position are skipped
      */
     public function scan(array $partitionGlobs, array $predicates, int $limit, ?array $resumeFrom = null): ScanResult
     {
@@ -156,9 +156,9 @@ final readonly class ParquetScanner
      * matching row beyond it (signalling `hasMore`). Returns `false` when
      * the run is exhausted without exceeding the limit.
      *
-     * @param list<Predicate>                              $predicates
+     * @param list<Predicate>                               $predicates
      * @param ?array{lastTimeUnixNano: int, lastRowId: int} $resumeFrom
-     * @param list<array<string, mixed>>                   $rows           (mutated)
+     * @param list<array<string, mixed>>                    $rows         (mutated)
      * @param ?array{lastTimeUnixNano: int, lastRowId: int} $lastPosition (mutated)
      */
     private function scanRun(
@@ -257,7 +257,7 @@ final readonly class ParquetScanner
     }
 
     /**
-     * @param array<string, mixed>                       $row
+     * @param array<string, mixed>                         $row
      * @param array{lastTimeUnixNano: int, lastRowId: int} $resumeFrom
      */
     private static function rowAtOrBeforePosition(array $row, int $rowIdInFile, array $resumeFrom): bool

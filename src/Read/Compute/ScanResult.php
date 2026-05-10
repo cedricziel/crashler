@@ -17,7 +17,7 @@ namespace App\Read\Compute;
 final readonly class ScanResult
 {
     /**
-     * @param list<array<string, mixed>>                  $rows
+     * @param list<array<string, mixed>>                    $rows
      * @param ?array{lastTimeUnixNano: int, lastRowId: int} $position
      */
     public function __construct(

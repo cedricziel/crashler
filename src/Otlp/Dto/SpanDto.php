@@ -7,8 +7,8 @@ namespace App\Otlp\Dto;
 final readonly class SpanDto
 {
     /**
-     * @param non-empty-string      $traceId raw 16 bytes (REQUIRED)
-     * @param non-empty-string      $spanId  raw 8 bytes (REQUIRED)
+     * @param non-empty-string      $traceId      raw 16 bytes (REQUIRED)
+     * @param non-empty-string      $spanId       raw 8 bytes (REQUIRED)
      * @param non-empty-string|null $parentSpanId raw 8 bytes when present
      * @param list<KeyValueDto>     $attributes
      * @param list<SpanEventDto>    $events

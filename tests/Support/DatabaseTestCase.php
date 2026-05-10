@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Support;
 
 use App\Entity\Org;
-use App\Entity\OrgMembership;
 use App\Entity\Tenant;
-use App\Entity\TenantMembership;
 use App\Entity\TenantToken;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;

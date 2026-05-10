@@ -324,7 +324,7 @@ final class TracesIngestServiceTest extends TestCase
 
     public function testCreatesPartitionDirectoryBeforeWriting(): void
     {
-        $writer = new class() implements \App\Storage\WritesParquetFiles {
+        $writer = new class implements \App\Storage\WritesParquetFiles {
             public ?string $observedDir = null;
 
             public function writeAndCommit(string $finalPath, iterable $rows): void
