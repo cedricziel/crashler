@@ -37,7 +37,7 @@ trait SeedsParquetLogs
      *                                             time window the seeded
      *                                             rows fall inside
      */
-    protected function seedLogs(string $tenantSlug, array $bodies, string $service = 'checkout', int $severity = 9, string $atIso = '2026-05-09 14:30:00 UTC'): array
+    protected function seedLogs(string $tenantSlug, array $bodies, string $service = 'checkout', int $severity = 9, string $atIso = '2026-05-09 14:30:00 UTC', ?string $traceIdHex = null, ?string $spanIdHex = null): array
     {
         $catalog = SchemaCatalog::fromDirectory(\dirname(__DIR__, 2).'/config/schemas');
         $logsSchema = $catalog->latestFor('logs');
@@ -64,8 +64,8 @@ trait SeedsParquetLogs
                 body: AnyValueDto::string($body),
                 attributes: [],
                 droppedAttributesCount: 0,
-                traceId: null,
-                spanId: null,
+                traceId: null === $traceIdHex ? null : hex2bin($traceIdHex),
+                spanId: null === $spanIdHex ? null : hex2bin($spanIdHex),
                 flags: null,
             );
         }

@@ -110,6 +110,49 @@ final class ResultTableComponentTest extends KernelTestCase
         self::assertMatchesRegularExpression('/\d{2}:\d{2}:\d{2}\.\d{3}/', $rendered);
     }
 
+    public function testTraceIdHexCellLinksToWaterfallDetailPage(): void
+    {
+        $traceHex = str_repeat('a1b2', 8); // 32 lowercase hex chars
+        $window = $this->seedLogs('test-trace-link', ['hello'], traceIdHex: $traceHex);
+
+        $component = $this->createLiveComponent('Explorer:ResultTable', [
+            'tenantSlug' => 'test-trace-link',
+            'signal' => 'logs',
+            'windowSinceNs' => $window['since_ns'],
+            'windowUntilNs' => $window['until_ns'],
+        ]);
+
+        $rendered = (string) $component->render();
+
+        // Anchor points at the waterfall route with the seeded trace id.
+        self::assertMatchesRegularExpression(
+            '#<a [^>]*href="/tenants/test-trace-link/traces/'.$traceHex.'"#',
+            $rendered,
+            'trace_id_hex cell must wrap the value in a link to the waterfall page',
+        );
+        // Display is truncated to 10 chars + ellipsis (column width is 10ch).
+        self::assertStringContainsString(substr($traceHex, 0, 10).'…', $rendered);
+    }
+
+    public function testTraceIdHexFallsBackToDashWhenRowHasNoTraceId(): void
+    {
+        // Default seed leaves traceId null.
+        $window = $this->seedLogs('test-no-trace', ['hello']);
+
+        $component = $this->createLiveComponent('Explorer:ResultTable', [
+            'tenantSlug' => 'test-no-trace',
+            'signal' => 'logs',
+            'windowSinceNs' => $window['since_ns'],
+            'windowUntilNs' => $window['until_ns'],
+        ]);
+
+        $rendered = (string) $component->render();
+
+        // No anchor pointing at /traces/<hex>, but the row still renders.
+        self::assertDoesNotMatchRegularExpression('#href="/tenants/test-no-trace/traces/[0-9a-f]{32}"#', $rendered);
+        self::assertStringContainsString('hello', $rendered);
+    }
+
     public function testHydratedRenderShowsPaginatorOnFirstPage(): void
     {
         $window = $this->seedLogs('test-pager', ['hello']);

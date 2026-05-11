@@ -37,6 +37,19 @@
                                         {% else %}—{% endif %}
                                     {% elseif raw is null %}
                                         <span style="color: #bbb;">—</span>
+                                    {% elseif col.key == 'trace_id_hex' %}
+                                        {% set hex = this.toHex(raw) %}
+                                        {% set url = this.traceUrl(raw) %}
+                                        {% if url %}
+                                            <a href="{{ url }}" title="{{ hex }}">{{ hex|slice(0, 10) }}…</a>
+                                        {% else %}<span style="color: #bbb;">—</span>{% endif %}
+                                    {% elseif col.key == 'span_id_hex' %}
+                                        {% set hex = this.toHex(raw) %}
+                                        {% set url = this.spanTraceUrl(row) %}
+                                        {% if url %}
+                                            <a href="{{ url }}" title="{{ hex }}">{{ hex|slice(0, 10) }}…</a>
+                                        {% elseif hex %}{{ hex|slice(0, 10) }}…
+                                        {% else %}<span style="color: #bbb;">—</span>{% endif %}
                                     {% elseif raw is iterable %}
                                         <code style="font-size: 0.78rem;">{{ raw|json_encode|slice(0, 60) }}</code>
                                     {% else %}

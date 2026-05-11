@@ -7,6 +7,7 @@ namespace App\Twig\Components\Explorer;
 use App\Explorer\SignalProfileRegistry;
 use App\Explorer\TableResultResolver;
 use App\Read\Criteria\TimeWindow;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
 use Symfony\UX\LiveComponent\Attribute\LiveAction;
 use Symfony\UX\LiveComponent\Attribute\LiveProp;
@@ -56,7 +57,56 @@ final class ResultTable
     public function __construct(
         private readonly TableResultResolver $resolver,
         private readonly SignalProfileRegistry $profiles,
+        private readonly UrlGeneratorInterface $router,
     ) {
+    }
+
+    /**
+     * Normalises a parquet `trace_id_hex` / `span_id_hex` cell to lowercase
+     * hex. Returns null when the value isn't a usable id.
+     *
+     * Writer convention is hex strings (see LogsIngestService /
+     * TracesIngestService), but legacy partitions may carry raw bytes —
+     * mirrors {@see App\Read\State\BaseSearchStateProvider::bytesToHex}.
+     */
+    public function toHex(mixed $raw): ?string
+    {
+        if (!\is_string($raw) || '' === $raw) {
+            return null;
+        }
+
+        return 1 === preg_match('/^[0-9a-f]+$/', $raw) ? $raw : bin2hex($raw);
+    }
+
+    /**
+     * Builds `/tenants/{slug}/traces/{traceId}` for the cell value, or
+     * null when the value can't be normalised to the 32-hex-char shape
+     * the waterfall route requires.
+     */
+    public function traceUrl(mixed $raw): ?string
+    {
+        $hex = $this->toHex($raw);
+        if (null === $hex || 32 !== \strlen($hex) || '' === $this->tenantSlug) {
+            return null;
+        }
+
+        return $this->router->generate('app_trace_waterfall', [
+            'slug' => $this->tenantSlug,
+            'traceId' => $hex,
+        ]);
+    }
+
+    /**
+     * For a `span_id_hex` cell, links to the waterfall page of the row's
+     * owning trace (there is no standalone span detail page; the waterfall
+     * sidebar is the span detail surface). Returns null when the row has
+     * no usable `trace_id_hex`.
+     *
+     * @param array<string, mixed> $row
+     */
+    public function spanTraceUrl(array $row): ?string
+    {
+        return $this->traceUrl($row['trace_id_hex'] ?? null);
     }
 
     /**
