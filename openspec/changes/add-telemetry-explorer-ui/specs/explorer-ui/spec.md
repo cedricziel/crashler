@@ -121,6 +121,29 @@ The waterfall sidebar SHALL include a "→ logs (this trace, ±5s)" link. Follow
 - **AND** the URL query's `since` is the span start - 5 s
 - **AND** the URL query's `until` is the span start + 5 s
 
+### Requirement: Trace and span ids in UI surfaces SHALL link to the detail page
+
+Any UI surface that renders a trace id SHALL wrap that rendering in an anchor pointing at the trace's waterfall page (`/tenants/{slug}/traces/{traceId}`). Any UI surface that renders a span id SHALL wrap that rendering in an anchor pointing at the waterfall of the span's owning trace (the sidebar is the span detail surface; there is no standalone span page). The anchor's `href` SHALL include the 32-hex-char trace id required by the waterfall route; ids stored as raw bytes SHALL be normalised to lowercase hex before linking.
+
+The rule applies to every current and future surface — result table cells, attribute lists, log bodies that carry a `traceId` attribute, future audit views, anywhere. The single exception is a surface that IS the linked-to page itself (e.g., the waterfall header showing the trace id of the page you are on); self-links MAY be omitted there.
+
+When a rendering site does not have a usable trace id (the cell is null, or the trace id is not 32 hex chars), the surface SHALL fall back to its existing non-link representation (em-dash or escaped text); it MUST NOT emit a broken `href`.
+
+#### Scenario: Result-table trace_id_hex cell links to the waterfall
+- **WHEN** the logs explorer renders a row whose `trace_id_hex` column is `a1b2…` (32 lowercase hex chars)
+- **THEN** the cell contains an `<a>` element
+- **AND** the anchor's `href` is `/tenants/{slug}/traces/a1b2…`
+- **AND** the visible label is a truncated form of the same hex id
+
+#### Scenario: Span id links to the owning trace's waterfall
+- **WHEN** a UI surface renders a `span_id_hex` value alongside the row's `trace_id_hex`
+- **THEN** the rendered span id is wrapped in an anchor whose `href` points at the waterfall page of the owning trace
+
+#### Scenario: Missing trace id degrades to plain text
+- **WHEN** a row has a null or malformed `trace_id_hex`
+- **THEN** the cell renders the existing empty / fallback representation
+- **AND** no anchor with a broken `href` is emitted
+
 ### Requirement: Cursor pagination without full page reload
 
 The result table's prev/next paginator SHALL use Stimulus + fetch to swap the table body in place. The browser's URL SHALL be updated with the new cursor via `history.replaceState`. The chart and KPI strip SHALL NOT re-render when paging. Cursor values SHALL come from the existing Read API's HMAC-signed opaque cursors and SHALL pass through unmodified.
