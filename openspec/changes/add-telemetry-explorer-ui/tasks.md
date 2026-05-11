@@ -35,7 +35,7 @@ The "verify coverage gate" task at the bottom is mandatory per `openspec/config.
 
 - [x] **3.1** Test: `tests/Unit/Explorer/PriorWindowCalculatorTest`.
 - [x] **3.2** Implement: `App\Explorer\PriorWindowCalculator`.
-- [ ] **3.3** Test: dedicated `tests/Unit/Explorer/KpiBundleResolverTest` for the de-dupe / null-prior contract. (KpiStripComponentTest covers the populated path end-to-end; the unit-level dedup contract is not yet pinned in isolation.)
+- [x] **3.3** Test: dedicated `tests/Unit/Explorer/KpiBundleResolverTest` for the de-dupe / null-prior contract. Four cases pin: two specs sharing a groupKey resolve through the same accumulator with output order preserved; distinct groupKeys produce their own aggregated values; empty prior window → null delta; empty current window → null value + null delta.
 - [x] **3.4** Implement: `App\Explorer\KpiBundleResolver` — single-pass scan with multiple Accumulators. Cache layer + `WindowBucket::snap()`.
 
 ## Explorer routes & controller
@@ -69,7 +69,7 @@ The "verify coverage gate" task at the bottom is mandatory per `openspec/config.
 
 ## Query form (Live)
 
-- [ ] **8.1** Test: `tests/Component/Explorer/QueryFormComponentTest` — initial render contains all filter chips + time inputs + aggregation controls; LiveProps reflect URL.
+- [x] **8.1** Test: `tests/Component/Explorer/QueryFormComponentTest` — pre-hydration "loading filters…" placeholder, post-hydration form renders every LogsProfile filter chip, both time inputs, all aggregation controls, and profile-driven defaults. URL→form-value contract pinned at `queryValue()` (the Live test harness's KernelBrowser request supersedes any pushed Request, so rendered round-trip is left to ExplorerAccessTest's functional test).
 - [x] **8.2** Implement: `App\Twig\Components\Explorer\QueryForm` (AsLiveComponent). Filter chips, time inputs, aggregation controls all rendered inline. Submit goes via the form's GET action; LiveAction-based submit is deferred.
 - [SKIP] **8.3** `applyBrush` LiveAction test — superseded. Brush selection rewrites the URL and triggers a full reload (URL is the source of truth); no LiveAction needed.
 - [x] **8.4** Brush event listener — `assets/controllers/brush_navigator_controller.js` is attached at the explorer page wrapper. Listens for `explorer:time-range-selected`, debounces 150ms (coalesces rapid drag adjustments), rewrites `?since=&until=` and navigates. Cursor is cleared so the new window lands on page 1.
