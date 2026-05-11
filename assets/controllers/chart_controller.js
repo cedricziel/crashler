@@ -17,27 +17,38 @@ export default class extends Controller {
     };
 
     async connect() {
-        const target = this.element.querySelector('canvas');
-        if (!target) return;
-
         try {
             const response = await fetch(this.endpointValue, {
                 headers: { Accept: 'application/json' },
                 credentials: 'same-origin',
             });
             if (!response.ok) {
-                this.#renderEmpty(this.emptyMessageValue || 'Failed to load chart');
+                this.#renderMessage('Failed to load chart', 'Reload the page or narrow the time window.');
                 return;
             }
             const payload = await response.json();
             if (!payload?.series?.length) {
-                this.#renderEmpty(this.emptyMessageValue || 'No data in this window');
+                this.#renderMessage(
+                    this.emptyMessageValue || 'No data in this window',
+                    'Try widening the time range or removing filters.',
+                );
                 return;
             }
 
+            // Clear the loading placeholder and drop the flex-centering so
+            // uPlot's chart can occupy the full container width. uPlot
+            // appends a `<div class="uplot">` with its own canvases — the
+            // initial `<canvas>` placeholder in the template was a no-op
+            // (a canvas can't host child elements visibly).
+            this.element.innerHTML = '';
+            this.element.style.display = 'block';
+            this.element.style.padding = '0';
+            this.element.style.alignItems = 'unset';
+            this.element.style.justifyContent = 'unset';
+
             const { default: uPlot } = await import('uplot');
             const opts = {
-                width: target.clientWidth || target.parentElement.clientWidth,
+                width: this.element.clientWidth || this.element.parentElement.clientWidth,
                 height: 240,
                 scales: { x: { time: true } },
                 series: [{ label: 'time' }, ...payload.series.map((s) => ({ label: s.label, stroke: 'currentColor' }))],
@@ -55,18 +66,35 @@ export default class extends Controller {
                     ],
                 },
             };
-            new uPlot(opts, [payload.x ?? [], ...payload.series.map((s) => s.values)], target);
+            new uPlot(opts, [payload.x ?? [], ...payload.series.map((s) => s.values)], this.element);
         } catch (e) {
-            this.#renderEmpty('Failed to load chart');
+            this.#renderMessage('Failed to load chart', 'Reload the page or narrow the time window.');
         }
     }
 
-    #renderEmpty(message) {
+    #renderMessage(message, hint) {
+        // Reuse the same placeholder shell the template seeds with so the
+        // empty state matches the loading state visually. The wrapping
+        // .chart div keeps its 16rem min-height — no layout jump and the
+        // empty state is impossible to miss.
         this.element.innerHTML = '';
-        const span = document.createElement('span');
-        span.textContent = message;
-        span.style.color = '#999';
-        span.style.fontSize = '0.85rem';
-        this.element.appendChild(span);
+        this.element.style.display = 'flex';
+        const wrap = document.createElement('div');
+        wrap.className = 'chart__placeholder';
+        const icon = document.createElement('span');
+        icon.className = 'chart__placeholder-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = '∅';
+        const line = document.createElement('span');
+        line.textContent = message;
+        wrap.appendChild(icon);
+        wrap.appendChild(line);
+        if (hint) {
+            const hintEl = document.createElement('span');
+            hintEl.className = 'chart__placeholder-hint';
+            hintEl.textContent = hint;
+            wrap.appendChild(hintEl);
+        }
+        this.element.appendChild(wrap);
     }
 }

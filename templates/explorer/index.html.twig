@@ -14,7 +14,10 @@
         .explorer__row { margin-bottom: 1.25rem; }
         .explorer__row-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 0.4rem; }
 
-        .chart { height: 16rem; background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 1rem; display: flex; align-items: center; justify-content: center; color: #999; font-size: 0.85rem; }
+        .chart { min-height: 16rem; background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 1rem; display: flex; align-items: center; justify-content: center; color: #999; font-size: 0.85rem; }
+        .chart__placeholder { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; color: #888; font-size: 0.9rem; text-align: center; line-height: 1.5; }
+        .chart__placeholder-icon { font-size: 1.6rem; line-height: 1; color: #c4c4c4; }
+        .chart__placeholder-hint { font-size: 0.75rem; color: #aaa; }
         .form-row { background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 0.85rem 1rem; }
         .form-row__group { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
         .form-row__label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #666; min-width: 5rem; }
@@ -66,8 +69,11 @@
             <div class="explorer__row-label">Chart</div>
             <div class="chart" data-controller="chart"
                  data-chart-endpoint-value="{{ path('app_explorer_index', {slug: tenant.slug, signal: signal}) }}/_chart.json"
-                 data-chart-empty-message-value="No data in this window — try a wider time range.">
-                <canvas></canvas>
+                 data-chart-empty-message-value="No data in this window">
+                <div class="chart__placeholder" aria-busy="true">
+                    <span class="chart__placeholder-icon" aria-hidden="true">⌛</span>
+                    <span>Loading chart…</span>
+                </div>
             </div>
         </section>
 
