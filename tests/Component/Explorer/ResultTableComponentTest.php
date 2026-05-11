@@ -126,11 +126,18 @@ final class ResultTableComponentTest extends KernelTestCase
 
         $rendered = (string) $component->render();
 
-        // Anchor points at the waterfall route with the seeded trace id.
+        // Anchor points at the waterfall route with the seeded trace id +
+        // the explorer's window as `?since=&until=` so the waterfall can
+        // look beyond its 24h default.
         self::assertMatchesRegularExpression(
-            '#<a [^>]*href="/tenants/test-trace-link/traces/'.$traceHex.'"#',
+            '#<a [^>]*href="/tenants/test-trace-link/traces/'.$traceHex.'\?[^"]*since=#',
             $rendered,
-            'trace_id_hex cell must wrap the value in a link to the waterfall page',
+            'trace_id_hex cell must link to the waterfall and carry the explorer window',
+        );
+        self::assertMatchesRegularExpression(
+            '#until='.$window['until_ns'].'#',
+            $rendered,
+            'link must include the explorer untilUnixNano',
         );
         // Display is truncated to 10 chars + ellipsis (column width is 10ch).
         self::assertStringContainsString(substr($traceHex, 0, 10).'…', $rendered);
@@ -152,11 +159,13 @@ final class ResultTableComponentTest extends KernelTestCase
 
         $rendered = (string) $component->render();
 
-        // The new trace_id_hex column renders as a link to the waterfall.
+        // The new trace_id_hex column renders as a link to the waterfall
+        // and carries the explorer window so the waterfall lookup extends
+        // beyond the default 24h lookback.
         self::assertMatchesRegularExpression(
-            '#<a [^>]*href="/tenants/test-traces-link/traces/'.$traceHex.'"#',
+            '#<a [^>]*href="/tenants/test-traces-link/traces/'.$traceHex.'\?[^"]*since=#',
             $rendered,
-            'traces explorer rows must expose a link to the waterfall page',
+            'traces explorer rows must link to the waterfall with the explorer window',
         );
         // And the row data still shows up (span name in the Span column).
         self::assertStringContainsString('GET /api/orders', $rendered);

@@ -83,6 +83,11 @@ final class ResultTable
      * Builds `/tenants/{slug}/traces/{traceId}` for the cell value, or
      * null when the value can't be normalised to the 32-hex-char shape
      * the waterfall route requires.
+     *
+     * The URL carries the explorer's current `windowSinceNs` /
+     * `windowUntilNs` as `?since=&until=` query params — without those,
+     * the waterfall controller would fall back to its 24h lookback and
+     * 404 on any trace that lives outside the last 24h of ingest.
      */
     public function traceUrl(mixed $raw): ?string
     {
@@ -91,10 +96,16 @@ final class ResultTable
             return null;
         }
 
-        return $this->router->generate('app_trace_waterfall', [
+        $params = [
             'slug' => $this->tenantSlug,
             'traceId' => $hex,
-        ]);
+        ];
+        if ($this->windowSinceNs > 0 && $this->windowUntilNs > $this->windowSinceNs) {
+            $params['since'] = (string) $this->windowSinceNs;
+            $params['until'] = (string) $this->windowUntilNs;
+        }
+
+        return $this->router->generate('app_trace_waterfall', $params);
     }
 
     /**

@@ -10,6 +10,7 @@ use App\Repository\TenantRepository;
 use App\Security\Voter\TenantVoter;
 use Psr\Clock\ClockInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Attribute\Route;
@@ -43,16 +44,24 @@ final class WaterfallController extends AbstractController
     public function index(
         string $slug,
         string $traceId,
+        Request $request,
         TenantRepository $tenants,
     ): Response {
         $tenant = $tenants->findOneBySlug($slug) ?? throw new NotFoundHttpException();
         $this->denyAccessUnlessGranted(TenantVoter::VIEW, $tenant);
 
-        // Look back 24h by default — the same span_lookup_window_hours
+        // When the link came from the explorer table the URL carries the
+        // explorer's `since` / `until` (typically unix-nano integers); use
+        // them so a trace outside the default 24h lookback still resolves.
+        // No hint → fall back to the 24h `span_lookup_window_hours`
         // contract the read API's /v1/traces/{id} endpoint uses.
+        $since = self::nullIfBlank($request->query->get('since'));
+        $until = self::nullIfBlank($request->query->get('until'));
         try {
             $window = TimeWindow::parse(
-                ['since' => $this->resolver->spanLookupWindowHours().'h'],
+                null === $since && null === $until
+                    ? ['since' => $this->resolver->spanLookupWindowHours().'h']
+                    : ['since' => $since, 'until' => $until],
                 $this->clock,
                 $this->maxTimeWindowDays,
             );
@@ -63,7 +72,7 @@ final class WaterfallController extends AbstractController
         $trace = $this->resolver->resolve($tenant->getSlug(), $traceId, $window);
         if (null === $trace) {
             throw new NotFoundHttpException(\sprintf(
-                'Trace %s not found within the last %d hours. Adjust span_lookup_window_hours if traces are older.',
+                'Trace %s not found within the requested window. Widen `since`/`until` or adjust span_lookup_window_hours if traces are older than %d hours.',
                 $traceId,
                 $this->resolver->spanLookupWindowHours(),
             ));
@@ -73,5 +82,14 @@ final class WaterfallController extends AbstractController
             'tenant' => $tenant,
             'trace' => $trace,
         ]);
+    }
+
+    private static function nullIfBlank(mixed $value): ?string
+    {
+        if (!\is_string($value)) {
+            return null;
+        }
+
+        return '' === trim($value) ? null : $value;
     }
 }
