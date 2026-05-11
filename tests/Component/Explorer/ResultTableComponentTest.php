@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Component\Explorer;
 
 use App\Tests\Support\SeedsParquetLogs;
+use App\Tests\Support\SeedsParquetTraces;
 use App\Tests\Support\TempStorageRoot;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
@@ -20,6 +21,7 @@ final class ResultTableComponentTest extends KernelTestCase
 {
     use InteractsWithLiveComponents;
     use SeedsParquetLogs;
+    use SeedsParquetTraces;
     use TempStorageRoot;
 
     protected function setUp(): void
@@ -132,6 +134,32 @@ final class ResultTableComponentTest extends KernelTestCase
         );
         // Display is truncated to 10 chars + ellipsis (column width is 10ch).
         self::assertStringContainsString(substr($traceHex, 0, 10).'…', $rendered);
+    }
+
+    public function testTracesExplorerRowsLinkToWaterfallDetailPage(): void
+    {
+        $traceHex = str_repeat('c0de', 8); // 32 lowercase hex chars
+        $window = $this->seedTrace('test-traces-link', $traceHex, [
+            ['spanIdHex' => 'abcdef0123456789', 'name' => 'GET /api/orders'],
+        ]);
+
+        $component = $this->createLiveComponent('Explorer:ResultTable', [
+            'tenantSlug' => 'test-traces-link',
+            'signal' => 'traces',
+            'windowSinceNs' => $window['since_ns'],
+            'windowUntilNs' => $window['until_ns'],
+        ]);
+
+        $rendered = (string) $component->render();
+
+        // The new trace_id_hex column renders as a link to the waterfall.
+        self::assertMatchesRegularExpression(
+            '#<a [^>]*href="/tenants/test-traces-link/traces/'.$traceHex.'"#',
+            $rendered,
+            'traces explorer rows must expose a link to the waterfall page',
+        );
+        // And the row data still shows up (span name in the Span column).
+        self::assertStringContainsString('GET /api/orders', $rendered);
     }
 
     public function testTraceIdHexFallsBackToDashWhenRowHasNoTraceId(): void

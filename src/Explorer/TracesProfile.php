@@ -43,6 +43,7 @@ final readonly class TracesProfile implements SignalProfile
     {
         return [
             new TableColumn('time', 'Time', '14ch', monospace: true),
+            new TableColumn('trace_id_hex', 'Trace', '10ch', monospace: true),
             new TableColumn('resource_service_name', 'Service', '12ch'),
             new TableColumn('name', 'Span', null),
             new TableColumn('status_text', 'Status', '8ch'),
