@@ -162,6 +162,29 @@ final class ResultTableComponentTest extends KernelTestCase
         self::assertStringContainsString('GET /api/orders', $rendered);
     }
 
+    public function testTracesDurationColumnRendersAutoScaledUnit(): void
+    {
+        $traceHex = str_repeat('1f2e', 8);
+        // 4.20ms span — 4_200_000 ns.
+        $window = $this->seedTrace('test-dur-fmt', $traceHex, [
+            ['spanIdHex' => '0123456789abcdef', 'name' => 'GET /', 'durationNs' => 4_200_000],
+        ]);
+
+        $component = $this->createLiveComponent('Explorer:ResultTable', [
+            'tenantSlug' => 'test-dur-fmt',
+            'signal' => 'traces',
+            'windowSinceNs' => $window['since_ns'],
+            'windowUntilNs' => $window['until_ns'],
+        ]);
+
+        $rendered = (string) $component->render();
+
+        // Raw nanos must NOT leak into the rendered cell.
+        self::assertStringNotContainsString('>4200000<', $rendered);
+        // 4_200_000 ns auto-scales to "4.20 ms".
+        self::assertStringContainsString('4.20 ms', $rendered);
+    }
+
     public function testTraceIdHexFallsBackToDashWhenRowHasNoTraceId(): void
     {
         // Default seed leaves traceId null.

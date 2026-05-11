@@ -50,6 +50,8 @@
                                             <a href="{{ url }}" title="{{ hex }}">{{ hex|slice(0, 10) }}…</a>
                                         {% elseif hex %}{{ hex|slice(0, 10) }}…
                                         {% else %}<span style="color: #bbb;">—</span>{% endif %}
+                                    {% elseif col.key ends with '_nano' %}
+                                        {{ this.formatNanos(raw) }}
                                     {% elseif raw is iterable %}
                                         <code style="font-size: 0.78rem;">{{ raw|json_encode|slice(0, 60) }}</code>
                                     {% else %}

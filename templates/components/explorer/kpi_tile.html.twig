@@ -18,13 +18,7 @@
         <div style="font-size: 1.4rem; font-weight: 600; color: #c33;" title="{{ errorMessage|default('Failed to load') }}">?</div>
         <div style="font-size: 0.75rem; color: #c33;">load failed</div>
     {% else %}
-        <div style="font-size: 1.4rem; font-weight: 600;">
-            {% if value is null %}—{% else %}
-                {% if value is same as(value|round) %}{{ value|number_format(0, '.', ' ') }}
-                {% else %}{{ value|number_format(2, '.', ' ') }}{% endif %}
-                {% if spec.unit %}<span style="font-size: 0.75rem; font-weight: 400; color: #888;">{{ spec.unit }}</span>{% endif %}
-            {% endif %}
-        </div>
+        <div style="font-size: 1.4rem; font-weight: 600;">{{ this.formatValue }}</div>
         <div style="font-size: 0.75rem; color: {% if badArrow %}#c33{% elseif goodArrow %}#3a7{% else %}#888{% endif %};">
             {% if deltaPercent is null %}
                 —

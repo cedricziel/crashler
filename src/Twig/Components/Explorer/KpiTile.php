@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Twig\Components\Explorer;
 
 use App\Explorer\KpiSpec;
+use App\Explorer\UnitFormatter;
 use Symfony\UX\TwigComponent\Attribute\AsTwigComponent;
 
 /**
@@ -32,4 +33,34 @@ final class KpiTile
 
     /** Optional error message (rendered as a tooltip on the "?" glyph). */
     public ?string $errorMessage = null;
+
+    /**
+     * Formats `value` for the populated state, applying the explorer-ui
+     * "no measurement number without its unit" rule.
+     *
+     * Auto-scales nanosecond-typed accumulator outputs (e.g.
+     * `avg(duration_nano)` → `4.20 ms`) so the displayed unit matches the
+     * value's scale. For other KpiSpecs the value is rendered as before
+     * and the spec's literal `unit` string (if any) is appended.
+     */
+    public function formatValue(): string
+    {
+        if (null === $this->value) {
+            return '—';
+        }
+
+        if (null !== $this->spec->column && str_ends_with($this->spec->column, '_nano')) {
+            return UnitFormatter::nanos($this->value);
+        }
+
+        $formatted = $this->value === (float) (int) $this->value
+            ? number_format($this->value, 0, '.', ' ')
+            : number_format((float) $this->value, 2, '.', ' ');
+
+        if (null !== $this->spec->unit) {
+            return $formatted.' '.$this->spec->unit;
+        }
+
+        return $formatted;
+    }
 }

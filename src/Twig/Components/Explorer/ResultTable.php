@@ -6,6 +6,7 @@ namespace App\Twig\Components\Explorer;
 
 use App\Explorer\SignalProfileRegistry;
 use App\Explorer\TableResultResolver;
+use App\Explorer\UnitFormatter;
 use App\Read\Criteria\TimeWindow;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\UX\LiveComponent\Attribute\AsLiveComponent;
@@ -107,6 +108,19 @@ final class ResultTable
     public function spanTraceUrl(array $row): ?string
     {
         return $this->traceUrl($row['trace_id_hex'] ?? null);
+    }
+
+    /**
+     * Formats a parquet `*_nano` cell as a unit-bearing string. Mirrors
+     * the explorer-ui spec rule "no measurement number without its unit".
+     */
+    public function formatNanos(mixed $rawNanos): string
+    {
+        if (!is_numeric($rawNanos)) {
+            return '—';
+        }
+
+        return UnitFormatter::nanos((int) $rawNanos);
     }
 
     /**

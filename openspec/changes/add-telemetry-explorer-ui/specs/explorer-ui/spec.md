@@ -144,6 +144,29 @@ When a rendering site does not have a usable trace id (the cell is null, or the 
 - **THEN** the cell renders the existing empty / fallback representation
 - **AND** no anchor with a broken `href` is emitted
 
+### Requirement: Numeric measurements SHALL be rendered with a scale-matched unit
+
+Any value rendered to the user that represents a unit-bearing measurement (duration, bytes, rate, percentage, etc.) SHALL be displayed alongside its unit. The displayed unit SHALL match the scale of the rendered number — a duration of `4_200_000` nanoseconds SHALL surface as `4.20 ms` (not as raw nanos with a misleading `ms` label tacked on, nor as `4200000 ns` when a larger unit fits). Auto-scaling SHALL pick the largest unit that keeps the mantissa to one to three digits.
+
+Where the underlying parquet column encodes its unit in the column name (suffixes `_nano`, `_bytes`, `_percent`, etc.), renderers SHALL recognise the suffix and produce a human-scaled output. The conversion SHALL happen at a single point per unit family (`App\Explorer\UnitFormatter`) so renderers cannot drift apart.
+
+Dimensionless counts (row totals, page numbers, cardinality) MAY render bare. When a value is null or otherwise unrenderable, the surface SHALL fall back to an em-dash; it MUST NOT emit a number without an accompanying unit, and it MUST NOT emit a unit without a backing number.
+
+#### Scenario: Result-table duration cell auto-scales nanoseconds
+- **WHEN** a `duration_nano` cell carries `4_200_000`
+- **THEN** the rendered cell is `4.20 ms`
+- **AND** the raw `4200000` string does not appear in the cell
+
+#### Scenario: KPI tile reading a nanosecond accumulator scales to ms or s
+- **WHEN** a KPI tile renders `avg(duration_nano)` returning `4_200_000` ns
+- **THEN** the tile displays `4.20 ms`
+- **AND** no instance of the raw `4200000` appears in the tile
+
+#### Scenario: Missing measurement degrades to em-dash, not to a bare number
+- **WHEN** a measurement-bearing cell or tile has no value
+- **THEN** the rendered output is `—`
+- **AND** no number is rendered without its unit
+
 ### Requirement: Cursor pagination without full page reload
 
 The result table's prev/next paginator SHALL use Stimulus + fetch to swap the table body in place. The browser's URL SHALL be updated with the new cursor via `history.replaceState`. The chart and KPI strip SHALL NOT re-render when paging. Cursor values SHALL come from the existing Read API's HMAC-signed opaque cursors and SHALL pass through unmodified.

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Component\Explorer;
 
 use App\Tests\Support\SeedsParquetLogs;
+use App\Tests\Support\SeedsParquetTraces;
 use App\Tests\Support\TempStorageRoot;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\UX\LiveComponent\Test\InteractsWithLiveComponents;
@@ -19,6 +20,7 @@ final class KpiStripComponentTest extends KernelTestCase
 {
     use InteractsWithLiveComponents;
     use SeedsParquetLogs;
+    use SeedsParquetTraces;
     use TempStorageRoot;
 
     protected function setUp(): void
@@ -67,6 +69,30 @@ final class KpiStripComponentTest extends KernelTestCase
         // Empty-state — em-dash for value, "no data" copy.
         self::assertSame(5, substr_count($rendered, 'kpi-tile--empty'));
         self::assertStringContainsString('no data', $rendered);
+    }
+
+    public function testTracesKpiStripScalesNanosecondDurationsToHumanUnits(): void
+    {
+        // 4.2ms span → avg/max(duration_nano) = 4_200_000 ns.
+        $traceHex = str_repeat('beef', 8);
+        $window = $this->seedTrace('test-kpi-dur', $traceHex, [
+            ['spanIdHex' => 'feedfacecafebabe', 'name' => 'GET /', 'durationNs' => 4_200_000],
+        ]);
+
+        $component = $this->createLiveComponent('Explorer:KpiStrip', [
+            'tenantSlug' => 'test-kpi-dur',
+            'signal' => 'traces',
+            'windowSinceNs' => $window['since_ns'],
+            'windowUntilNs' => $window['until_ns'],
+        ]);
+
+        $rendered = (string) $component->render();
+
+        // Raw nanos MUST NOT leak through to a duration tile.
+        self::assertStringNotContainsString('4 200 000', $rendered);
+        self::assertStringNotContainsString('4200000', $rendered);
+        // Both duration KPIs scale to "4.20 ms".
+        self::assertStringContainsString('4.20 ms', $rendered);
     }
 
     public function testHydratedWindowWithSeededLogsRendersPopulatedTotal(): void
