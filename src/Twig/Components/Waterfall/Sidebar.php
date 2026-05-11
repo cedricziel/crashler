@@ -38,6 +38,19 @@ final class Sidebar
     #[LiveProp]
     public string $traceId = '';
 
+    /**
+     * The waterfall page's resolved window — shadowed onto the sidebar so
+     * span-detail lookups search inside the same range the parent page
+     * used to resolve the tree. Without this the sidebar falls back to
+     * the 24h `spanLookupWindowHours` default and 404s every span click
+     * for any trace older than yesterday.
+     */
+    #[LiveProp]
+    public int $windowSinceNs = 0;
+
+    #[LiveProp]
+    public int $windowUntilNs = 0;
+
     #[LiveProp(writable: true)]
     public ?string $selectedSpanId = null;
 
@@ -55,11 +68,14 @@ final class Sidebar
         if (null === $this->selectedSpanId || '' === $this->tenantSlug || '' === $this->traceId) {
             return null;
         }
-        $window = TimeWindow::parse(
-            ['since' => $this->resolver->spanLookupWindowHours().'h'],
-            $this->clock,
-            30,
-        );
+
+        $window = $this->windowSinceNs > 0 && $this->windowUntilNs > $this->windowSinceNs
+            ? new TimeWindow($this->windowSinceNs, $this->windowUntilNs)
+            : TimeWindow::parse(
+                ['since' => $this->resolver->spanLookupWindowHours().'h'],
+                $this->clock,
+                30,
+            );
 
         return $this->resolver->span($this->tenantSlug, $this->traceId, $this->selectedSpanId, $window);
     }

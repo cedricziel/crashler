@@ -68,6 +68,33 @@ final class SidebarComponentTest extends KernelTestCase
         self::assertStringContainsString('traceId='.self::TRACE_ID, $rendered);
     }
 
+    public function testSpanLookupUsesInheritedWindowNotDefault24h(): void
+    {
+        // Seed a 3-day-old span. Under the historical 24h fallback the
+        // sidebar's span() lookup would return null; with windowSinceNs /
+        // windowUntilNs propagated from the page controller it resolves.
+        $atIso = (new \DateTimeImmutable('-3 days'))->format('Y-m-d H:i:s \U\T\C');
+        $atNs = (int) (new \DateTimeImmutable($atIso))->format('U') * 1_000_000_000;
+        $this->seedTrace('test-window-prop', self::TRACE_ID, [
+            ['spanIdHex' => 'feedfacecafebabe', 'parentSpanIdHex' => null, 'name' => 'POST /api/charge', 'durationNs' => 5_000_000],
+        ], atIso: $atIso);
+
+        $component = $this->createLiveComponent('Waterfall:Sidebar', [
+            'tenantSlug' => 'test-window-prop',
+            'traceId' => self::TRACE_ID,
+            'windowSinceNs' => $atNs - 60_000_000_000,
+            'windowUntilNs' => $atNs + 60_000_000_000,
+        ]);
+
+        $component->call('selectSpan', ['spanId' => 'feedfacecafebabe']);
+        $rendered = (string) $component->render();
+
+        // With the inherited window the 3-day-old span resolves — the
+        // sidebar paints its detail, not the empty state.
+        self::assertStringContainsString('POST /api/charge', $rendered);
+        self::assertStringNotContainsString('select a span', $rendered);
+    }
+
     public function testCrossTraceSpanIdYieldsEmptyState(): void
     {
         // Seed a span in test-sidebar's trace; query the sidebar with

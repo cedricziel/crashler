@@ -128,6 +128,125 @@ final class WaterfallAccessTest extends DatabaseTestCase
         self::assertStringContainsString('POST /api/orders', $body);
     }
 
+    public function testRootSpanIsPreselectedAndCarriesAriaSelectedOnFirstPaint(): void
+    {
+        $member = $this->createUser('alice@example.com', 'pw-12345');
+        $org = $this->createOrg('acme', 'Acme Corp');
+        $tenant = $this->createTenant($org, 'acme-prod', 'Acme Production');
+        $this->grantTenant($member, $tenant, MembershipRole::Member);
+        $this->client->loginUser($member, 'app');
+
+        $traceHex = str_repeat('e1', 16);
+        $this->seedTrace('acme-prod', $traceHex, [
+            ['spanIdHex' => '1111111111111111', 'parentSpanIdHex' => null, 'name' => 'POST /api/orders'],
+            ['spanIdHex' => '2222222222222222', 'parentSpanIdHex' => '1111111111111111', 'name' => 'db.query'],
+        ]);
+
+        $this->client->request('GET', '/tenants/acme-prod/traces/'.$traceHex);
+
+        self::assertResponseIsSuccessful();
+        $body = (string) $this->client->getResponse()->getContent();
+        // Root row carries aria-selected=true; the child row does not.
+        self::assertMatchesRegularExpression(
+            '#<div [^>]*id="span-1111111111111111"[^>]*aria-selected="true"#',
+            $body,
+            'root span row must carry aria-selected="true" on initial paint',
+        );
+        self::assertMatchesRegularExpression(
+            '#<div [^>]*id="span-2222222222222222"[^>]*aria-selected="false"#',
+            $body,
+            'non-root rows must carry aria-selected="false"',
+        );
+    }
+
+    public function testSpanIdQueryParamPreselectsThatSpan(): void
+    {
+        $member = $this->createUser('alice@example.com', 'pw-12345');
+        $org = $this->createOrg('acme', 'Acme Corp');
+        $tenant = $this->createTenant($org, 'acme-prod', 'Acme Production');
+        $this->grantTenant($member, $tenant, MembershipRole::Member);
+        $this->client->loginUser($member, 'app');
+
+        $traceHex = str_repeat('e2', 16);
+        $this->seedTrace('acme-prod', $traceHex, [
+            ['spanIdHex' => 'aaaaaaaaaaaaaaaa', 'parentSpanIdHex' => null, 'name' => 'POST /'],
+            ['spanIdHex' => 'bbbbbbbbbbbbbbbb', 'parentSpanIdHex' => 'aaaaaaaaaaaaaaaa', 'name' => 'inner'],
+        ]);
+
+        $this->client->request('GET', '/tenants/acme-prod/traces/'.$traceHex.'?spanId=bbbbbbbbbbbbbbbb');
+
+        self::assertResponseIsSuccessful();
+        $body = (string) $this->client->getResponse()->getContent();
+        // The url-targeted span is selected, not the root.
+        self::assertMatchesRegularExpression(
+            '#<div [^>]*id="span-bbbbbbbbbbbbbbbb"[^>]*aria-selected="true"#',
+            $body,
+        );
+        self::assertMatchesRegularExpression(
+            '#<div [^>]*id="span-aaaaaaaaaaaaaaaa"[^>]*aria-selected="false"#',
+            $body,
+        );
+    }
+
+    public function testErroredSpanCarriesGlyphAndHeaderJumpAffordance(): void
+    {
+        $member = $this->createUser('alice@example.com', 'pw-12345');
+        $org = $this->createOrg('acme', 'Acme Corp');
+        $tenant = $this->createTenant($org, 'acme-prod', 'Acme Production');
+        $this->grantTenant($member, $tenant, MembershipRole::Member);
+        $this->client->loginUser($member, 'app');
+
+        $traceHex = str_repeat('e3', 16);
+        $this->seedTrace('acme-prod', $traceHex, [
+            ['spanIdHex' => '1111111111111111', 'parentSpanIdHex' => null, 'name' => 'POST /'],
+            ['spanIdHex' => '2222222222222222', 'parentSpanIdHex' => '1111111111111111', 'name' => 'broken', 'statusCode' => 2],
+        ]);
+
+        $this->client->request('GET', '/tenants/acme-prod/traces/'.$traceHex);
+
+        self::assertResponseIsSuccessful();
+        $body = (string) $this->client->getResponse()->getContent();
+        // Header: "1 error · jump to first ↓" affordance jumps to the
+        // first errored span.
+        self::assertStringContainsString('1 error', $body);
+        self::assertStringContainsString('jump to first', $body);
+        self::assertStringContainsString('href="#span-2222222222222222"', $body);
+        // Errored row carries the warning glyph.
+        self::assertMatchesRegularExpression(
+            '#id="span-2222222222222222".*?⚠#s',
+            $body,
+            'errored row must include the ⚠ glyph',
+        );
+        // The bar gains the error-stripe class.
+        self::assertStringContainsString('span-row__bar--error-stripe', $body);
+    }
+
+    public function testMinimapRendersOneMiniBarPerSpan(): void
+    {
+        $member = $this->createUser('alice@example.com', 'pw-12345');
+        $org = $this->createOrg('acme', 'Acme Corp');
+        $tenant = $this->createTenant($org, 'acme-prod', 'Acme Production');
+        $this->grantTenant($member, $tenant, MembershipRole::Member);
+        $this->client->loginUser($member, 'app');
+
+        $traceHex = str_repeat('e4', 16);
+        $this->seedTrace('acme-prod', $traceHex, [
+            ['spanIdHex' => '1111111111111111', 'parentSpanIdHex' => null, 'name' => 'a'],
+            ['spanIdHex' => '2222222222222222', 'parentSpanIdHex' => '1111111111111111', 'name' => 'b'],
+            ['spanIdHex' => '3333333333333333', 'parentSpanIdHex' => '1111111111111111', 'name' => 'c'],
+        ]);
+
+        $this->client->request('GET', '/tenants/acme-prod/traces/'.$traceHex);
+
+        self::assertResponseIsSuccessful();
+        $body = (string) $this->client->getResponse()->getContent();
+        // Minimap section + Stimulus wiring present.
+        self::assertStringContainsString('data-controller="minimap"', $body);
+        self::assertStringContainsString('data-minimap-tree-selector-value=".waterfall-tree"', $body);
+        // One mini-bar per seeded span.
+        self::assertSame(3, substr_count($body, 'class="minimap__bar'));
+    }
+
     public function testMalformedTraceIdHits404FromRouter(): void
     {
         $member = $this->createUser('alice@example.com', 'pw-12345');

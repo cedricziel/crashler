@@ -1,0 +1,52 @@
+{# Passive component: Waterfall:Minimap.
+
+   Rendered above the main waterfall. Each child mini-row carries the
+   same `leftPct` / `widthPct` as the main view, so the eye reads the
+   same trace shape at both scales. The viewport rectangle indicates
+   what is currently visible in the main tree; the minimap controller
+   drags it to scroll the tree.
+
+   The container uses the kind palette via `data-kind` so colours stay
+   in sync with the main view's CSS.
+#}
+<section {{ attributes.defaults({
+    'class': 'minimap',
+    'data-controller': 'minimap',
+    'data-minimap-tree-selector-value': '.waterfall-tree',
+}) }}>
+    <style>
+        .minimap { position: relative; margin: 0 0 0.75rem; padding: 0.5rem 1rem 0.65rem; background: #fafafa; border: 1px solid #e5e5e5; border-radius: 6px; }
+        .minimap__label { display: flex; justify-content: space-between; font-size: 0.65rem; color: #888; font-family: ui-monospace, SFMono-Regular, monospace; margin-bottom: 0.25rem; }
+        .minimap__canvas { position: relative; height: 3rem; background: #fff; border: 1px solid #ececec; border-radius: 3px; overflow: hidden; cursor: grab; }
+        .minimap__canvas:active { cursor: grabbing; }
+        .minimap__bar { position: absolute; height: 2px; border-radius: 1px; min-width: 1px; }
+        .minimap__bar[data-kind="0"] { background: #cbd5e1; }
+        .minimap__bar[data-kind="1"] { background: #64748b; }
+        .minimap__bar[data-kind="2"] { background: #4f46e5; }
+        .minimap__bar[data-kind="3"] { background: #d97706; }
+        .minimap__bar[data-kind="4"] { background: #0d9488; }
+        .minimap__bar[data-kind="5"] { background: #db2777; }
+        .minimap__bar--error { box-shadow: inset -1px 0 0 #c33; }
+        .minimap__viewport { position: absolute; top: 0; bottom: 0; background: rgba(79, 70, 229, 0.10); border: 1px solid rgba(79, 70, 229, 0.55); border-radius: 2px; pointer-events: auto; }
+    </style>
+
+    <div class="minimap__label">
+        <span>0 ms</span>
+        <span>{{ durationMs|number_format(2, '.', '') }} ms</span>
+    </div>
+    <div class="minimap__canvas" data-minimap-target="canvas">
+        {# Row height of 3px per span (2px bar + 1px gap) keeps long traces
+           inside the 3rem canvas without scrolling. Beyond ~64 spans the
+           rows wrap into a fixed 3rem track, which is fine — the goal is
+           a glanceable shape, not a per-row map. #}
+        {% set rowHeight = 3 %}
+        {% set maxRows = 16 %}
+        {% for span in spans %}
+            {% set rowIndex = loop.index0 % maxRows %}
+            <div class="minimap__bar {% if span.statusCode == 2 %}minimap__bar--error{% endif %}"
+                 data-kind="{{ span.kind }}"
+                 style="top: {{ rowIndex * rowHeight }}px; left: {{ span.leftPct }}%; width: {{ span.widthPct }}%;"></div>
+        {% endfor %}
+        <div class="minimap__viewport" data-minimap-target="viewport" aria-hidden="true" style="left: 0%; width: 100%;"></div>
+    </div>
+</section>

@@ -81,9 +81,20 @@ final class WaterfallController extends AbstractController
             ));
         }
 
+        // The sidebar preselects either the URL-pinned `?spanId=` or the
+        // trace's root span. The same value drives the row-level
+        // `aria-selected` attribute so the visual highlight matches.
+        $urlSpanId = self::nullIfBlank($request->query->get('spanId'));
+        $selectedSpanId = null !== $urlSpanId && 1 === preg_match('/^[0-9a-f]{16}$/', $urlSpanId)
+            ? $urlSpanId
+            : ($trace['rootSpanId'] ?? null);
+
         return $this->render('waterfall/index.html.twig', [
             'tenant' => $tenant,
             'trace' => $trace,
+            'window_since_ns' => $window->sinceUnixNano,
+            'window_until_ns' => $window->untilUnixNano,
+            'selected_span_id' => $selectedSpanId,
         ]);
     }
 

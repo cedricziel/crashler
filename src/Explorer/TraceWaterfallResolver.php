@@ -41,9 +41,12 @@ final readonly class TraceWaterfallResolver
      *     endNs: int,
      *     durationMs: float,
      *     rootName: string,
+     *     rootSpanId: ?string,
      *     service: string,
      *     spans: list<array<string, mixed>>,
      *     truncatedCount: int,
+     *     errorCount: int,
+     *     firstErrorSpanId: ?string,
      * }
      */
     public function resolve(string $tenantSlug, string $traceId, TimeWindow $window): ?array
@@ -52,7 +55,27 @@ final readonly class TraceWaterfallResolver
         $predicates = [new ColumnEquals('trace_id_hex', $traceId)];
 
         try {
-            $result = $this->scanner->scan($globs, $predicates, limit: \PHP_INT_MAX);
+            // Project to only the columns the bar render needs. The big
+            // JSON blobs (`attributes_json`, `events_json`,
+            // `resource_attributes_json`) are skipped here and only read
+            // by `span()` when the sidebar fetches a single span.
+            $result = $this->scanner->scan(
+                $globs,
+                $predicates,
+                limit: \PHP_INT_MAX,
+                columns: [
+                    'trace_id_hex',
+                    'span_id_hex',
+                    'parent_span_id_hex',
+                    'name',
+                    'start_time_unix_nano',
+                    'end_time_unix_nano',
+                    'status_code',
+                    'status_text',
+                    'resource_service_name',
+                    'kind',
+                ],
+            );
         } catch (\Throwable) {
             return null;
         }
@@ -114,11 +137,19 @@ final readonly class TraceWaterfallResolver
         // first by start time among those without a parent.
         $firstRoot = ($byParent[''][0] ?? null);
         $rootName = \is_array($firstRoot) ? (string) ($firstRoot['name'] ?? '') : '';
+        $rootSpanId = \is_array($firstRoot) ? ((string) ($firstRoot['span_id_hex'] ?? '') ?: null) : null;
         $service = \is_array($firstRoot) ? (string) ($firstRoot['resource_service_name'] ?? '') : '';
 
         $spans = [];
+        $errorCount = 0;
+        $firstErrorSpanId = null;
         foreach ($flat as $entry) {
-            $spans[] = $this->shapeSpan($entry['row'], $entry['depth'], $startNs, $endNs);
+            $shaped = $this->shapeSpan($entry['row'], $entry['depth'], $startNs, $endNs);
+            $spans[] = $shaped;
+            if (2 === $shaped['statusCode']) {
+                ++$errorCount;
+                $firstErrorSpanId ??= $shaped['spanId'];
+            }
         }
 
         return [
@@ -127,9 +158,12 @@ final readonly class TraceWaterfallResolver
             'endNs' => $endNs,
             'durationMs' => $durationMs,
             'rootName' => $rootName,
+            'rootSpanId' => $rootSpanId,
             'service' => $service,
             'spans' => $spans,
             'truncatedCount' => $truncated,
+            'errorCount' => $errorCount,
+            'firstErrorSpanId' => $firstErrorSpanId,
         ];
     }
 
@@ -195,6 +229,16 @@ final readonly class TraceWaterfallResolver
         $leftPct = $width > 0 ? max(0.0, min(100.0, ($startNs - $traceStartNs) * 100.0 / $width)) : 0.0;
         $widthPct = $width > 0 ? max(0.5, min(100.0 - $leftPct, ($endNs - $startNs) * 100.0 / $width)) : 100.0;
 
+        // OTLP SpanKind is an int (0..5) — schema column is `kind`.
+        // Anything outside the known range collapses to UNSPECIFIED (0)
+        // so the kind-color palette has a defined fallback.
+        $rawKind = $row['kind'] ?? null;
+        $kind = match (true) {
+            \is_int($rawKind) && $rawKind >= 0 && $rawKind <= 5 => $rawKind,
+            \is_string($rawKind) && is_numeric($rawKind) && (int) $rawKind >= 0 && (int) $rawKind <= 5 => (int) $rawKind,
+            default => 0,
+        };
+
         return [
             'spanId' => (string) ($row['span_id_hex'] ?? ''),
             'parentSpanId' => (string) ($row['parent_span_id_hex'] ?? ''),
@@ -206,6 +250,7 @@ final readonly class TraceWaterfallResolver
             'durationMs' => max(0.0, ($endNs - $startNs) / 1_000_000),
             'leftPct' => $leftPct,
             'widthPct' => $widthPct,
+            'kind' => $kind,
             'statusCode' => isset($row['status_code']) ? (int) $row['status_code'] : null,
             'statusText' => (string) ($row['status_text'] ?? ''),
         ];

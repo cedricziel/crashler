@@ -7,26 +7,49 @@
         .waterfall-page { max-width: 100rem; margin: 1.5rem auto; padding: 0 1rem; font-family: -apple-system, system-ui, sans-serif; color: #1a1a1a; }
         .waterfall-page header { margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #e5e5e5; }
         .waterfall-page h1 { margin: 0; font-size: 1.1rem; font-weight: 600; }
+        .waterfall-page__error-jump { display: inline-block; margin-left: 0.5rem; padding: 0.15rem 0.55rem; background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; border-radius: 999px; text-decoration: none; font-size: 0.78rem; font-weight: 500; }
+        .waterfall-page__error-jump:hover { background: #fee2e2; }
         .waterfall-layout { display: grid; grid-template-columns: 80% 20%; gap: 0; min-height: 30rem; border: 1px solid #e5e5e5; border-radius: 8px; background: #fff; }
         .waterfall-tree { padding: 0.5rem 0; overflow-x: auto; }
         .axis { display: flex; justify-content: space-between; padding: 0.25rem 1rem 0.5rem; font-size: 0.7rem; color: #888; border-bottom: 1px solid #f0f0f0; margin-bottom: 0.5rem; font-family: ui-monospace, SFMono-Regular, monospace; }
+        .kind-legend { display: flex; flex-wrap: wrap; gap: 0.85rem; padding: 0.4rem 1rem; font-size: 0.7rem; color: #666; border-bottom: 1px solid #f4f4f4; }
+        .kind-legend__swatch { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 2px; margin-right: 0.25rem; vertical-align: -1px; }
         .span-row { display: flex; align-items: center; padding: 0.2rem 0.5rem; border-bottom: 1px solid #f6f6f6; gap: 0.5rem; cursor: pointer; }
         .span-row:hover { background: #f8f9fa; }
         .span-row[aria-selected="true"] { background: #fef3c7; }
+        .span-row--error { background: #fef2f2; }
+        .span-row--error:hover { background: #fee2e2; }
         .span-row__label { flex: 0 0 28%; min-width: 14rem; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: ui-monospace, SFMono-Regular, monospace; }
         .span-row__service { color: #666; font-size: 0.72rem; margin-right: 0.25rem; }
+        .span-row__error-glyph { color: #c33; margin-right: 0.2rem; }
         .span-row__bar-track { flex: 1; position: relative; height: 1.2rem; background: #f7f7f7; border-radius: 2px; overflow: hidden; }
-        .span-row__bar { position: absolute; top: 2px; bottom: 2px; background: #4f46e5; border-radius: 2px; min-width: 2px; }
-        .span-row__bar--error { background: #c33; }
+        .span-row__bar { position: absolute; top: 2px; bottom: 2px; border-radius: 2px; min-width: 2px; }
+        .span-row__bar[data-kind="0"] { background: #cbd5e1; }
+        .span-row__bar[data-kind="1"] { background: #64748b; }
+        .span-row__bar[data-kind="2"] { background: #4f46e5; }
+        .span-row__bar[data-kind="3"] { background: #d97706; }
+        .span-row__bar[data-kind="4"] { background: #0d9488; }
+        .span-row__bar[data-kind="5"] { background: #db2777; }
+        .span-row__bar--error-stripe { box-shadow: inset -3px 0 0 #c33; }
         .span-row__duration { flex: 0 0 6rem; text-align: right; font-size: 0.78rem; color: #444; font-family: ui-monospace, SFMono-Regular, monospace; }
     </style>
 {% endblock %}
 
 {% block body %}
+    {% set kindLabels = {0: 'UNSPECIFIED', 1: 'INTERNAL', 2: 'SERVER', 3: 'CLIENT', 4: 'PRODUCER', 5: 'CONSUMER'} %}
     <main class="waterfall-page">
         <header>
             <a href="{{ path('app_explorer_index', {slug: tenant.slug, signal: 'traces'}) }}" style="font-size: 0.85em; color: #666;">← traces explorer · {{ tenant.name }}</a>
-            <h1 style="margin-top: 0.5rem;">{{ trace.rootName|default('(unnamed)') }}</h1>
+            <h1 style="margin-top: 0.5rem;">
+                {{ trace.rootName|default('(unnamed)') }}
+                {% if trace.errorCount > 0 and trace.firstErrorSpanId %}
+                    <a class="waterfall-page__error-jump"
+                       href="#span-{{ trace.firstErrorSpanId }}"
+                       data-jump-target="{{ trace.firstErrorSpanId }}">
+                        {{ trace.errorCount }} error{{ trace.errorCount == 1 ? '' : 's' }} · jump to first ↓
+                    </a>
+                {% endif %}
+            </h1>
             <div style="margin-top: 0.25rem; font-size: 0.85rem; color: #666;">
                 <code>{{ trace.traceId }}</code> ·
                 {{ trace.service|default('—') }} ·
@@ -38,8 +61,15 @@
             </div>
         </header>
 
+        <twig:Waterfall:Minimap :spans="trace.spans" :durationMs="trace.durationMs"/>
+
         <div class="waterfall-layout">
             <section class="waterfall-tree">
+                <div class="kind-legend" aria-label="Span kind colour key">
+                    {% for kindValue, label in kindLabels %}
+                        <span><span class="kind-legend__swatch" style="background: {{ {0: '#cbd5e1', 1: '#64748b', 2: '#4f46e5', 3: '#d97706', 4: '#0d9488', 5: '#db2777'}[kindValue] }};"></span>{{ label }}</span>
+                    {% endfor %}
+                </div>
                 <div class="axis">
                     <span>0 ms</span>
                     <span>{{ (trace.durationMs / 4)|number_format(2, '.', '') }} ms</span>
@@ -49,19 +79,23 @@
                 </div>
                 {% for span in trace.spans %}
                     {% set isError = span.statusCode == 2 %}
-                    <div class="span-row"
+                    {% set isSelected = span.spanId == selected_span_id %}
+                    <div class="span-row {% if isError %}span-row--error{% endif %}"
+                         id="span-{{ span.spanId }}"
+                         aria-selected="{{ isSelected ? 'true' : 'false' }}"
                          data-span-id="{{ span.spanId }}"
                          data-action="live#action"
                          data-live-action-param="selectSpan"
                          data-live-span-id-param="{{ span.spanId }}"
                          data-live-target="#waterfall-sidebar">
                         <div class="span-row__label" style="padding-left: {{ span.depth * 1.2 }}rem;">
-                            {% if span.depth > 0 %}<span style="color: #ccc;">↳ </span>{% endif %}<span class="span-row__service">{{ span.service }}</span>{{ span.name }}
+                            {% if span.depth > 0 %}<span style="color: #ccc;">↳ </span>{% endif %}<span class="span-row__service">{{ span.service }}</span>{% if isError %}<span class="span-row__error-glyph" aria-label="error">⚠ </span>{% endif %}{{ span.name }}
                         </div>
                         <div class="span-row__bar-track">
-                            <div class="span-row__bar {% if isError %}span-row__bar--error{% endif %}"
+                            <div class="span-row__bar {% if isError %}span-row__bar--error-stripe{% endif %}"
+                                 data-kind="{{ span.kind }}"
                                  style="left: {{ span.leftPct }}%; width: {{ span.widthPct }}%;"
-                                 title="{{ span.name }} · {{ span.durationMs|number_format(2, '.', '') }} ms"></div>
+                                 title="{{ span.name }} · {{ kindLabels[span.kind] }} · {{ span.durationMs|number_format(2, '.', '') }} ms"></div>
                         </div>
                         <div class="span-row__duration">{{ span.durationMs|number_format(2, '.', '') }} ms</div>
                     </div>
@@ -71,6 +105,9 @@
             <twig:Waterfall:Sidebar
                 tenantSlug="{{ tenant.slug }}"
                 traceId="{{ trace.traceId }}"
+                :windowSinceNs="window_since_ns"
+                :windowUntilNs="window_until_ns"
+                selectedSpanId="{{ selected_span_id }}"
                 id="waterfall-sidebar"/>
         </div>
     </main>

@@ -43,8 +43,9 @@ final readonly class ParquetScanner
      * @param list<string>                                  $partitionGlobs glob patterns produced by {@see PartitionPruner}
      * @param list<Predicate>                               $predicates     evaluated in tier order; ALL must pass for a row to match
      * @param ?array{lastTimeUnixNano: int, lastRowId: int} $resumeFrom     resume position from a previous cursor; rows at or before this position are skipped
+     * @param list<string>                                  $columns        optional column whitelist; empty array (default) reads all columns. Callers MUST include any column their predicates evaluate AND any column they read off the returned rows.
      */
-    public function scan(array $partitionGlobs, array $predicates, int $limit, ?array $resumeFrom = null): ScanResult
+    public function scan(array $partitionGlobs, array $predicates, int $limit, ?array $resumeFrom = null, array $columns = []): ScanResult
     {
         // Tier order — cheap predicates first so wide queries fail-fast on
         // the cheap conditions before paying the JSON-decode cost on the
@@ -129,6 +130,7 @@ final readonly class ParquetScanner
                         $rows,
                         $lastPosition,
                         $rowsCollected,
+                        $columns,
                     )) {
                         $hasMore = true;
                         break 2;
@@ -160,6 +162,7 @@ final readonly class ParquetScanner
      * @param ?array{lastTimeUnixNano: int, lastRowId: int} $resumeFrom
      * @param list<array<string, mixed>>                    $rows         (mutated)
      * @param ?array{lastTimeUnixNano: int, lastRowId: int} $lastPosition (mutated)
+     * @param list<string>                                  $columns      empty list = read all columns; otherwise narrows the flow-php `values()` projection
      */
     private function scanRun(
         \Flow\Parquet\ParquetFile $parquetFile,
@@ -173,9 +176,10 @@ final readonly class ParquetScanner
         array &$rows,
         ?array &$lastPosition,
         int &$rowsCollected,
+        array $columns = [],
     ): bool {
         try {
-            $iter = $parquetFile->values(columns: [], limit: $runCount, offset: $runOffset);
+            $iter = $parquetFile->values(columns: $columns, limit: $runCount, offset: $runOffset);
         } catch (\Throwable $e) {
             throw new ScanIoException(
                 \sprintf('Failed reading rows from %s: %s', basename($file), $e->getMessage()),

@@ -72,6 +72,41 @@ final class TraceWaterfallResolverTest extends KernelTestCase
         self::assertNull($trace);
     }
 
+    public function testResolveExposesRootSpanIdAndErrorMetadata(): void
+    {
+        $window = $this->seedTrace('test-wf-meta', self::TRACE_A, [
+            ['spanIdHex' => '1111111111111111', 'parentSpanIdHex' => null, 'name' => 'root'],
+            ['spanIdHex' => '2222222222222222', 'parentSpanIdHex' => '1111111111111111', 'name' => 'ok-child'],
+            ['spanIdHex' => '3333333333333333', 'parentSpanIdHex' => '1111111111111111', 'name' => 'errored', 'statusCode' => 2],
+            ['spanIdHex' => '4444444444444444', 'parentSpanIdHex' => '1111111111111111', 'name' => 'errored-2', 'statusCode' => 2],
+        ]);
+
+        $resolver = self::getContainer()->get(TraceWaterfallResolver::class);
+        $trace = $resolver->resolve('test-wf-meta', self::TRACE_A, new TimeWindow($window['since_ns'], $window['until_ns']));
+
+        self::assertNotNull($trace);
+        self::assertSame('1111111111111111', $trace['rootSpanId'], 'root is the first parentless span by start time');
+        self::assertSame(2, $trace['errorCount']);
+        self::assertSame('3333333333333333', $trace['firstErrorSpanId'], 'firstErrorSpanId is the first errored span in DFS order');
+    }
+
+    public function testShapedSpanExposesKindFallingBackToUnspecified(): void
+    {
+        // Seeded spans don't carry an explicit span_kind override — the
+        // ingest writer assigns 1 (INTERNAL) by default in SeedsParquetTraces.
+        $window = $this->seedTrace('test-wf-kind', self::TRACE_A, [
+            ['spanIdHex' => '1111111111111111', 'parentSpanIdHex' => null, 'name' => 'root'],
+        ]);
+
+        $resolver = self::getContainer()->get(TraceWaterfallResolver::class);
+        $trace = $resolver->resolve('test-wf-kind', self::TRACE_A, new TimeWindow($window['since_ns'], $window['until_ns']));
+
+        self::assertNotNull($trace);
+        self::assertArrayHasKey('kind', $trace['spans'][0]);
+        self::assertGreaterThanOrEqual(0, $trace['spans'][0]['kind']);
+        self::assertLessThanOrEqual(5, $trace['spans'][0]['kind']);
+    }
+
     public function testSpanLookupRejectsCrossTraceSpanId(): void
     {
         // Trace A has span 1111…; Trace B has its own. Looking up B's

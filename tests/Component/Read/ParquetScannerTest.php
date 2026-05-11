@@ -334,6 +334,33 @@ final class ParquetScannerTest extends TestCase
         self::assertSame(0, $result->groupsSkipped);
     }
 
+    public function testScanProjectsToRequestedColumnsOnly(): void
+    {
+        $glob = $this->writeLogsFixture('acme', '2026-05-09', '14', [
+            ['service' => 'checkout', 'severity' => 9, 'body' => 'one'],
+            ['service' => 'checkout', 'severity' => 9, 'body' => 'two'],
+        ]);
+
+        $scanner = new ParquetScanner(new MockClock('2026-05-09 14:30:00 UTC'), executionTimeoutSeconds: 10);
+        $result = $scanner->scan(
+            [$glob],
+            [new ColumnEquals('resource_service_name', 'checkout')],
+            limit: 100,
+            columns: ['resource_service_name', 'body_json'],
+        );
+
+        self::assertNotEmpty($result->rows);
+        foreach ($result->rows as $row) {
+            // The whitelist is the projection contract. attributes_json /
+            // severity_number / time_unix_nano MUST NOT leak in.
+            self::assertArrayHasKey('resource_service_name', $row);
+            self::assertArrayHasKey('body_json', $row);
+            self::assertArrayNotHasKey('attributes_json', $row);
+            self::assertArrayNotHasKey('severity_number', $row);
+            self::assertArrayNotHasKey('time_unix_nano', $row);
+        }
+    }
+
     public function testGreaterEqualPredicate(): void
     {
         $glob = $this->writeLogsFixture('acme', '2026-05-09', '14', [
