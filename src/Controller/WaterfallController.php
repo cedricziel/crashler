@@ -52,15 +52,18 @@ final class WaterfallController extends AbstractController
 
         // When the link came from the explorer table the URL carries the
         // explorer's `since` / `until` (typically unix-nano integers); use
-        // them so a trace outside the default 24h lookback still resolves.
-        // No hint → fall back to the 24h `span_lookup_window_hours`
-        // contract the read API's /v1/traces/{id} endpoint uses.
+        // them. With no hint — a bare URL pasted from a chat, ticket, or
+        // alert — fall back to the full retention window (maxTimeWindowDays).
+        // The trace_id_hex predicate is highly selective so scanning the
+        // whole retention window stays cheap, and a bare URL "just works"
+        // instead of inheriting the 24h read-API contract that hides
+        // anything older than yesterday.
         $since = self::nullIfBlank($request->query->get('since'));
         $until = self::nullIfBlank($request->query->get('until'));
         try {
             $window = TimeWindow::parse(
                 null === $since && null === $until
-                    ? ['since' => $this->resolver->spanLookupWindowHours().'h']
+                    ? ['since' => $this->maxTimeWindowDays.'d']
                     : ['since' => $since, 'until' => $until],
                 $this->clock,
                 $this->maxTimeWindowDays,
@@ -72,9 +75,9 @@ final class WaterfallController extends AbstractController
         $trace = $this->resolver->resolve($tenant->getSlug(), $traceId, $window);
         if (null === $trace) {
             throw new NotFoundHttpException(\sprintf(
-                'Trace %s not found within the requested window. Widen `since`/`until` or adjust span_lookup_window_hours if traces are older than %d hours.',
+                'Trace %s not found within the searched window. The lookup spans the configured retention of %d days; older traces are no longer stored.',
                 $traceId,
-                $this->resolver->spanLookupWindowHours(),
+                $this->maxTimeWindowDays,
             ));
         }
 
