@@ -5,7 +5,7 @@
     "license": "proprietary",
     "require": {
         "php": ">=8.5",
-        "infection/infection": "^0.30 || ^0.32"
+        "infection/infection": "^0.30 || ^0.32 || ^0.33"
     },
     "config": {
         "sort-packages": true,
