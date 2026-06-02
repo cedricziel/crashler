@@ -316,16 +316,16 @@
         },
         {
             "name": "api-platform/json-api",
-            "version": "v4.3.6",
+            "version": "v4.3.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/api-platform/json-api.git",
-                "reference": "3a562e7f1bb1bc802e58eff674a20b78fe107275"
+                "reference": "b275e45653f693427e38b53b195a6cdab890418b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/api-platform/json-api/zipball/3a562e7f1bb1bc802e58eff674a20b78fe107275",
-                "reference": "3a562e7f1bb1bc802e58eff674a20b78fe107275",
+                "url": "https://api.github.com/repos/api-platform/json-api/zipball/b275e45653f693427e38b53b195a6cdab890418b",
+                "reference": "b275e45653f693427e38b53b195a6cdab890418b",
                 "shasum": ""
             },
             "require": {
@@ -392,9 +392,9 @@
                 "rest"
             ],
             "support": {
-                "source": "https://github.com/api-platform/json-api/tree/v4.3.6"
+                "source": "https://github.com/api-platform/json-api/tree/v4.3.7"
             },
-            "time": "2026-05-22T11:06:32+00:00"
+            "time": "2026-05-25T06:50:22+00:00"
         },
         {
             "name": "api-platform/json-schema",
