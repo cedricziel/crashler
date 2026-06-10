@@ -317,23 +317,23 @@
         },
         {
             "name": "api-platform/json-api",
-            "version": "v4.3.7",
+            "version": "v4.3.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/api-platform/json-api.git",
-                "reference": "b275e45653f693427e38b53b195a6cdab890418b"
+                "reference": "2e1773bc4b098119531c59de14124afa0cb693a2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/api-platform/json-api/zipball/b275e45653f693427e38b53b195a6cdab890418b",
-                "reference": "b275e45653f693427e38b53b195a6cdab890418b",
+                "url": "https://api.github.com/repos/api-platform/json-api/zipball/2e1773bc4b098119531c59de14124afa0cb693a2",
+                "reference": "2e1773bc4b098119531c59de14124afa0cb693a2",
                 "shasum": ""
             },
             "require": {
                 "api-platform/documentation": "^4.3",
                 "api-platform/json-schema": "^4.3",
                 "api-platform/metadata": "^4.3",
-                "api-platform/serializer": "^4.3",
+                "api-platform/serializer": "^4.3.8",
                 "api-platform/state": "^4.3",
                 "php": ">=8.2",
                 "symfony/error-handler": "^6.4 || ^7.0 || ^8.0",
@@ -393,22 +393,22 @@
                 "rest"
             ],
             "support": {
-                "source": "https://github.com/api-platform/json-api/tree/v4.3.7"
+                "source": "https://github.com/api-platform/json-api/tree/v4.3.10"
             },
-            "time": "2026-05-25T06:50:22+00:00"
+            "time": "2026-06-05T15:17:34+00:00"
         },
         {
             "name": "api-platform/json-schema",
-            "version": "v4.3.7",
+            "version": "v4.3.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/api-platform/json-schema.git",
-                "reference": "23dc2c388a08f2006b9189a0883a08f8837d7249"
+                "reference": "6a0a2ddc4914bb1fdb1b71777c49aef388f6ea31"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/api-platform/json-schema/zipball/23dc2c388a08f2006b9189a0883a08f8837d7249",
-                "reference": "23dc2c388a08f2006b9189a0883a08f8837d7249",
+                "url": "https://api.github.com/repos/api-platform/json-schema/zipball/6a0a2ddc4914bb1fdb1b71777c49aef388f6ea31",
+                "reference": "6a0a2ddc4914bb1fdb1b71777c49aef388f6ea31",
                 "shasum": ""
             },
             "require": {
@@ -474,9 +474,9 @@
                 "swagger"
             ],
             "support": {
-                "source": "https://github.com/api-platform/json-schema/tree/v4.3.7"
+                "source": "https://github.com/api-platform/json-schema/tree/v4.3.10"
             },
-            "time": "2026-04-30T12:21:24+00:00"
+            "time": "2026-06-03T14:46:27+00:00"
         },
         {
             "name": "api-platform/jsonld",
