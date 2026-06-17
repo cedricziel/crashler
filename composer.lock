@@ -71,22 +71,22 @@
         },
         {
             "name": "api-platform/hal",
-            "version": "v4.3.10",
+            "version": "v4.3.13",
             "source": {
                 "type": "git",
                 "url": "https://github.com/api-platform/hal.git",
-                "reference": "8d0aaa1aa789b5d82748262e438275e3dd814ec9"
+                "reference": "acef54a84506b79c93e8843991f29900553b1645"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/api-platform/hal/zipball/8d0aaa1aa789b5d82748262e438275e3dd814ec9",
-                "reference": "8d0aaa1aa789b5d82748262e438275e3dd814ec9",
+                "url": "https://api.github.com/repos/api-platform/hal/zipball/acef54a84506b79c93e8843991f29900553b1645",
+                "reference": "acef54a84506b79c93e8843991f29900553b1645",
                 "shasum": ""
             },
             "require": {
                 "api-platform/documentation": "^4.3",
                 "api-platform/metadata": "^4.3",
-                "api-platform/serializer": "^4.3.8",
+                "api-platform/serializer": "^4.3.12",
                 "api-platform/state": "^4.3",
                 "php": ">=8.2",
                 "symfony/type-info": "^7.3 || ^8.0"
@@ -144,9 +144,9 @@
             ],
             "support": {
                 "issues": "https://github.com/api-platform/hal/issues",
-                "source": "https://github.com/api-platform/hal/tree/v4.3.10"
+                "source": "https://github.com/api-platform/hal/tree/v4.3.13"
             },
-            "time": "2026-06-04T14:33:29+00:00"
+            "time": "2026-06-13T05:11:46+00:00"
         },
         {
             "name": "api-platform/http-cache",
