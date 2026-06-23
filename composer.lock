@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "479e832356241fce19ab553ac62379c6",
+    "content-hash": "3e6b974d85f6ccf2c094a63087ef4667",
     "packages": [
         {
             "name": "api-platform/documentation",
@@ -2511,7 +2511,7 @@
         },
         {
             "name": "flow-php/filesystem",
-            "version": "0.39.0",
+            "version": "0.40.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/filesystem.git",
@@ -2559,7 +2559,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/filesystem/issues",
-                "source": "https://github.com/flow-php/filesystem/tree/0.39.0"
+                "source": "https://github.com/flow-php/filesystem/tree/0.40.0"
             },
             "funding": [
                 {
@@ -2575,7 +2575,7 @@
         },
         {
             "name": "flow-php/parquet",
-            "version": "0.39.0",
+            "version": "0.40.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/parquet.git",
@@ -2628,7 +2628,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/parquet/issues",
-                "source": "https://github.com/flow-php/parquet/tree/0.39.0"
+                "source": "https://github.com/flow-php/parquet/tree/0.40.0"
             },
             "funding": [
                 {
@@ -2644,7 +2644,7 @@
         },
         {
             "name": "flow-php/snappy",
-            "version": "0.39.0",
+            "version": "0.40.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/snappy.git",
@@ -2687,7 +2687,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/snappy/issues",
-                "source": "https://github.com/flow-php/snappy/tree/0.39.0"
+                "source": "https://github.com/flow-php/snappy/tree/0.40.0"
             },
             "funding": [
                 {
@@ -2703,16 +2703,16 @@
         },
         {
             "name": "flow-php/telemetry",
-            "version": "0.39.0",
+            "version": "0.40.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/telemetry.git",
-                "reference": "05092a4f4e1c02beee44809f442bcfd66ad15155"
+                "reference": "e4c24db952ba006419caa42066f1ecc9050b6788"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/flow-php/telemetry/zipball/05092a4f4e1c02beee44809f442bcfd66ad15155",
-                "reference": "05092a4f4e1c02beee44809f442bcfd66ad15155",
+                "url": "https://api.github.com/repos/flow-php/telemetry/zipball/e4c24db952ba006419caa42066f1ecc9050b6788",
+                "reference": "e4c24db952ba006419caa42066f1ecc9050b6788",
                 "shasum": ""
             },
             "require": {
@@ -2745,7 +2745,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/telemetry/issues",
-                "source": "https://github.com/flow-php/telemetry/tree/0.39.0"
+                "source": "https://github.com/flow-php/telemetry/tree/0.40.0"
             },
             "funding": [
                 {
@@ -2757,11 +2757,11 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-05-29T07:14:39+00:00"
+            "time": "2026-06-13T18:42:41+00:00"
         },
         {
             "name": "flow-php/types",
-            "version": "0.39.0",
+            "version": "0.40.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/flow-php/types.git",
@@ -2799,7 +2799,7 @@
             ],
             "support": {
                 "issues": "https://github.com/flow-php/types/issues",
-                "source": "https://github.com/flow-php/types/tree/0.39.0"
+                "source": "https://github.com/flow-php/types/tree/0.40.0"
             },
             "funding": [
                 {
@@ -9776,16 +9776,16 @@
         },
         {
             "name": "webmozart/assert",
-            "version": "2.4.0",
+            "version": "2.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webmozarts/assert.git",
-                "reference": "9007ea6f45ecf352a9422b36644e4bfc039b9155"
+                "reference": "2ccb7c2e821038c03a3e6e1700c570c158c55f70"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmozarts/assert/zipball/9007ea6f45ecf352a9422b36644e4bfc039b9155",
-                "reference": "9007ea6f45ecf352a9422b36644e4bfc039b9155",
+                "url": "https://api.github.com/repos/webmozarts/assert/zipball/2ccb7c2e821038c03a3e6e1700c570c158c55f70",
+                "reference": "2ccb7c2e821038c03a3e6e1700c570c158c55f70",
                 "shasum": ""
             },
             "require": {
@@ -9836,9 +9836,9 @@
             ],
             "support": {
                 "issues": "https://github.com/webmozarts/assert/issues",
-                "source": "https://github.com/webmozarts/assert/tree/2.4.0"
+                "source": "https://github.com/webmozarts/assert/tree/2.4.1"
             },
-            "time": "2026-05-20T13:07:01+00:00"
+            "time": "2026-06-15T15:31:57+00:00"
         },
         {
             "name": "webmozart/glob",
