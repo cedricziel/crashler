@@ -8,11 +8,11 @@
     "packages": [
         {
             "name": "phpstan/phpstan",
-            "version": "2.2.2",
+            "version": "2.2.5",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/e5cc34d491a90e79c216d824f60fe21fd4d93bd6",
-                "reference": "e5cc34d491a90e79c216d824f60fe21fd4d93bd6",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/909c1e5fef7989ac0d0c1c5c42e32a5c4f6198a0",
+                "reference": "909c1e5fef7989ac0d0c1c5c42e32a5c4f6198a0",
                 "shasum": ""
             },
             "require": {
@@ -68,20 +68,20 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-06-05T09:00:01+00:00"
+            "time": "2026-07-05T06:31:06+00:00"
         },
         {
             "name": "rector/rector",
-            "version": "2.5.1",
+            "version": "2.5.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/rectorphp/rector.git",
-                "reference": "34a9124ece04df818e6b4be4ecd0a4e23f4c0c64"
+                "reference": "3d3577ad88d70d9f8dccd0a4c2f75bf13d6268e6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/rectorphp/rector/zipball/34a9124ece04df818e6b4be4ecd0a4e23f4c0c64",
-                "reference": "34a9124ece04df818e6b4be4ecd0a4e23f4c0c64",
+                "url": "https://api.github.com/repos/rectorphp/rector/zipball/3d3577ad88d70d9f8dccd0a4c2f75bf13d6268e6",
+                "reference": "3d3577ad88d70d9f8dccd0a4c2f75bf13d6268e6",
                 "shasum": ""
             },
             "require": {
@@ -120,7 +120,7 @@
             ],
             "support": {
                 "issues": "https://github.com/rectorphp/rector/issues",
-                "source": "https://github.com/rectorphp/rector/tree/2.5.1"
+                "source": "https://github.com/rectorphp/rector/tree/2.5.3"
             },
             "funding": [
                 {
@@ -128,7 +128,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-06-21T10:28:27+00:00"
+            "time": "2026-07-05T01:32:08+00:00"
         }
     ],
     "packages-dev": [],
