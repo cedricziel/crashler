@@ -71,16 +71,16 @@
         },
         {
             "name": "api-platform/hal",
-            "version": "v4.3.14",
+            "version": "v4.3.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/api-platform/hal.git",
-                "reference": "acef54a84506b79c93e8843991f29900553b1645"
+                "reference": "3499d6b0b1b2a8c59e789ed7215b705c71b61d3e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/api-platform/hal/zipball/acef54a84506b79c93e8843991f29900553b1645",
-                "reference": "acef54a84506b79c93e8843991f29900553b1645",
+                "url": "https://api.github.com/repos/api-platform/hal/zipball/3499d6b0b1b2a8c59e789ed7215b705c71b61d3e",
+                "reference": "3499d6b0b1b2a8c59e789ed7215b705c71b61d3e",
                 "shasum": ""
             },
             "require": {
@@ -144,9 +144,9 @@
             ],
             "support": {
                 "issues": "https://github.com/api-platform/hal/issues",
-                "source": "https://github.com/api-platform/hal/tree/v4.3.14"
+                "source": "https://github.com/api-platform/hal/tree/v4.3.16"
             },
-            "time": "2026-06-13T05:11:46+00:00"
+            "time": "2026-07-03T05:49:32+00:00"
         },
         {
             "name": "api-platform/http-cache",
