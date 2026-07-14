@@ -71,7 +71,7 @@
         },
         {
             "name": "api-platform/hal",
-            "version": "v4.3.16",
+            "version": "v4.3.17",
             "source": {
                 "type": "git",
                 "url": "https://github.com/api-platform/hal.git",
@@ -144,7 +144,7 @@
             ],
             "support": {
                 "issues": "https://github.com/api-platform/hal/issues",
-                "source": "https://github.com/api-platform/hal/tree/v4.3.16"
+                "source": "https://github.com/api-platform/hal/tree/v4.3.17"
             },
             "time": "2026-07-03T05:49:32+00:00"
         },
